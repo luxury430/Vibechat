@@ -3,12 +3,13 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBm_cuY0tQI60bAzwWZyvuUSaEX6sTgTs4",
-  authDomain: "neuroforge-815e5.firebaseapp.com",
-  projectId: "neuroforge-815e5",
-  storageBucket: "neuroforge-815e5.firebasestorage.app",
-  messagingSenderId: "101095135000",
-  appId: "1:101095135000:web:b5068cfb8262dd9f8c306d"
+const firebaseConfig = {
+  apiKey: "AIzaSyC4VFRg8moM-39BO0CPZgOg94gD3T1ED5k",
+  authDomain: "neuros-52cda.firebaseapp.com",
+  projectId: "neuros-52cda",
+  storageBucket: "neuros-52cda.firebasestorage.app",
+  messagingSenderId: "817588719752",
+  appId: "1:817588719752:web:f206aabf4e908d99d90f3d"
 };
 
 const app = initializeApp(firebaseConfig);
