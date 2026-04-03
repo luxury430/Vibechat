@@ -901,17 +901,8 @@ function formatTime(ms) {
 /* ─────────────────────────────────────────────────────────────
    AUTH & USER MANAGEMENT
 ───────────────────────────────────────────────────────────── */
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    await loadMyProfile();
-    setOnlineStatus(true);
-    listenToChats(); // Load contacts dynamically
-  } 
-  else {
-  console.log("Not logged in");
-}
-});
+
+
 
 async function loadMyProfile() {
   const snap = await getDoc(doc(db, "users", currentUser.uid));
