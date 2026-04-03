@@ -28,7 +28,9 @@ document.getElementById("login").addEventListener("submit", async (e) => {
 
     window.location.href = "/Vibechat/chat.html"; // ✅ correct path
   } catch (err) {
-    alert(err.message);
+  console.log("ERROR CODE:", err.code);
+  console.log("FULL ERROR:", err);
+  alert(err.message);
   }
 });
 
