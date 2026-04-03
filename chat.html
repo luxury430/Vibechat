@@ -844,17 +844,25 @@ function logout() {
     .then(() => console.log("Logged out ✅"))
     .catch(err => console.error("Logout error:", err));
 }
+let currentUser = null;
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "index.html";
+    window.location.href = "/Vibechat/index.html";
     return;
   }
 
   currentUser = user;
 
-  await loadMyProfile();
-  await setOnlineStatus(true);
-  listenToChats();
+  try {
+    await loadMyProfile();
+    await setOnlineStatus(true);
+    listenToChats();
+  } catch (e) {
+    console.error("Init error:", e);
+  }
+
+  console.log("User ready:", user.uid);
 });
 /* ─────────────────────────────────────────────────────────────
    STATE & VARIABLES
