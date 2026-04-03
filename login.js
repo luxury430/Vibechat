@@ -3,7 +3,7 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-const firebaseConfig = {
+
   apiKey: "AIzaSyC4VFRg8moM-39BO0CPZgOg94gD3T1ED5k",
   authDomain: "neuros-52cda.firebaseapp.com",
   projectId: "neuros-52cda",
