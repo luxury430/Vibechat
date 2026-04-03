@@ -846,7 +846,7 @@ function logout() {
 }
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "login.html"; // 🔥 correct this
+    window.location.href = "index.html";
     return;
   }
 
@@ -855,8 +855,6 @@ onAuthStateChanged(auth, async (user) => {
   await loadMyProfile();
   await setOnlineStatus(true);
   listenToChats();
-
-  console.log("User ready:", user.uid);
 });
 /* ─────────────────────────────────────────────────────────────
    STATE & VARIABLES
