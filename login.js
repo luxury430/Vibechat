@@ -1,5 +1,4 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -7,87 +6,69 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import {
-  getFirestore,
-  doc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// 🔥 YOUR FIREBASE CONFIG
+// 🔥 Firebase Config (your working one)
 const firebaseConfig = {
   apiKey: "AIzaSyBm_cuY0tQI6ObAzwWZyvuUSaEX6sTgTs4",
   authDomain: "neuroforge-815e5.firebaseapp.com",
   projectId: "neuroforge-815e5",
-  storageBucket: "neuroforge-815e5.firebasestorage.app",
+  storageBucket: "neuroforge-815e5.appspot.com",
   messagingSenderId: "101095135000",
   appId: "1:101095135000:web:b5068cfb8262dd9f8c306d"
 };
 
+// 🔥 Init
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-// 🔥 AUTO REDIRECT IF ALREADY LOGGED IN
+// 🚫 Prevent redirect loop
+let authChecked = false;
+
+/* ================= AUTO LOGIN CHECK ================= */
 onAuthStateChanged(auth, (user) => {
   if (user) {
+    console.log("Already logged in → redirecting");
     window.location.href = "chat.html";
+  } else {
+    authChecked = true; // allow login page to stay
   }
 });
 
-// WAIT FOR PAGE LOAD
-document.addEventListener("DOMContentLoaded", () => {
+/* ================= LOGIN ================= */
+document.getElementById("login")?.addEventListener("submit", (e) => {
+  e.preventDefault();
 
-  // ================= LOGIN =================
-  const loginForm = document.getElementById("login");
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      alert("Login success 🔥");
 
-    const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("loginPassword").value;
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-
-      // 🔥 GO TO CHAT
+      // ✅ redirect after login
       window.location.href = "chat.html";
+    })
+    .catch((error) => {
+      alert(error.code);
+      console.log(error);
+    });
+});
 
-    } catch (error) {
-      alert(error.message);
-    }
-  });
+/* ================= SIGNUP ================= */
+document.getElementById("signup")?.addEventListener("submit", (e) => {
+  e.preventDefault();
 
-  // ================= SIGNUP =================
-  const signupForm = document.getElementById("signup");
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
 
-  signupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      alert("Signup success 🚀");
 
-    const name = document.getElementById("signupName").value;
-    const email = document.getElementById("signupEmail").value;
-    const password = document.getElementById("signupPassword").value;
-
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = cred.user;
-
-      // 🔥 SAVE USER DATA (VERY IMPORTANT)
-      await setDoc(doc(db, "users", user.uid), {
-        name: name,
-        email: email,
-        uid: "NF-" + user.uid.slice(0,8).toUpperCase(),
-        ini: name.slice(0,2).toUpperCase(),
-        g: 'linear-gradient(140deg,#7c3aed,#8b5cf6)',
-        online: true,
-        lastSeen: Date.now()
-      });
-
-      // 🔥 GO TO CHAT
+      // ✅ redirect after signup
       window.location.href = "chat.html";
-
-    } catch (error) {
-      alert(error.message);
-    }
-  });
-
+    })
+    .catch((error) => {
+      alert(error.code);
+      console.log(error);
+    });
 });
