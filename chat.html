@@ -1103,11 +1103,11 @@ async function openChat(otherUser) {
   curOtherUser = otherUser;
   
   // Create consistent Chat ID by sorting UIDs
-  curChatId = [currentUser.uid, otherUser.uid].sort().join("_");
+  curChatId = [currentUser.uid, otherUser.id].sort().join("_");
 
   // Ensure chat document exists
   await setDoc(doc(db, "chats", curChatId), {
-    users: [currentUser.uid, otherUser.uid],
+    users: [currentUser.uid, otherUser.id],
     updatedAt: Date.now()
   }, { merge: true });
 
