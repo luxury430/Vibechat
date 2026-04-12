@@ -2141,10 +2141,21 @@ textarea{font-family:var(--font-b);}
   background: var(--bg-sidebar); flex-shrink: 0; display: flex; gap: 10px; align-items: flex-end;
 }
 .chan-inp-area {
-  flex: 1; background: var(--bg-input); border: 1px solid var(--border2);
-  border-radius: var(--r-l); padding: 9px 14px; color: var(--tp); font-size: .855rem;
-  outline: none; resize: none; max-height: 100px; line-height: 1.5;
-  font-family: var(--font-b); transition: all .2s;
+
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-l);
+  padding: 9px 14px;
+  color: var(--tp);
+  font-size: .855rem;
+  font-family: var(--font-b);
+  outline: none;
+  resize: none;
+  max-height: 80px;
+  line-height: 1.5;
+  transition: border-color .2s;
+   
 }
 .chan-inp-area::placeholder { color: var(--tm); }
 .chan-inp-area:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow2); }
