@@ -19316,6 +19316,8 @@ async function initFCM() {
 // Boot after a tick to ensure window.app is ready
 setTimeout(initFCM, 0);
 </script>
-
+<button onclick="alert(localStorage.getItem('nf_fcm_token_cached'))">
+  Show FCM Token
+</button>
 </body>
 </html>
