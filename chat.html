@@ -19318,12 +19318,6 @@ async function initFCM() {
 // Boot after a tick to ensure window.app is ready
 setTimeout(initFCM, 0);
 </script>
-<button onclick="
-  const t = localStorage.getItem('nf_fcm_token_cached');
-  if(t){ navigator.clipboard.writeText(t); alert('Token copied!\n\n' + t); }
-  else { alert('No token found. Allow notifications first!'); }
-" style="position:fixed;bottom:80px;right:16px;z-index:99999;padding:12px 18px;background:#7c3aed;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
-  📋 Copy FCM Token
-</button>
+
 </body>
 </html>
