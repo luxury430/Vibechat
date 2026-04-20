@@ -1,0 +1,498 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     NEUROFORGE FCM — Frontend Patch
+     ═══════════════════════════════════════════════════════════════════
+     Paste this entire block just before </body> in chat.html.
+
+     ALSO do these two small edits in chat.html FIRST:
+
+     ① In the "EXPOSE MODULE GLOBALS TO window" block (~line 17109), add:
+         window.openChat         = openChat;
+         window._addNotification = _addNotification;
+         window.contactsMap      = contactsMap;
+
+     ② Find the existing blob-SW registration block (~line 17206):
+           const blob  = new Blob([SW_SRC], ...);
+           const swUrl = URL.createObjectURL(blob);
+           navigator.serviceWorker.register(swUrl, { scope: '/' })
+             .then(reg => { ... })
+        Replace ONLY the .register() line with:
+           navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+             .then(reg => { ... })
+        Keep everything inside the .then() callback exactly as-is
+        (it generates the PWA manifest — you still want that).
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<!-- ── Permission prompt UI ── -->
+<style>
+/* ── FCM permission card ───────────────────────────────────────── */
+#nfFcmPrompt {
+  position: fixed;
+  bottom: -240px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 420px;
+  background: var(--bg-card, #0e0e20);
+  border: 1px solid rgba(139,92,246,.22);
+  border-radius: 22px;
+  box-shadow: 0 -2px 0 0 rgba(139,92,246,.18) inset,
+              0 18px 60px rgba(0,0,0,.7),
+              0 0 0 1px rgba(139,92,246,.08);
+  padding: 22px 20px 20px;
+  z-index: 3100;
+  transition: bottom .42s cubic-bezier(.22,.1,.36,1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+#nfFcmPrompt.show { bottom: 24px; }
+
+.nfp-header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 12px;
+}
+.nfp-icon {
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #3a1070, #7c3aed, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(139,92,246,.4);
+}
+.nfp-titles { flex: 1; min-width: 0; }
+.nfp-title {
+  font-family: var(--font-d, 'Outfit', sans-serif);
+  font-size: .97rem;
+  font-weight: 700;
+  color: var(--tp, #eaeaf8);
+  letter-spacing: .3px;
+  margin-bottom: 2px;
+}
+.nfp-sub {
+  font-size: .77rem;
+  color: var(--ts, #6464a4);
+  line-height: 1.45;
+}
+.nfp-features {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.nfp-feat {
+  background: rgba(139,92,246,.1);
+  border: 1px solid rgba(139,92,246,.18);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: .72rem;
+  color: var(--accent2, #b49ef5);
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+.nfp-btns {
+  display: flex;
+  gap: 9px;
+}
+.nfp-btn-allow {
+  flex: 1;
+  padding: 11px 0;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #5c16c4, #7c3aed, #8b5cf6);
+  color: #fff;
+  font-family: var(--font-d, 'Outfit', sans-serif);
+  font-size: .88rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(139,92,246,.35);
+  transition: opacity .18s;
+}
+.nfp-btn-allow:active { opacity: .82; }
+.nfp-btn-later {
+  padding: 11px 18px;
+  border: 1px solid var(--border2, rgba(255,255,255,.08));
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ts, #6464a4);
+  font-family: var(--font-d, 'Outfit', sans-serif);
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .18s, border-color .18s;
+}
+.nfp-btn-later:hover { color: var(--tp); border-color: var(--border2); }
+
+/* ── FCM status badge in settings (optional) ──────────────────── */
+#nfFcmStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .74rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-left: 8px;
+}
+#nfFcmStatusBadge.active   { background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+#nfFcmStatusBadge.inactive { background: rgba(239,68,68,.1);  color: #f87171; border: 1px solid rgba(239,68,68,.18); }
+</style>
+
+<div id="nfFcmPrompt">
+  <div class="nfp-header">
+    <div class="nfp-icon">🔔</div>
+    <div class="nfp-titles">
+      <div class="nfp-title">Stay in the loop</div>
+      <div class="nfp-sub">Get notified instantly — even when NeuroForge is closed.</div>
+    </div>
+  </div>
+  <div class="nfp-features">
+    <span class="nfp-feat">💬 New messages</span>
+    <span class="nfp-feat">👍 Likes &amp; comments</span>
+    <span class="nfp-feat">📣 Broadcasts</span>
+  </div>
+  <div class="nfp-btns">
+    <button class="nfp-btn-allow" id="nfpAllowBtn">Enable Notifications</button>
+    <button class="nfp-btn-later" id="nfpLaterBtn">Not now</button>
+  </div>
+</div>
+
+<!-- ── FCM core logic ── -->
+<script type="module">
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+  deleteToken
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+// ── Helpers — re-use the app's Firestore and auth ───────────────
+// window.app, window.db, window.currentUser, window._firebaseModExports
+// are all set by the main module before onAuthStateChanged fires.
+
+const VAPID_KEY = 'BKQa79JcHt3Q3Dy0tw8NQ_Sr-Q5QImpkDTwGN92_I4nattG8CaRsXCh9ilmbL2yjabEapg192Hme6sEIF4bos40';
+// ↑ Replace with your key from:
+//   Firebase Console → Project Settings → Cloud Messaging
+//   → Web Push certificates → Generate key pair
+
+const FCM_PREF_KEY      = 'nf_fcm_permission';   // localStorage key
+const FCM_DEVICE_KEY    = 'nf_fcm_device_id';    // localStorage key
+const PROMPT_DELAY_MS   = 4000;                  // show prompt 4s after login
+const TOKEN_REFRESH_KEY = 'nf_fcm_token_cached'; // localStorage key
+
+// ── Unique device identifier (stable per browser) ───────────────
+function _getDeviceId() {
+  let id = localStorage.getItem(FCM_DEVICE_KEY);
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem(FCM_DEVICE_KEY, id);
+  }
+  return id;
+}
+
+// ── Wait for currentUser to be ready ────────────────────────────
+function _waitForUser(timeout = 12000) {
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    const check = () => {
+      if (window.currentUser) return resolve(window.currentUser);
+      if (Date.now() - t0 > timeout) return reject(new Error('Timed out waiting for currentUser'));
+      setTimeout(check, 200);
+    };
+    check();
+  });
+}
+
+// ── Save token to Firestore under users/{uid} ────────────────────
+async function _saveTokenToFirestore(token) {
+  const { setDoc, doc } = window._firebaseModExports || {};
+  const db  = window.db;
+  const uid = window.currentUser?.uid;
+  if (!setDoc || !doc || !db || !uid) return;
+
+  const deviceId = _getDeviceId();
+
+  // Primary flat field (easy to query in Cloud Functions)
+  // Also store in a map keyed by deviceId for multi-device support
+  await setDoc(doc(db, 'users', uid), {
+    fcmToken:  token,                             // latest token (single-device shortcut)
+    fcmTokens: { [deviceId]: token },             // multi-device map
+    fcmUpdatedAt: Date.now()
+  }, { merge: true });
+
+  localStorage.setItem(TOKEN_REFRESH_KEY, token);
+  console.log('[FCM] Token saved to Firestore for uid:', uid);
+}
+
+// ── Delete token from Firestore (logout / revoke) ────────────────
+async function _removeTokenFromFirestore() {
+  const { setDoc, doc } = window._firebaseModExports || {};
+  const db  = window.db;
+  const uid = window.currentUser?.uid;
+  if (!setDoc || !doc || !db || !uid) return;
+
+  const deviceId = _getDeviceId();
+
+  // Use FieldValue.deleteField equivalent — set to null and merge
+  await setDoc(doc(db, 'users', uid), {
+    fcmToken:  null,
+    fcmTokens: { [deviceId]: null }
+  }, { merge: true });
+
+  localStorage.removeItem(TOKEN_REFRESH_KEY);
+}
+
+// ── Core: register SW + get FCM token ───────────────────────────
+async function _registerAndGetToken(messaging) {
+  // Register firebase-messaging-sw.js (this also replaces the old blob SW)
+  let swReg;
+  try {
+    swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+    console.log('[FCM] Service worker registered:', swReg.scope);
+  } catch (err) {
+    console.error('[FCM] SW registration failed:', err);
+    return null;
+  }
+
+  // Get (or refresh) the FCM token
+  try {
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
+
+    if (token) {
+      console.log('[FCM] Token obtained:', token.slice(0, 20) + '…');
+      await _saveTokenToFirestore(token);
+      return token;
+    } else {
+      console.warn('[FCM] No token returned — permission may have been blocked.');
+      return null;
+    }
+  } catch (err) {
+    console.error('[FCM] getToken error:', err);
+    return null;
+  }
+}
+
+// ── Permission prompt UI ─────────────────────────────────────────
+function _showPermissionPrompt(messaging) {
+  const prompt   = document.getElementById('nfFcmPrompt');
+  const allowBtn = document.getElementById('nfpAllowBtn');
+  const laterBtn = document.getElementById('nfpLaterBtn');
+  if (!prompt) return;
+
+  // Slide up
+  requestAnimationFrame(() => { prompt.classList.add('show'); });
+
+  allowBtn.addEventListener('click', async () => {
+    prompt.classList.remove('show');
+    localStorage.setItem(FCM_PREF_KEY, 'granted');
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      await _registerAndGetToken(messaging);
+      window.toast?.('🔔 Notifications enabled!');
+      _updateFcmStatusBadge(true);
+    } else {
+      localStorage.setItem(FCM_PREF_KEY, 'denied');
+      window.toast?.('Notifications blocked in browser settings.');
+      _updateFcmStatusBadge(false);
+    }
+  }, { once: true });
+
+  laterBtn.addEventListener('click', () => {
+    prompt.classList.remove('show');
+    // Don't permanently block — just snooze until next session
+    sessionStorage.setItem('nf_fcm_snoozed', '1');
+    console.log('[FCM] User snoozed the permission prompt.');
+  }, { once: true });
+}
+
+// ── Update settings badge (optional visual indicator) ────────────
+function _updateFcmStatusBadge(active) {
+  const badge = document.getElementById('nfFcmStatusBadge');
+  if (!badge) return;
+  badge.className = 'nfFcmStatusBadge ' + (active ? 'active' : 'inactive');
+  badge.innerHTML = active ? '● Live' : '● Off';
+}
+
+// ── Foreground message handler ───────────────────────────────────
+// Called when a push arrives while the app tab is OPEN and in focus.
+// We show the in-app notification bar instead of a system notification.
+function _bindForegroundHandler(messaging) {
+  onMessage(messaging, (payload) => {
+    console.log('[FCM] Foreground message:', payload);
+
+    const n    = payload.notification || {};
+    const d    = payload.data         || {};
+
+    const senderName = n.title      || d.senderName || d.title || 'Someone';
+    const body       = n.body       || d.body       || 'Sent you a message';
+    const senderId   = d.senderId   || '';
+    const chatId     = d.chatId     || '';
+
+    // Pipe into the existing NeuroForge notification system
+    if (typeof window._addNotification === 'function') {
+      window._addNotification('message', {
+        senderName,
+        senderId,
+        chatId,
+        message: body,
+        avatar:  d.avatar || null
+      });
+    } else {
+      // Fallback: plain toast if _addNotification isn't exposed yet
+      window.toast?.(`💬 ${senderName}: ${body.slice(0, 60)}`);
+    }
+  });
+}
+
+// ── SW → App bridge: handle notification click navigation ────────
+// When user taps a system notification (app open or cold-launch),
+// the SW sends NF_NOTIFICATION_CLICK. We open the right chat here.
+function _bindSwMessageHandler() {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const msg = event.data;
+    if (!msg || msg.type !== 'NF_NOTIFICATION_CLICK') return;
+
+    console.log('[FCM] SW notification click bridged:', msg);
+
+    const { action, senderId, chatId, senderName } = msg;
+
+    // Try contactsMap first (fast, no Firestore call)
+    const contactsMap = window.contactsMap;
+    if (contactsMap && senderId) {
+      const contact = contactsMap.get(senderId);
+      if (contact && typeof window.openChat === 'function') {
+        window.openChat(contact);
+        // If user tapped "Reply", focus the message input
+        if (action === 'reply') {
+          setTimeout(() => {
+            const inp = document.getElementById('msgInp');
+            inp?.focus();
+          }, 380); // wait for chat open animation
+        }
+        return;
+      }
+    }
+
+    // Fallback: fetch user from Firestore if not in contactsMap yet
+    // (cold-launch scenario where the app just booted)
+    if (senderId && window.db && window._firebaseModExports) {
+      const { getDoc, doc } = window._firebaseModExports;
+      if (getDoc && doc) {
+        getDoc(doc(window.db, 'users', senderId)).then(snap => {
+          if (!snap.exists()) return;
+          const userData = { id: snap.id, ...snap.data() };
+          if (typeof window.openChat === 'function') {
+            window.openChat(userData);
+            if (action === 'reply') {
+              setTimeout(() => document.getElementById('msgInp')?.focus(), 380);
+            }
+          }
+        }).catch(e => console.warn('[FCM] Could not load sender profile:', e));
+      }
+    }
+  });
+}
+
+// ── Token refresh detection ──────────────────────────────────────
+// FCM tokens can rotate. We detect staleness and refresh automatically.
+async function _checkTokenFreshness(messaging) {
+  const currentToken = localStorage.getItem(TOKEN_REFRESH_KEY);
+  if (!currentToken) return; // no token yet, initFCM() will get one
+
+  // Re-request the token — if it's changed, FCM returns a new one
+  try {
+    const swReg = await navigator.serviceWorker.ready;
+    const freshToken = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
+
+    if (freshToken && freshToken !== currentToken) {
+      console.log('[FCM] Token rotated — updating Firestore.');
+      await _saveTokenToFirestore(freshToken);
+    }
+  } catch (e) {
+    // Silent — non-critical on startup
+    console.warn('[FCM] Token freshness check skipped:', e.message);
+  }
+}
+
+// ── Expose delete-token for logout ───────────────────────────────
+// Call window.nfFcmRevokeToken() before signing out to
+// stop notifications to this device.
+window.nfFcmRevokeToken = async function() {
+  try {
+    const swReg = await navigator.serviceWorker.ready;
+    const msg   = getMessaging(window.app);
+    await deleteToken(msg);
+    await _removeTokenFromFirestore();
+    console.log('[FCM] Token revoked.');
+  } catch(e) {
+    console.warn('[FCM] Token revoke failed:', e);
+  }
+};
+
+// ── MAIN INIT ────────────────────────────────────────────────────
+async function initFCM() {
+  // Guard: browser must support SW + notifications
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+    console.warn('[FCM] Push not supported in this browser.');
+    return;
+  }
+
+  // Guard: VAPID key must be set
+  if (VAPID_KEY === 'YOUR_VAPID_PUBLIC_KEY_HERE') {
+    console.warn('[FCM] Set your VAPID key in fcm-patch.html before enabling push.');
+    return;
+  }
+
+  // Wait for the user to be authenticated
+  let user;
+  try {
+    user = await _waitForUser();
+  } catch(e) {
+    console.warn('[FCM] Skipping — user not ready:', e.message);
+    return;
+  }
+
+  // Init Firebase Messaging (re-uses the already-initialized window.app)
+  const msg = getMessaging(window.app);
+
+  // ── Bind handlers (these are always needed, regardless of permission) ──
+  _bindForegroundHandler(msg);
+  _bindSwMessageHandler();
+
+  const existingPermission = Notification.permission;
+  const savedPref          = localStorage.getItem(FCM_PREF_KEY);
+  const snoozed            = sessionStorage.getItem('nf_fcm_snoozed');
+
+  if (existingPermission === 'granted') {
+    // ── Already allowed: just ensure token is fresh ──────────────
+    _updateFcmStatusBadge(true);
+    await _checkTokenFreshness(msg);
+
+    // If we don't have a saved token at all, get one now
+    if (!localStorage.getItem(TOKEN_REFRESH_KEY)) {
+      await _registerAndGetToken(msg);
+    }
+
+  } else if (existingPermission === 'denied' || savedPref === 'denied') {
+    // ── Blocked: don't ask again ─────────────────────────────────
+    _updateFcmStatusBadge(false);
+    console.log('[FCM] Notifications blocked by user.');
+
+  } else if (!snoozed && savedPref !== 'denied') {
+    // ── Not decided yet: show the in-app prompt after a short delay ──
+    setTimeout(() => _showPermissionPrompt(msg), PROMPT_DELAY_MS);
+  }
+}
+
+// Boot after a tick to ensure window.app is ready
+setTimeout(initFCM, 0);
+</script>
