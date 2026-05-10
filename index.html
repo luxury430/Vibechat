@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroForge · Premium Access</title>
+    <style>
+        :root {
+            --mystery-black: #0a0a0f;
+            --gold: #D4AF37;
+            --gold-hover: #E5C158;
+            --text-light: #F8F9FA;
+            --glass-bg: rgba(16, 22, 35, 0.8);
+            --glass-border: rgba(212, 175, 55, 0.4);
+            --accent-blue: #1a2a4a;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--mystery-black);
+            color: var(--text-light);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(ellipse at 30% 40%, #14213d 0%, #0a0a0f 70%);
+        }
+
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(212, 175, 55, 0.05) 0px, transparent 2px, transparent 45px),
+                repeating-linear-gradient(90deg, rgba(212, 175, 55, 0.05) 0px, transparent 2px, transparent 45px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .floating-icons {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .floating-icon {
+            position: absolute;
+            opacity: 0.06;
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 1.2;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+
+        .floating-icon.book {
+            top: 12%;
+            left: 7%;
+            width: 100px;
+            height: 100px;
+            animation-delay: 0s;
+        }
+        .floating-icon.cap {
+            top: 70%;
+            right: 7%;
+            width: 110px;
+            height: 110px;
+            animation-delay: -4s;
+        }
+        .floating-icon.atom {
+            bottom: 10%;
+            left: 12%;
+            width: 120px;
+            height: 120px;
+            animation-delay: -7s;
+            opacity: 0.04;
+        }
+        .floating-icon.lamp {
+            top: 18%;
+            right: 14%;
+            width: 85px;
+            height: 85px;
+            animation-delay: -2s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-35px) rotate(4deg); }
+        }
+
+        /* SELECTION SCREEN */
+        .selection-screen {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2.5rem;
+            text-align: center;
+        }
+
+        .selection-screen h2 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .selection-buttons {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-select {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem 3rem;
+            color: var(--gold);
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(20, 25, 40, 0.7);
+            min-width: 160px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-select:hover {
+            background: rgba(212, 175, 55, 0.12);
+            border-color: var(--gold);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 45px rgba(212, 175, 55, 0.25);
+            color: #fff;
+        }
+
+        /* AUTH CONTAINER (hidden initially) */
+        .auth-wrapper {
+            position: relative;
+            z-index: 9999;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+            display: none;
+            animation: fadeSlideIn 0.5s ease-out forwards;
+        }
+
+        .auth-wrapper.visible {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: clamp(25px, 5vw, 45px);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(212, 175, 55, 0.3);
+            width: 100%;
+        }
+
+        /* Tabs hidden - using forms directly */
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .form-heading {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+        }
+        .form-subheading {
+            font-size: 1rem;
+            font-weight: 300;
+            opacity: 0.7;
+            margin-bottom: 2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            z-index: 2;
+            pointer-events: none;
+            color: rgba(212, 175, 55, 0.6);
+            transition: var(--transition);
+        }
+
+        .input-group:focus-within .input-icon {
+            color: var(--gold);
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 18px rgba(212, 175, 55, 0.2);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.45);
+            pointer-events: none;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            background: transparent;
+            padding: 0 5px;
+        }
+
+        .input-group input:focus~label,
+        .input-group input:valid~label {
+            top: -10px;
+            left: 16px;
+            font-size: 0.7rem;
+            color: var(--gold);
+            background: var(--mystery-black);
+            padding: 0 8px;
+            border-radius: 6px;
+            letter-spacing: 0.4px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(145deg, #c59b2a, var(--gold));
+            color: #0a0a0f;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-top: 5px;
+            outline: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(145deg, #e0b33f, var(--gold-hover));
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: right;
+            margin: -10px 0 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .forgot-link:hover { color: var(--gold); }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 30px 0 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        .social-logins {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .btn-social {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-social:hover {
+            background: rgba(212,175,55,0.12);
+            border-color: var(--gold);
+        }
+
+        .switch-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+        }
+        .switch-link {
+            color: var(--gold);
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 5px;
+            text-decoration: none;
+        }
+        .switch-link:hover { text-decoration: underline; }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+            transition: opacity 0.3s;
+        }
+        .back-btn:hover { opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .btn-select {
+                padding: 1.2rem 2rem;
+                font-size: 1.1rem;
+            }
+            .social-logins {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    <div class="floating-icons">
+        <svg class="floating-icon cap" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <svg class="floating-icon book" viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 6a2 2 0 012-2h12a2 2 0 012 2M4 18a2 2 0 002 2h12a2 2 0 002-2M12 6v12"/></svg>
+        <svg class="floating-icon atom" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2a10 10 0 010 20"/><path d="M12 2a10 10 0 000 20" transform="rotate(60 12 12)"/><path d="M12 2a10 10 0 000 20" transform="rotate(120 12 12)"/></svg>
+        <svg class="floating-icon lamp" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 2.4 1.2 4.5 3 5.7V17h8v-2.3c1.8-1.3 3-3.4 3-5.7a7 7 0 00-7-7z"/><line x1="9" y1="19" x2="15" y2="19"/><line x1="10" y1="22" x2="14" y2="22"/></svg>
+    </div>
+
+    <!-- SELECTION SCREEN -->
+    <div id="selectionScreen" class="selection-screen fade-up delay-1">
+        <h2>Welcome</h2>
+        <div class="selection-buttons">
+            <button class="btn-select" id="goToLogin">Login</button>
+            <button class="btn-select" id="goToSignup">Sign up</button>
+        </div>
+    </div>
+
+    <!-- AUTH FORMS WRAPPER (initially hidden) -->
+    <div id="authWrapper" class="auth-wrapper">
+        <button class="back-btn" id="backToSelection">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+        </button>
+        <div class="auth-container">
+            <!-- LOGIN FORM -->
+            <form id="login" class="form-section active">
+                <div class="form-heading">Welcome Back</div>
+                <div class="form-subheading">Hello, Sign in!</div>
+
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <input type="email" id="loginEmail" required>
+                    <label>Enter your Email</label>
+                </div>
+
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    <input type="password" id="loginPassword" required>
+                    <label>Password</label>
+                </div>
+
+                <a class="forgot-link" href="#">Forgot Password?</a>
+                <button type="submit" class="btn-submit">Sign in</button>
+
+                <div class="divider">Sign in with Social Media</div>
+                <div class="social-logins">
+                    <button type="button" class="btn-social">
+                        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                        Google
+                    </button>
+                    <button type="button" class="btn-social">
+                        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Facebook
+                    </button>
+                </div>
+
+                <div class="switch-text">
+                    Don't have account? <span class="switch-link" id="switchToSignup">Sign up</span>
+                </div>
+            </form>
+
+            <!-- SIGNUP FORM -->
+            <form id="signup" class="form-section">
+                <div class="form-heading">Create Your Account</div>
+                <div class="form-subheading">Join the elite learning community</div>
+
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <input type="text" id="signupName" required>
+                    <label>Full Name</label>
+                </div>
+
+                
+                
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <input type="email" id="signupEmail" required>
+                    <label>Enter your Email</label>
+                </div>
+
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    <input type="text" id="signupTagline">
+                    <label>Your tag line here</label>
+                </div>
+
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    <input type="password" id="signupPassword" required>
+                    <label>Password</label>
+                </div>
+
+                <div class="input-group">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    <input type="password" id="signupConfirmPassword" required>
+                    <label>Confirm Password</label>
+                </div>
+
+                <button type="submit" class="btn-submit">Sign up</button>
+
+                <div class="divider">Sign in with Social Media</div>
+                <div class="social-logins">
+                    <button type="button" class="btn-social">
+                        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                        Google
+                    </button>
+                    <button type="button" class="btn-social">
+                        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Facebook
+                    </button>
+                </div>
+
+                <div class="switch-text">
+                    Already have an account? <span class="switch-link" id="switchToLogin">Sign in</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRESERVED ORIGINAL SCRIPTS (backend logic intact) -->
+    <script>
+        function switchTab(tabId, el) {
+            document.querySelectorAll(".form-section").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+            document.getElementById(tabId).classList.add("active");
+            if (el) el.classList.add("active");
+        }
+    </script>
+    <script type="module" src="login.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const fadeElements = document.querySelectorAll('.fade-up');
+            fadeElements.forEach(el => {
+                setTimeout(() => { el.classList.add('visible'); }, 100);
+            });
+
+            const selectionScreen = document.getElementById('selectionScreen');
+            const authWrapper = document.getElementById('authWrapper');
+            const backBtn = document.getElementById('backToSelection');
+
+            function showAuthForm(formId) {
+                selectionScreen.style.display = 'none';
+                authWrapper.classList.add('visible');
+                // Activate the correct form
+                document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+                document.getElementById(formId).classList.add('active');
+            }
+
+            document.getElementById('goToLogin').addEventListener('click', () => showAuthForm('login'));
+            document.getElementById('goToSignup').addEventListener('click', () => showAuthForm('signup'));
+
+            document.getElementById('switchToSignup').addEventListener('click', () => {
+                document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+                document.getElementById('signup').classList.add('active');
+            });
+            document.getElementById('switchToLogin').addEventListener('click', () => {
+                document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+                document.getElementById('login').classList.add('active');
+            });
+
+            backBtn.addEventListener('click', () => {
+                authWrapper.classList.remove('visible');
+                selectionScreen.style.display = 'flex';
+            });
+
+            // Preserve original switchTab if needed by other logic
+            window.switchTab = function(tabId, el) {
+                document.querySelectorAll(".form-section").forEach(el => el.classList.remove("active"));
+                document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+                document.getElementById(tabId).classList.add("active");
+                if (el) el.classList.add("active");
+            };
+        });
+    </script>
+</body>
+</html>
