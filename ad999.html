@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Lab Ultimate — Real Newtonian Physics Engine</title>
+    <style>
+        :root {
+            --bg: #020308;
+            --panel-bg: rgba(8, 12, 28, 0.94);
+            --text: #d0dce8;
+            --accent: #ffb347;
+            --border: rgba(255,255,255,0.12);
+            --radius: 10px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            cursor: crosshair;
+        }
+        canvas {
+            display: block;
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+        #ui-panel {
+            position: fixed;
+            z-index: 10;
+            top: 20px;
+            left: 20px;
+            width: 370px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        #ui-panel.collapsed {
+            transform: translateX(-390px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #panel-toggle {
+            position: fixed;
+            z-index: 11;
+            top: 24px;
+            left: 396px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+        }
+        #panel-toggle.shifted {
+            left: 24px;
+        }
+        #panel-toggle:hover {
+            border-color: var(--accent);
+        }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .tab-btn {
+            flex: 1;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px 6px 0 0;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #ccc;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: rgba(255, 180, 40, 0.15);
+            border-bottom-color: transparent;
+            color: #fff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .field label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #8899bb;
+            font-weight: 600;
+        }
+        input[type=range] {
+            accent-color: var(--accent);
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slider-row input[type=range] {
+            flex: 1;
+        }
+        .slider-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #aac;
+            min-width: 32px;
+            text-align: right;
+        }
+        button,
+        select {
+            background: rgba(25, 35, 60, 0.9);
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        button:hover,
+        select:hover {
+            background: rgba(45, 65, 110, 0.95);
+            border-color: var(--accent);
+        }
+        button.active-mode {
+            background: rgba(255, 180, 40, 0.2);
+            border-color: var(--accent);
+            color: #ffe0a0;
+            animation: glow 1.2s infinite;
+        }
+        @keyframes glow {
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(255, 160, 30, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(255, 160, 30, 0.5);
+            }
+        }
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+        }
+        .toast {
+            background: rgba(20, 25, 45, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 0.75rem;
+            animation: toastIn 0.4s ease, toastOut 0.4s 3.5s forwards;
+            box-shadow: 0 6px 20px rgba(255, 200, 80, 0.25);
+            pointer-events: auto;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+        }
+        #custom-eq {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: rgba(0, 0, 0, 0.5);
+            color: #7ee7ff;
+            width: 100%;
+            outline: none;
+        }
+        #custom-eq:focus {
+            border-color: #7ee7ff;
+        }
+        .info-text {
+            font-size: 0.6rem;
+            color: #667;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui-panel">
+        <div class="tabs">
+            <div class="tab-btn active" data-tab="controls">🎛️ Controls</div>
+            <div class="tab-btn" data-tab="presets">🌟 Presets</div>
+            <div class="tab-btn" data-tab="measure">📏 Measure</div>
+            <div class="tab-btn" data-tab="emitters">⚡ Fields</div>
+            <div class="tab-btn" data-tab="camera">🎥 Camera</div>
+        </div>
+        <div id="tab-controls" class="tab-content active">
+            <div class="field"><label>Time Scale</label><div class="slider-row"><input type="range" id="time-scale" min="-2" max="4" step="0.1" value="1"><span class="slider-val" id="time-val">1.0x</span></div></div>
+            <div class="field"><label>Gravity (G)</label><div class="slider-row"><input type="range" id="g-const" min="0.1" max="8" step="0.1" value="1.5"><span class="slider-val" id="g-val">1.5</span></div></div>
+            <div class="field"><label>Particles</label><div class="slider-row"><input type="range" id="particle-count" min="200" max="5000" step="100" value="1500"><span class="slider-val" id="pcount-val">1500</span></div></div>
+            <div class="field"><label>Drag</label><div class="slider-row"><input type="range" id="drag" min="0" max="0.3" step="0.005" value="0"><span class="slider-val" id="drag-val">0.000</span></div></div>
+            <div class="field"><label>Visualization</label><select id="vis-mode"><option value="curvature">Curvature</option><option value="topo">Topographic</option><option value="arrows">Force Arrows</option><option value="grid">Spacetime Grid</option></select></div>
+            <div class="btn-row">
+                <button id="pause-btn">⏸️ Pause</button>
+                <button id="rewind-btn">⏪ -5s</button>
+                <button id="ffwd-btn">⏩ x2</button>
+                <button id="grav-wave-btn">🌊 Ripple</button>
+            </div>
+            <div class="btn-row">
+                <button id="add-body-btn">➕ Star</button>
+                <button id="add-blackhole-btn">🕳️ BH</button>
+                <button id="clear-bodies-btn">🗑️ Clear</button>
+            </div>
+            <div class="info-text">Drag bodies · Right-click: spray particles · Scroll: zoom</div>
+        </div>
+        <div id="tab-presets" class="tab-content">
+            <div class="btn-row">
+                <button class="preset-btn" data-preset="binary">Binary BH</button>
+                <button class="preset-btn" data-preset="solar">Solar System</button>
+                <button class="preset-btn" data-preset="galaxy">Galaxy Core</button>
+                <button class="preset-btn" data-preset="triple">Triple Star</button>
+                <button class="preset-btn" data-preset="merge">Merger</button>
+                <button class="preset-btn" data-preset="scatter">Scatter Field</button>
+            </div>
+        </div>
+        <div id="tab-measure" class="tab-content">
+            <div style="font-size:0.7rem;background:rgba(0,0,0,0.3);padding:8px;border-radius:6px;">
+                <div><strong id="measure-body">No body selected</strong></div>
+                <div>Mass: <span id="meas-mass">-</span></div>
+                <div>Escape velocity: <span id="meas-vesc">-</span></div>
+                <div>Orbital period (r=5): <span id="meas-period">-</span></div>
+                <div>Angular momentum: <span id="meas-angmom">-</span></div>
+            </div>
+            <div style="font-size:0.65rem;color:#889;background:rgba(0,0,0,0.2);padding:6px;border-radius:4px;">
+                System L: <span id="sys-angmom">0.00</span> | Bodies: <span id="sys-body-count">0</span>
+            </div>
+        </div>
+        <div id="tab-emitters" class="tab-content">
+            <div class="field"><label>Field Emitters</label>
+                <div class="btn-row">
+                    <select id="emitter-type">
+                        <option value="gravity">Gravity Well</option>
+                        <option value="repulsor">Repulsor</option>
+                        <option value="vortex">Vortex</option>
+                        <option value="oscillator">Oscillator</option>
+                        <option value="wave">Wave Emitter</option>
+                    </select>
+                    <button id="add-emitter">Place</button>
+                    <button id="clear-emitters">Clear All</button>
+                </div>
+                <span style="font-size:0.6rem;color:#aaa;" id="emitter-count">0 emitters</span>
+            </div>
+            <div class="field"><label>Custom Equation (overrides all fields)</label>
+                <input type="text" id="custom-eq" placeholder="e.g. sin(x*x+y*y+t)/(1+x*x+y*y)">
+                <button id="apply-eq">Apply Equation</button>
+                <button id="clear-eq" style="margin-top:4px;">Clear Equation</button>
+            </div>
+            <div class="info-text">Variables: x, y, t (time)</div>
+        </div>
+        <div id="tab-camera" class="tab-content">
+            <div class="btn-row">
+                <button id="cam-orbit">Orbit View</button>
+                <button id="cam-top">Top Down</button>
+                <button id="cam-body1">Zoom Body</button>
+                <button id="cam-record-path">Rec Path</button>
+                <button id="cam-play-path">Play Path</button>
+            </div>
+            <div class="btn-row">
+                <button id="record-btn">⏺️ Record</button>
+                <button id="stop-record-btn" disabled>⏹️ Stop</button>
+                <button id="screenshot-btn">📸 Screenshot</button>
+            </div>
+        </div>
+        <div class="toast-container" id="toast-container"></div>
+    </div>
+    <button id="panel-toggle">◀</button>
+
+    <script type="importmap">
+        {"imports":{"three":"https://unpkg.com/three@0.157.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.157.0/examples/jsm/","mathjs":"https://cdn.jsdelivr.net/npm/mathjs@11.8.0/+esm"}}
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import * as math from 'mathjs';
+
+        // ═══════════════════════════════════════
+        // DOM REFERENCES (unchanged UI)
+        // ═══════════════════════════════════════
+        const panel = document.getElementById('ui-panel');
+        const panelToggle = document.getElementById('panel-toggle');
+        const pauseBtn = document.getElementById('pause-btn');
+        const rewindBtn = document.getElementById('rewind-btn');
+        const ffwdBtn = document.getElementById('ffwd-btn');
+        const gravWaveBtn = document.getElementById('grav-wave-btn');
+        const addBodyBtn = document.getElementById('add-body-btn');
+        const addBHbtn = document.getElementById('add-blackhole-btn');
+        const clearBodiesBtn = document.getElementById('clear-bodies-btn');
+        const timeScaleSlider = document.getElementById('time-scale');
+        const timeVal = document.getElementById('time-val');
+        const gConstSlider = document.getElementById('g-const');
+        const gVal = document.getElementById('g-val');
+        const particleCountSlider = document.getElementById('particle-count');
+        const pcountVal = document.getElementById('pcount-val');
+        const dragSlider = document.getElementById('drag');
+        const dragVal = document.getElementById('drag-val');
+        const visModeSelect = document.getElementById('vis-mode');
+        const addEmitterBtn = document.getElementById('add-emitter');
+        const clearEmittersBtn = document.getElementById('clear-emitters');
+        const emitterTypeSel = document.getElementById('emitter-type');
+        const emitterCountSpan = document.getElementById('emitter-count');
+        const customEqInput = document.getElementById('custom-eq');
+        const applyEqBtn = document.getElementById('apply-eq');
+        const clearEqBtn = document.getElementById('clear-eq');
+        const camOrbitBtn = document.getElementById('cam-orbit');
+        const camTopBtn = document.getElementById('cam-top');
+        const camBody1Btn = document.getElementById('cam-body1');
+        const camRecPathBtn = document.getElementById('cam-record-path');
+        const camPlayPathBtn = document.getElementById('cam-play-path');
+        const recordBtn = document.getElementById('record-btn');
+        const stopRecordBtn = document.getElementById('stop-record-btn');
+        const screenshotBtn = document.getElementById('screenshot-btn');
+        const toastContainer = document.getElementById('toast-container');
+        const measureBody = document.getElementById('measure-body');
+        const measMass = document.getElementById('meas-mass');
+        const measVesc = document.getElementById('meas-vesc');
+        const measPeriod = document.getElementById('meas-period');
+        const measAngmom = document.getElementById('meas-angmom');
+        const sysAngmom = document.getElementById('sys-angmom');
+        const sysBodyCount = document.getElementById('sys-body-count');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // ═══════════════════════════════════════
+        // STATE VARIABLES
+        // ═══════════════════════════════════════
+        let isPaused = false,
+            fastForward = false;
+        let timeScale = 1.0,
+            G = 1.5,
+            particleTargetCount = 1500,
+            dragCoeff = 0;
+        let visualizationMode = 'curvature';
+        let useCustomEquation = false;
+        let customExpression = null;
+
+        // ═══════════════════════════════════════
+        // THREE.JS SETUP
+        // ═══════════════════════════════════════
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#05081a');
+        scene.fog = new THREE.Fog('#05081a', 8, 45);
+
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.4, 80);
+        camera.position.set(9, 8, 13);
+        camera.lookAt(0, 0, 0);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 0, 0);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.minDistance = 4;
+        controls.maxDistance = 35;
+        controls.update();
+
+        scene.add(new THREE.AmbientLight('#334466', 2.8));
+        const dirLight = new THREE.DirectionalLight('#ffffff', 5);
+        dirLight.position.set(10, 18, 8);
+        scene.add(dirLight);
+        scene.add(new THREE.PointLight('#88ccff', 2.5, 50));
+
+        // ═══════════════════════════════════════
+        // GPU TERRAIN (shader + DataTexture)
+        // ═══════════════════════════════════════
+        const SURFACE_SIZE = 24;
+        const SEGMENTS = 150;
+        const WIDTH = SEGMENTS + 1;
+        const potentialData = new Float32Array(WIDTH * WIDTH);
+        const potentialTexture = new THREE.DataTexture(potentialData, WIDTH, WIDTH, THREE.RedFormat, THREE.FloatType);
+        potentialTexture.needsUpdate = true;
+
+        const vertexShader = `
+            uniform sampler2D potentialTex;
+            uniform float surfaceSize;
+            varying float vHeight;
+            varying vec2 vUv;
+            void main() {
+                vec2 uv = position.xy / surfaceSize + 0.5;
+                float pot = texture2D(potentialTex, uv).r;
+                vec3 newPos = vec3(position.x, position.y, pot);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+                vHeight = pot;
+                vUv = uv;
+            }
+        `;
+        const fragmentShader = `
+            varying float vHeight;
+            varying vec2 vUv;
+            uniform float zMin;
+            uniform float zRange;
+            uniform bool useTopo;
+            void main() {
+                float norm = (vHeight - zMin) / zRange;
+                norm = clamp(norm, 0.0, 1.0);
+                vec3 col;
+                if(useTopo) {
+                    float band = floor(norm * 8.0) / 8.0;
+                    col = vec3(0.2 + band*0.15, 0.4 + band*0.2, 0.7 + band*0.1);
+                } else {
+                    if(norm < 0.3) {
+                        col = mix(vec3(0.02, 0.08, 0.35), vec3(0.0, 0.45, 0.75), norm/0.3);
+                    } else if(norm < 0.6) {
+                        col = mix(vec3(0.0, 0.45, 0.75), vec3(0.35, 0.2, 0.65), (norm-0.3)/0.3);
+                    } else {
+                        col = mix(vec3(0.35, 0.2, 0.65), vec3(0.95, 0.4, 0.65), (norm-0.6)/0.4);
+                    }
+                }
+                gl_FragColor = vec4(col, 1.0);
+            }
+        `;
+        const shaderMaterial = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                potentialTex: { value: potentialTexture },
+                surfaceSize: { value: SURFACE_SIZE },
+                zMin: { value: 0.0 },
+                zRange: { value: 1.0 },
+                useTopo: { value: false }
+            },
+            side: THREE.DoubleSide
+        });
+        const geometry = new THREE.PlaneGeometry(SURFACE_SIZE, SURFACE_SIZE, SEGMENTS, SEGMENTS);
+        const surfaceMesh = new THREE.Mesh(geometry, shaderMaterial);
+        surfaceMesh.castShadow = surfaceMesh.receiveShadow = true;
+        scene.add(surfaceMesh);
+
+        const wireframeMat = new THREE.MeshBasicMaterial({ color: '#1a1a3a', wireframe: true, transparent: true,
+            opacity: 0.06 });
+        const wireframeMesh = new THREE.Mesh(geometry, wireframeMat);
+        wireframeMesh.renderOrder = 1;
+        scene.add(wireframeMesh);
+
+        const arrowsGroup = new THREE.Group();
+        arrowsGroup.visible = false;
+        scene.add(arrowsGroup);
+
+        // ═══════════════════════════════════════
+        // PARTICLE SYSTEM
+        // ═══════════════════════════════════════
+        const particleGeo = new THREE.BufferGeometry();
+        const particleMat = new THREE.PointsMaterial({ color: 0x88ccff, size: 0.06, blending: THREE.AdditiveBlending,
+            depthWrite: false });
+        const particlePoints = new THREE.Points(particleGeo, particleMat);
+        scene.add(particlePoints);
+        let particles = [];
+
+        function initParticles(count) {
+            particles = [];
+            const posArr = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                const ang = Math.random() * 2 * Math.PI,
+                    r = 4 + Math.random() * 10;
+                const x = Math.cos(ang) * r,
+                    y = Math.sin(ang) * r;
+                particles.push({
+                    x,
+                    y,
+                    vx: (Math.random() - 0.5) * 0.6,
+                    vy: (Math.random() - 0.5) * 0.6,
+                    mass: 0.003 + Math.random() * 0.012
+                });
+                posArr[i * 3] = x;
+                posArr[i * 3 + 1] = y;
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+        }
+        initParticles(1500);
+
+        // ═══════════════════════════════════════
+        // GRAVITY BODIES (with leapfrog state)
+        // ═══════════════════════════════════════
+        const gravityBodies = [];
+        const bodyMeshes = new Map();
+        const bodyGroup = new THREE.Group();
+        scene.add(bodyGroup);
+
+        function createBodyMesh(body) {
+            const grp = new THREE.Group();
+            const isBH = body.isBlackHole;
+            const coreGeo = new THREE.SphereGeometry(isBH ? body.mass * 0.4 : body.mass * 0.25, 32, 16);
+            const coreMat = new THREE.MeshStandardMaterial({ color: isBH ? 0x000000 : 0xffcc88, roughness: 0.3,
+                metalness: 0.6, emissive: isBH ? 0x000000 : 0x331100 });
+            grp.add(new THREE.Mesh(coreGeo, coreMat));
+            if (isBH) {
+                const ringGeo = new THREE.TorusGeometry(body.mass * 0.55, 0.07, 16, 48);
+                const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true,
+                    opacity: 0.7 }));
+                ring.rotation.x = Math.PI / 2;
+                grp.add(ring);
+            }
+            grp.position.set(body.x, body.y, 0);
+            return grp;
+        }
+
+        function addGravityBody(x, y, mass, isBH = false, vx = 0, vy = 0) {
+            const body = {
+                x,
+                y,
+                mass,
+                isBlackHole: isBH,
+                vx,
+                vy,
+                ax_prev: 0,
+                ay_prev: 0,
+                merged: false
+            };
+            gravityBodies.push(body);
+            const grp = createBodyMesh(body);
+            bodyGroup.add(grp);
+            bodyMeshes.set(body, grp);
+            return body;
+        }
+
+        function clearAllBodies() {
+            for (const [b, grp] of bodyMeshes.entries()) {
+                bodyGroup.remove(grp);
+                grp.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); });
+            }
+            gravityBodies.length = 0;
+            bodyMeshes.clear();
+        }
+
+        // ═══════════════════════════════════════
+        // FIELD EMITTERS
+        // ═══════════════════════════════════════
+        const emitters = [];
+        const emitterMeshes = new Map();
+        const emitterGroup = new THREE.Group();
+        scene.add(emitterGroup);
+
+        function addEmitter(x, y, type = 'gravity', mass = 2, rot = 0.8, freq = 1.5) {
+            const emitter = { x, y, type, mass, rotationStrength: rot, frequency: freq, startTime: performance.now() /
+                    1000 };
+            emitters.push(emitter);
+            const grp = new THREE.Group();
+            let geo, mat;
+            switch (type) {
+                case 'gravity':
+                    geo = new THREE.SphereGeometry(0.3);
+                    mat = new THREE.MeshStandardMaterial({ color: 0xff8800 });
+                    break;
+                case 'repulsor':
+                    geo = new THREE.SphereGeometry(0.3);
+                    mat = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+                    break;
+                case 'vortex':
+                    geo = new THREE.TorusGeometry(0.4, 0.05, 8, 16);
+                    mat = new THREE.MeshStandardMaterial({ color: 0x00ffff });
+                    break;
+                case 'oscillator':
+                    geo = new THREE.IcosahedronGeometry(0.3);
+                    mat = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+                    break;
+                case 'wave':
+                    geo = new THREE.RingGeometry(0.2, 0.4, 32);
+                    mat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                    break;
+            }
+            const mesh = new THREE.Mesh(geo, mat);
+            grp.add(mesh);
+            grp.position.set(x, y, 0);
+            emitterGroup.add(grp);
+            emitterMeshes.set(emitter, grp);
+            updateEmitterCount();
+        }
+
+        function clearEmitters() {
+            for (const [e, grp] of emitterMeshes.entries()) {
+                emitterGroup.remove(grp);
+                grp.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); });
+            }
+            emitterMeshes.clear();
+            emitters.length = 0;
+            updateEmitterCount();
+        }
+
+        function updateEmitterCount() { emitterCountSpan.textContent = `${emitters.length} emitters`; }
+
+        // ═══════════════════════════════════════
+        // GRAVITATIONAL WAVE RIPPLES
+        // ═══════════════════════════════════════
+        const gravityWaves = [];
+
+        function addGravityWave(x, y, amp = 1.5) { gravityWaves.push({ x, y, startTime: performance.now() / 1000,
+                amplitude: amp }); }
+
+        // ═══════════════════════════════════════
+        // PHYSICS: REAL NEWTONIAN POTENTIAL
+        // ═══════════════════════════════════════
+        const SOFTENING = 0.05; // gravitational softening (eps)
+        const SOFTENING_BH = 0.02; // tighter softening for black holes
+        const SPEED_OF_LIGHT_SQ = 900; // c² proxy for Schwarzschild radius scaling
+
+        function computePotential(x, y, time) {
+            // Custom equation overrides everything
+            if (useCustomEquation && customExpression) {
+                try { return customExpression.evaluate({ x, y, t: time }); } catch (e) { return 0; }
+            }
+
+            let pot = 0;
+
+            // Gravity bodies — real softened Newtonian potential
+            for (const body of gravityBodies) {
+                if (body.merged) continue;
+                const dx = x - body.x,
+                    dy = y - body.y;
+                const eps = body.isBlackHole ? SOFTENING_BH : SOFTENING;
+                const distSq = dx * dx + dy * dy + eps * eps;
+                const dist = Math.sqrt(distSq);
+                // Schwarzschild-inspired: steeper well near event horizon for BHs
+                if (body.isBlackHole) {
+                    const rs = G * body.mass / SPEED_OF_LIGHT_SQ;
+                    const effectiveR = Math.max(dist, rs + 0.01);
+                    pot += -G * body.mass / effectiveR;
+                } else {
+                    pot += -G * body.mass / dist;
+                }
+            }
+
+            // Field emitters
+            for (const e of emitters) {
+                const dx = x - e.x,
+                    dy = y - e.y;
+                const r = Math.sqrt(dx * dx + dy * dy + SOFTENING * SOFTENING);
+                const age = time - e.startTime;
+                switch (e.type) {
+                    case 'gravity':
+                        pot += -e.mass / r;
+                        break;
+                    case 'repulsor':
+                        pot += e.mass / r;
+                        break;
+                    case 'vortex': {
+                        const angle = Math.atan2(dy, dx);
+                        pot += -e.rotationStrength * Math.sin(angle * 3 + r * 0.5) * Math.exp(-r * 0.3);
+                        break;
+                    }
+                    case 'oscillator':
+                        pot += -e.mass * Math.sin(r * 2 - time * e.frequency) / r;
+                        break;
+                    case 'wave':
+                        pot += 0.5 * Math.sin(r * 5 - time * 3) * Math.exp(-r * 0.5);
+                        break;
+                }
+            }
+
+            // Ripples
+            for (const wave of gravityWaves) {
+                const age = time - wave.startTime;
+                if (age > 3.5) continue;
+                const dx = x - wave.x,
+                    dy = y - wave.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const decay = Math.exp(-age * 1.2);
+                pot += Math.sin(dist * 5 - age * 6) * wave.amplitude * decay * 0.3;
+            }
+
+            return pot;
+        }
+
+        // ═══════════════════════════════════════
+        // UPDATE POTENTIAL TEXTURE (CPU → GPU)
+        // ═══════════════════════════════════════
+        function updatePotentialTexture(time) {
+            for (let j = 0; j < WIDTH; j++) {
+                for (let i = 0; i < WIDTH; i++) {
+                    const x = (i / (WIDTH - 1) - 0.5) * SURFACE_SIZE;
+                    const y = (j / (WIDTH - 1) - 0.5) * SURFACE_SIZE;
+                    potentialData[j * WIDTH + i] = computePotential(x, y, time);
+                }
+            }
+            potentialTexture.needsUpdate = true;
+            let min = Infinity,
+                max = -Infinity;
+            for (let v of potentialData) { if (v < min) min = v; if (v > max) max = v; }
+            shaderMaterial.uniforms.zMin.value = min;
+            shaderMaterial.uniforms.zRange.value = Math.max(1, max - min);
+            shaderMaterial.uniforms.useTopo.value = (visualizationMode === 'topo');
+        }
+
+        // ═══════════════════════════════════════
+        // PARTICLE PHYSICS: MASS + MOMENTUM
+        // ═══════════════════════════════════════
+        function sampleTex(ux, uy) {
+            const ix = Math.floor(ux * (WIDTH - 1));
+            const iy = Math.floor(uy * (WIDTH - 1));
+            const ci = Math.min(WIDTH - 1, Math.max(0, ix));
+            const cj = Math.min(WIDTH - 1, Math.max(0, iy));
+            return potentialData[cj * WIDTH + ci];
+        }
+
+        function updateParticles(dt, time) {
+            const posArr = particleGeo.attributes.position.array;
+            const size = SURFACE_SIZE;
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                let uvx = (p.x / size) + 0.5;
+                let uvy = (p.y / size) + 0.5;
+                if (uvx < 0.01 || uvx > 0.99 || uvy < 0.01 || uvy > 0.99) {
+                    p.x *= 0.98;
+                    p.y *= 0.98;
+                    if (p.x > size / 2) p.x = size / 2;
+                    if (p.x < -size / 2) p.x = -size / 2;
+                    if (p.y > size / 2) p.y = size / 2;
+                    if (p.y < -size / 2) p.y = -size / 2;
+                    uvx = (p.x / size) + 0.5;
+                    uvy = (p.y / size) + 0.5;
+                }
+                const h = 0.003;
+                const potR = sampleTex(uvx + h, uvy);
+                const potL = sampleTex(uvx - h, uvy);
+                const potU = sampleTex(uvx, uvy + h);
+                const potD = sampleTex(uvx, uvy - h);
+                const fx = -(potR - potL) / (2 * h * size);
+                const fy = -(potU - potD) / (2 * h * size);
+                // Newton's 2nd law: a = F/m, then v += a*dt, x += v*dt
+                const ax = fx / p.mass;
+                const ay = fy / p.mass;
+                p.vx += ax * dt;
+                p.vy += ay * dt;
+                if (dragCoeff > 0) {
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy) + 0.001;
+                    const dragForce = dragCoeff * speed * speed;
+                    p.vx -= (p.vx / speed) * dragForce * dt / p.mass;
+                    p.vy -= (p.vy / speed) * dragForce * dt / p.mass;
+                }
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                // Black hole absorption
+                for (const body of gravityBodies) {
+                    if (!body.isBlackHole || body.merged) continue;
+                    const dx = p.x - body.x,
+                        dy = p.y - body.y;
+                    const r = Math.sqrt(dx * dx + dy * dy);
+                    const horizon = body.mass * 0.55;
+                    if (r < horizon) {
+                        const ang = Math.random() * 2 * Math.PI;
+                        p.x = body.x + Math.cos(ang) * horizon * 1.3;
+                        p.y = body.y + Math.sin(ang) * horizon * 1.3;
+                        p.vx = (Math.random() - 0.5) * 0.25;
+                        p.vy = (Math.random() - 0.5) * 0.25;
+                        body.mass += p.mass;
+                        const grp = bodyMeshes.get(body);
+                        if (grp) {
+                            const oldCore = grp.children[0];
+                            const newGeo = new THREE.SphereGeometry(body.mass * 0.4, 32, 16);
+                            oldCore.geometry.dispose();
+                            oldCore.geometry = newGeo;
+                        }
+                    }
+                }
+                const dist = Math.sqrt(p.x * p.x + p.y * p.y);
+                if (dist > size / 2 + 2) { p.x *= 0.98;
+                    p.y *= 0.98;
+                    p.vx *= 0.95;
+                    p.vy *= 0.95; }
+                posArr[i * 3] = p.x;
+                posArr[i * 3 + 1] = p.y;
+            }
+            particleGeo.attributes.position.needsUpdate = true;
+        }
+
+        // ═══════════════════════════════════════
+        // BODY DYNAMICS: LEAPFROG INTEGRATION
+        // ═══════════════════════════════════════
+        function computeBodyAcceleration(body, allBodies) {
+            let ax = 0,
+                ay = 0;
+            for (const other of allBodies) {
+                if (other === body || other.merged) continue;
+                const dx = other.x - body.x,
+                    dy = other.y - body.y;
+                const eps = (body.isBlackHole || other.isBlackHole) ? SOFTENING_BH : SOFTENING;
+                const distSq = dx * dx + dy * dy + eps * eps;
+                const dist = Math.sqrt(distSq);
+                const forceMag = G * body.mass * other.mass / distSq;
+                ax += forceMag * dx / dist / body.mass;
+                ay += forceMag * dy / dist / body.mass;
+            }
+            return { ax, ay };
+        }
+
+        function detectAndHandleCollisions() {
+            const merged = [];
+            for (let i = 0; i < gravityBodies.length; i++) {
+                const a = gravityBodies[i];
+                if (a.merged) continue;
+                for (let j = i + 1; j < gravityBodies.length; j++) {
+                    const b = gravityBodies[j];
+                    if (b.merged) continue;
+                    const dx = b.x - a.x,
+                        dy = b.y - a.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const radiusA = a.isBlackHole ? a.mass * 0.4 : a.mass * 0.25;
+                    const radiusB = b.isBlackHole ? b.mass * 0.4 : b.mass * 0.25;
+                    const mergeDist = (radiusA + radiusB) * 0.8;
+                    if (dist < mergeDist) {
+                        // Conserve momentum: merge into heavier body
+                        const totalMass = a.mass + b.mass;
+                        const newVx = (a.mass * a.vx + b.mass * b.vx) / totalMass;
+                        const newVy = (a.mass * a.vy + b.mass * b.vy) / totalMass;
+                        const newX = (a.mass * a.x + b.mass * b.x) / totalMass;
+                        const newY = (a.mass * a.y + b.mass * b.y) / totalMass;
+                        const survivor = a.mass >= b.mass ? a : b;
+                        const absorbed = a.mass >= b.mass ? b : a;
+                        survivor.mass = totalMass;
+                        survivor.x = newX;
+                        survivor.y = newY;
+                        survivor.vx = newVx;
+                        survivor.vy = newVy;
+                        survivor.ax_prev = 0;
+                        survivor.ay_prev = 0;
+                        if (absorbed.isBlackHole && !survivor.isBlackHole) survivor.isBlackHole = true;
+                        absorbed.merged = true;
+                        merged.push(absorbed);
+                        // Update mesh
+                        const grp = bodyMeshes.get(survivor);
+                        if (grp) {
+                            grp.position.set(survivor.x, survivor.y, 0);
+                            const oldCore = grp.children[0];
+                            const newGeo = new THREE.SphereGeometry(survivor.isBlackHole ? survivor.mass * 0.4 : survivor
+                                .mass * 0.25, 32, 16);
+                            oldCore.geometry.dispose();
+                            oldCore.geometry = newGeo;
+                            if (survivor.isBlackHole && grp.children.length < 2) {
+                                const ringGeo = new THREE.TorusGeometry(survivor.mass * 0.55, 0.07, 16, 48);
+                                const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffaa00,
+                                    transparent: true, opacity: 0.7 }));
+                                ring.rotation.x = Math.PI / 2;
+                                grp.add(ring);
+                            }
+                        }
+                        showToast(
+                            `💥 Collision! ${absorbed.isBlackHole?'BH':'Star'} merged. Mass: ${totalMass.toFixed(1)}`);
+                    }
+                }
+            }
+            // Remove merged bodies
+            for (const body of merged) {
+                const idx = gravityBodies.indexOf(body);
+                if (idx >= 0) gravityBodies.splice(idx, 1);
+                const grp = bodyMeshes.get(body);
+                if (grp) {
+                    bodyGroup.remove(grp);
+                    grp.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material
+                    .dispose(); });
+                    bodyMeshes.delete(body);
+                }
+            }
+        }
+
+        function updateBodiesLeapfrog(dt) {
+            if (gravityBodies.length === 0) return;
+            const activeBodies = gravityBodies.filter(b => !b.merged);
+            // Half-step velocity update using previous acceleration
+            for (const body of activeBodies) {
+                body.vx += body.ax_prev * dt * 0.5;
+                body.vy += body.ay_prev * dt * 0.5;
+                // Position update
+                body.x += body.vx * dt;
+                body.y += body.vy * dt;
+            }
+            // Recompute accelerations at new positions
+            for (const body of activeBodies) {
+                const { ax, ay } = computeBodyAcceleration(body, activeBodies);
+                body.ax_prev = ax;
+                body.ay_prev = ay;
+                // Second half-step velocity update
+                body.vx += ax * dt * 0.5;
+                body.vy += ay * dt * 0.5;
+            }
+            // Update meshes
+            for (const body of activeBodies) {
+                const grp = bodyMeshes.get(body);
+                if (grp) grp.position.set(body.x, body.y, 0);
+            }
+            // Detect collisions
+            detectAndHandleCollisions();
+            // Clamp positions
+            for (const body of activeBodies) {
+                const half = SURFACE_SIZE / 2;
+                if (Math.abs(body.x) > half) { body.x = Math.sign(body.x) * half;
+                    body.vx *= -0.5; }
+                if (Math.abs(body.y) > half) { body.y = Math.sign(body.y) * half;
+                    body.vy *= -0.5; }
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // ANGULAR MOMENTUM COMPUTATION
+        // ═══════════════════════════════════════
+        function computeSystemAngularMomentum() {
+            let L = 0;
+            for (const body of gravityBodies) {
+                if (body.merged) continue;
+                L += body.mass * (body.x * body.vy - body.y * body.vx);
+            }
+            return L;
+        }
+
+        function computeBodyAngularMomentum(body) {
+            return body.mass * (body.x * body.vy - body.y * body.vx);
+        }
+
+        // ═══════════════════════════════════════
+        // FORCE ARROWS VISUALIZATION
+        // ═══════════════════════════════════════
+        function updateForceArrows() {
+            while (arrowsGroup.children.length) arrowsGroup.remove(arrowsGroup.children[0]);
+            if (visualizationMode !== 'arrows') return;
+            const time = performance.now() / 1000;
+            const spacing = 1.8;
+            for (let x = -SURFACE_SIZE / 2; x <= SURFACE_SIZE / 2; x += spacing) {
+                for (let y = -SURFACE_SIZE / 2; y <= SURFACE_SIZE / 2; y += spacing) {
+                    const gradX = (computePotential(x + 0.08, y, time) - computePotential(x - 0.08, y, time)) / 0.16;
+                    const gradY = (computePotential(x, y + 0.08, time) - computePotential(x, y - 0.08, time)) / 0.16;
+                    const mag = Math.sqrt(gradX * gradX + gradY * gradY);
+                    if (mag < 0.08) continue;
+                    const scale = 0.5 / mag;
+                    const p1 = new THREE.Vector3(x, y, computePotential(x, y, time));
+                    const p2 = new THREE.Vector3(x - gradX * scale, y - gradY * scale, computePotential(x - gradX * scale,
+                        y - gradY * scale, time));
+                    const geo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+                    arrowsGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffaa00 })));
+                }
+            }
+            arrowsGroup.visible = true;
+        }
+
+        // ═══════════════════════════════════════
+        // PRESETS
+        // ═══════════════════════════════════════
+        function setPreset(name) {
+            clearAllBodies();
+            clearEmitters();
+            gravityWaves.length = 0;
+            bodyHistory.length = 0;
+            switch (name) {
+                case 'binary':
+                    addGravityBody(3, 0, 3, true, 0, 1.8);
+                    addGravityBody(-3, 0, 3, true, 0, -1.8);
+                    break;
+                case 'solar':
+                    addGravityBody(0, 0, 5, false, 0, 0);
+                    addGravityBody(6, 0, 0.4, false, 0, 2.5);
+                    addGravityBody(-4, 0, 0.3, false, 0, -2.2);
+                    break;
+                case 'galaxy':
+                    addGravityBody(0, 0, 6, true, 0, 0);
+                    for (let i = 0; i < 8; i++) {
+                        const ang = i * Math.PI * 2 / 8,
+                            r = 5.5;
+                        addGravityBody(Math.cos(ang) * r, Math.sin(ang) * r, 0.7, false, -Math.sin(ang) * 2.2, Math.cos(
+                            ang) * 2.2);
+                    }
+                    break;
+                case 'triple':
+                    addGravityBody(0, 0, 4, false, 0, 0);
+                    addGravityBody(4, 0, 2, false, 0, 3);
+                    addGravityBody(-3, 2, 2, false, 1, -1.5);
+                    break;
+                case 'merge':
+                    addGravityBody(2, 1, 3, true, -0.8, 0.3);
+                    addGravityBody(-2, -1, 2.5, true, 1, -0.2);
+                    break;
+                case 'scatter':
+                    for (let i = 0; i < 12; i++)
+                        addGravityBody((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, 0.5 + Math.random() *
+                            1.5, Math.random() < 0.2, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5);
+                    break;
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // TIME HISTORY (REWIND)
+        // ═══════════════════════════════════════
+        const HISTORY_STEP = 0.15;
+        const MAX_HISTORY = 60;
+        const bodyHistory = [];
+
+        function saveHistory() {
+            const snap = gravityBodies.filter(b => !b.merged).map(b => ({
+                x: b.x,
+                y: b.y,
+                vx: b.vx,
+                vy: b.vy,
+                mass: b.mass,
+                isBlackHole: b.isBlackHole,
+                ax_prev: b.ax_prev,
+                ay_prev: b.ay_prev
+            }));
+            bodyHistory.push(snap);
+            if (bodyHistory.length > MAX_HISTORY) bodyHistory.shift();
+        }
+
+        function rewindTime(seconds) {
+            if (!bodyHistory.length) return;
+            const steps = Math.round(seconds / HISTORY_STEP);
+            const idx = Math.max(0, bodyHistory.length - steps);
+            const snap = bodyHistory[idx];
+            bodyHistory.length = idx + 1;
+            clearAllBodies();
+            for (const s of snap) {
+                const body = addGravityBody(s.x, s.y, s.mass, s.isBlackHole, s.vx, s.vy);
+                body.ax_prev = s.ax_prev;
+                body.ay_prev = s.ay_prev;
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // CINEMATIC CAMERA
+        // ═══════════════════════════════════════
+        let camAnimation = null;
+
+        function flyTo(pos, lookAt, duration = 1.5) {
+            camAnimation = {
+                startPos: camera.position.clone(),
+                startTarget: controls.target.clone(),
+                endPos: pos,
+                endTarget: lookAt,
+                startTime: performance.now() / 1000,
+                duration
+            };
+        }
+
+        function updateCamAnim() {
+            if (!camAnimation) return;
+            const elapsed = performance.now() / 1000 - camAnimation.startTime;
+            const t = Math.min(elapsed / camAnimation.duration, 1.0);
+            const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+            camera.position.lerpVectors(camAnimation.startPos, camAnimation.endPos, ease);
+            controls.target.lerpVectors(camAnimation.startTarget, camAnimation.endTarget, ease);
+            if (t >= 1.0) camAnimation = null;
+        }
+
+        let recordedPath = [];
+        let isRecordingPath = false;
+
+        // ═══════════════════════════════════════
+        // RECORDING
+        // ═══════════════════════════════════════
+        let mediaRecorder = null,
+            recordedChunks = [];
+
+        function startRecording() {
+            const stream = renderer.domElement.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'gravity_sim.webm';
+                a.click();
+                recordedChunks = [];
+            };
+            mediaRecorder.start();
+            recordBtn.disabled = true;
+            stopRecordBtn.disabled = false;
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            recordBtn.disabled = false;
+            stopRecordBtn.disabled = true;
+        }
+
+        function takeScreenshot() {
+            const a = document.createElement('a');
+            a.href = renderer.domElement.toDataURL('image/png');
+            a.download = 'screenshot.png';
+            a.click();
+        }
+
+        // ═══════════════════════════════════════
+        // TOAST NOTIFICATIONS
+        // ═══════════════════════════════════════
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            toastContainer.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+        }
+
+        // ═══════════════════════════════════════
+        // MEASUREMENT
+        // ═══════════════════════════════════════
+        let selectedBody = null;
+
+        function updateMeasurementDisplay() {
+            if (!selectedBody) {
+                measureBody.textContent = 'No body selected';
+                measMass.textContent = '-';
+                measVesc.textContent = '-';
+                measPeriod.textContent = '-';
+                measAngmom.textContent = '-';
+            } else {
+                const b = selectedBody;
+                measureBody.textContent = b.isBlackHole ? '⚫ Black Hole' : '⭐ Star';
+                measMass.textContent = b.mass.toFixed(2);
+                const r = b.isBlackHole ? b.mass * 0.4 : b.mass * 0.25;
+                const vesc = Math.sqrt(2 * G * b.mass / (r + 0.05)).toFixed(2);
+                measVesc.textContent = vesc;
+                const period = (2 * Math.PI * Math.pow(5, 1.5) / Math.sqrt(G * b.mass)).toFixed(1);
+                measPeriod.textContent = period;
+                measAngmom.textContent = computeBodyAngularMomentum(b).toFixed(3);
+            }
+            sysAngmom.textContent = computeSystemAngularMomentum().toFixed(3);
+            sysBodyCount.textContent = gravityBodies.filter(b => !b.merged).length;
+        }
+
+        // ═══════════════════════════════════════
+        // BODY SELECTION & DRAGGING
+        // ═══════════════════════════════════════
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let draggingBody = null;
+
+        window.addEventListener('click', (e) => {
+            if (e.target.closest('#ui-panel') || e.target.closest('button')) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = Array.from(bodyMeshes.values()).map(g => g.children[0]);
+            const hits = raycaster.intersectObjects(meshes);
+            if (hits.length) {
+                for (const [body, grp] of bodyMeshes.entries()) {
+                    if (grp.children[0] === hits[0].object) { selectedBody = body; break; }
+                }
+            } else selectedBody = null;
+            updateMeasurementDisplay();
+        });
+
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const meshes = Array.from(bodyMeshes.values()).map(g => g.children[0]);
+            const hits = raycaster.intersectObjects(meshes);
+            if (hits.length) {
+                for (const [body, grp] of bodyMeshes.entries())
+                    if (grp.children[0] === hits[0].object) { draggingBody = body; break; }
+            }
+        });
+
+        window.addEventListener('mouseup', () => { draggingBody = null; });
+        window.addEventListener('mousemove', (e) => {
+            if (!draggingBody) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+            const pt = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, pt);
+            if (pt) {
+                draggingBody.x = pt.x;
+                draggingBody.y = pt.y;
+                draggingBody.vx = 0;
+                draggingBody.vy = 0;
+                const grp = bodyMeshes.get(draggingBody);
+                if (grp) grp.position.set(pt.x, pt.y, 0);
+            }
+        });
+
+        // Right-click: spray particles
+        renderer.domElement.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+            const pt = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, pt);
+            if (pt) {
+                for (let i = 0; i < 15; i++) {
+                    particles.push({
+                        x: pt.x + (Math.random() - 0.5) * 2,
+                        y: pt.y + (Math.random() - 0.5) * 2,
+                        vx: (Math.random() - 0.5) * 0.3,
+                        vy: (Math.random() - 0.5) * 0.3,
+                        mass: 0.003 + Math.random() * 0.01
+                    });
+                }
+                const newPos = new Float32Array(particles.length * 3);
+                for (let i = 0; i < particles.length; i++) { newPos[i * 3] = particles[i].x;
+                    newPos[i * 3 + 1] = particles[i].y; }
+                particleGeo.setAttribute('position', new THREE.BufferAttribute(newPos, 3));
+            }
+        });
+
+        // ═══════════════════════════════════════
+        // UI EVENT BINDINGS
+        // ═══════════════════════════════════════
+        tabBtns.forEach(btn => btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }));
+
+        panelToggle.onclick = () => {
+            panel.classList.toggle('collapsed');
+            panelToggle.classList.toggle('shifted');
+            panelToggle.textContent = panel.classList.contains('collapsed') ? '▶' : '◀';
+        };
+
+        timeScaleSlider.oninput = () => { timeScale = +timeScaleSlider.value;
+            timeVal.textContent = timeScale.toFixed(1) + 'x'; };
+        gConstSlider.oninput = () => { G = +gConstSlider.value;
+            gVal.textContent = G.toFixed(1); };
+        particleCountSlider.oninput = () => {
+            particleTargetCount = +particleCountSlider.value;
+            pcountVal.textContent = particleTargetCount;
+            while (particles.length < particleTargetCount) {
+                const ang = Math.random() * 2 * Math.PI,
+                    r = 4 + Math.random() * 10;
+                particles.push({ x: Math.cos(ang) * r, y: Math.sin(ang) * r, vx: (Math.random() - 0.5) * 0.5, vy: (Math
+                        .random() - 0.5) * 0.5, mass: 0.003 + Math.random() * 0.012 });
+            }
+            while (particles.length > particleTargetCount) particles.pop();
+            const newPos = new Float32Array(particles.length * 3);
+            for (let i = 0; i < particles.length; i++) { newPos[i * 3] = particles[i].x;
+                newPos[i * 3 + 1] = particles[i].y; }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(newPos, 3));
+        };
+        dragSlider.oninput = () => { dragCoeff = +dragSlider.value;
+            dragVal.textContent = dragCoeff.toFixed(3); };
+        visModeSelect.onchange = () => {
+            visualizationMode = visModeSelect.value;
+            shaderMaterial.uniforms.useTopo.value = (visualizationMode === 'topo');
+            wireframeMesh.visible = (visualizationMode === 'grid');
+            arrowsGroup.visible = false;
+            if (visualizationMode === 'arrows') updateForceArrows();
+        };
+
+        pauseBtn.onclick = () => { isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? '▶️ Play' : '⏸️ Pause'; };
+        rewindBtn.onclick = () => { rewindTime(5); };
+        ffwdBtn.onclick = () => { fastForward = !fastForward;
+            ffwdBtn.textContent = fastForward ? '⏩ x2' : '⏩ x2';
+            ffwdBtn.classList.toggle('active-mode', fastForward); };
+        gravWaveBtn.onclick = () => { addGravityWave(0, 0, 2.5); };
+        addBodyBtn.onclick = () => {
+            addGravityBody((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 1 + Math.random() * 3, false, (Math
+                .random() - 0.5) * 1, (Math.random() - 0.5) * 1);
+        };
+        addBHbtn.onclick = () => {
+            addGravityBody((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 2 + Math.random() * 4, true, (Math
+                .random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5);
+        };
+        clearBodiesBtn.onclick = () => { clearAllBodies();
+            selectedBody = null;
+            updateMeasurementDisplay(); };
+        addEmitterBtn.onclick = () => { const t = emitterTypeSel.value;
+            addEmitter(0, 0, t, 2, 0.8, 1.5); };
+        clearEmittersBtn.onclick = clearEmitters;
+        applyEqBtn.onclick = () => {
+            const raw = customEqInput.value.trim();
+            if (raw) { try { customExpression = math.compile(raw);
+                    useCustomEquation = true;
+                    clearEmitters();
+                    clearAllBodies(); } catch (e) { showToast('Invalid equation syntax'); } } else { useCustomEquation =
+                    false; }
+        };
+        clearEqBtn.onclick = () => { useCustomEquation = false;
+            customExpression = null;
+            customEqInput.value = '';
+            showToast('Equation cleared. Emitters & bodies active.'); };
+
+        camOrbitBtn.onclick = () => { flyTo(new THREE.Vector3(9, 12, 15), new THREE.Vector3(0, 0, 0)); };
+        camTopBtn.onclick = () => { flyTo(new THREE.Vector3(0, 0, 18), new THREE.Vector3(0, 0, 0)); };
+        camBody1Btn.onclick = () => {
+            const activeBodies = gravityBodies.filter(b => !b.merged);
+            if (activeBodies.length) { const b = activeBodies[0];
+                flyTo(new THREE.Vector3(b.x + 3, b.y + 3, 5), new THREE.Vector3(b.x, b.y, 0)); }
+        };
+        camRecPathBtn.onclick = () => { isRecordingPath = !isRecordingPath; if (isRecordingPath) recordedPath = [];
+            camRecPathBtn.classList.toggle('active-mode', isRecordingPath); };
+        camPlayPathBtn.onclick = () => {
+            if (recordedPath.length < 2) return;
+            let idx = 0;
+
+            function playStep() { if (idx >= recordedPath.length) return;
+                const pt = recordedPath[idx];
+                flyTo(pt.pos.clone(), pt.target.clone(), 0.2);
+                idx++;
+                setTimeout(playStep, 200); }
+            playStep();
+        };
+        recordBtn.onclick = startRecording;
+        stopRecordBtn.onclick = stopRecording;
+        screenshotBtn.onclick = takeScreenshot;
+
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.addEventListener('click', () => {
+            useCustomEquation = false;
+            customExpression = null;
+            customEqInput.value = '';
+            setPreset(btn.dataset.preset);
+        }));
+
+        window.addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault();
+                pauseBtn.click(); } });
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ═══════════════════════════════════════
+        // ANIMATION LOOP
+        // ═══════════════════════════════════════
+        let lastTime = performance.now() / 1000,
+            historyTimer = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = performance.now() / 1000;
+            let dt = Math.min(now - lastTime, 0.05);
+            lastTime = now;
+            if (isPaused) dt = 0;
+            else { const speed = timeScale * (fastForward ? 2 : 1);
+                dt *= speed; }
+
+            if (dt > 0) {
+                updateBodiesLeapfrog(dt);
+                updatePotentialTexture(now);
+                updateParticles(dt, now);
+                if (visualizationMode === 'arrows') updateForceArrows();
+                historyTimer += dt;
+                if (historyTimer >= HISTORY_STEP) { historyTimer = 0;
+                    saveHistory(); }
+                for (let i = gravityWaves.length - 1; i >= 0; i--)
+                    if (now - gravityWaves[i].startTime > 3.5) gravityWaves.splice(i, 1);
+            }
+
+            updateCamAnim();
+            if (isRecordingPath && !isPaused) recordedPath.push({ pos: camera.position.clone(), target: controls.target
+                    .clone() });
+            updateMeasurementDisplay();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // ═══════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════
+        setPreset('binary');
+        initParticles(1500);
+        animate();
+        console.log('🚀 Gravity Lab Ultimate — Real Newtonian Physics Engine Ready');
+        console.log('  • Leapfrog integration for energy-conserving orbits');
+        console.log('  • Gravitational softening (eps=0.05) for stable N-body');
+        console.log('  • Particle mass + momentum for realistic motion');
+        console.log('  • Collision detection with momentum conservation');
+        console.log('  • Angular momentum tracking');
+        console.log('  • Schwarzschild-inspired black hole potential');
+    </script>
+</body>
+</html>

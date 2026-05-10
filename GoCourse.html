@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neurowave Lab — Enhanced Wave Lab</title>
+    <style>
+        :root {
+            --bg-deep: #050816;
+            --glass: rgba(12, 18, 32, 0.78);
+            --glass-border: rgba(120, 180, 255, 0.12);
+            --accent: #7ee7ff;
+            --danger: #ff5577;
+            --gold: #ffc850;
+            --radius: 10px;
+            --layer-bg: rgba(18, 24, 42, 0.7);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at top, #101a2b 0%, #050816 55%, #020308 100%);
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            color: #fff;
+            height: 100vh;
+            width: 100vw;
+            cursor: crosshair;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        canvas {
+            display: block;
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+        #info {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 100;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            pointer-events: none;
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+        }
+        #info h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0 0 4px;
+        }
+        #info kbd {
+            background: rgba(25, 35, 60, 0.85);
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: #7ee7ff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            border: 1px solid rgba(120, 180, 255, 0.2);
+        }
+        #dna-card {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 100;
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 11px;
+            color: #ccc;
+            width: 210px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            line-height: 1.5;
+            letter-spacing: 0.02em;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        #dna-card .rarity {
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .rarity-common {
+            color: #aaa;
+        }
+        .rarity-uncommon {
+            color: #7ee7ff;
+        }
+        .rarity-rare {
+            color: #c084fc;
+        }
+        .rarity-legendary {
+            color: #ffc850;
+            text-shadow: 0 0 8px gold;
+        }
+        #dna-card .signature {
+            font-style: italic;
+            color: #ffaa88;
+        }
+        #toast-container {
+            position: fixed;
+            top: 80px;
+            right: 18px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: rgba(20, 25, 45, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 13px;
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 3.5s forwards;
+            box-shadow: 0 6px 20px rgba(255, 200, 80, 0.25);
+            pointer-events: auto;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+        .toast button {
+            background: none;
+            border: 1px solid #888;
+            color: #fff;
+            margin-left: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 2px 8px;
+            font-size: 11px;
+        }
+        #ui-container {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 94%;
+            max-width: 1000px;
+            max-height: 68vh;
+            overflow-y: auto;
+            background: var(--glass);
+            padding: 14px 16px 12px;
+            border-radius: 14px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        #ui-container.collapsed {
+            transform: translateX(-50%) translateY(120%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #ui-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 101;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+        #ui-toggle:hover {
+            border-color: var(--accent);
+        }
+        #formula-input,
+        #formula-input2 {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #7ee7ff;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        #formula-input:focus,
+        #formula-input2:focus {
+            border-color: #7ee7ff;
+        }
+        .error {
+            border-color: #ff5577 !important;
+            color: #ff8899 !important;
+        }
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls-row.space-between {
+            justify-content: space-between;
+        }
+        select,
+        button {
+            padding: 7px 12px;
+            background: rgba(25, 35, 60, 0.9);
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        select:hover,
+        button:hover {
+            background: rgba(45, 65, 110, 0.95);
+            border-color: #7ee7ff;
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 24px;
+        }
+        button.active-mode {
+            background: rgba(255, 180, 40, 0.2);
+            border-color: rgba(255, 180, 40, 0.6);
+            color: #ffe0a0;
+            animation: glow-pulse 1s infinite;
+        }
+        @keyframes glow-pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(255, 160, 30, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 24px rgba(255, 160, 30, 0.5);
+            }
+        }
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: #aaa;
+        }
+        .slider-group label {
+            font-weight: 500;
+            color: #99aabb;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+        .slider-group input[type=range] {
+            width: 65px;
+            accent-color: #7ee7ff;
+            cursor: pointer;
+            height: 4px;
+        }
+        .slider-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #bcc;
+            min-width: 26px;
+        }
+        #battle-row {
+            display: none;
+            margin-top: 2px;
+        }
+        .audio-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        #layers-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 2px;
+            border-top: 1px solid rgba(120, 180, 255, 0.1);
+            padding-top: 6px;
+        }
+        #layers-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #99aabb;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        #layers-header button {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 4px;
+        }
+        .layer-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            background: var(--layer-bg);
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(120, 180, 255, 0.08);
+            flex-wrap: wrap;
+        }
+        .layer-row input[type="text"] {
+            flex: 1;
+            min-width: 140px;
+            padding: 6px 8px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #444;
+            color: #bcc;
+            border-radius: 5px;
+            outline: none;
+        }
+        .layer-row input[type="text"]:focus {
+            border-color: #7ee7ff;
+            color: #7ee7ff;
+        }
+        .layer-row select {
+            font-size: 10px;
+            padding: 4px 18px 4px 6px;
+            background-position: right 4px center;
+        }
+        .layer-row .layer-opacity {
+            width: 50px;
+            accent-color: #c084fc;
+            cursor: pointer;
+            height: 3px;
+        }
+        .layer-row button {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .layer-row .layer-toggle {
+            width: 16px;
+            height: 16px;
+            accent-color: #7ee7ff;
+            cursor: pointer;
+            margin: 0;
+        }
+        .layer-number {
+            font-size: 10px;
+            color: #7ee7ff;
+            font-weight: 700;
+            min-width: 14px;
+            text-align: center;
+        }
+        @media (max-width:768px) {
+            #ui-container {
+                padding: 10px;
+                gap: 6px;
+                width: 97%;
+                max-height: 60vh;
+            }
+            #formula-input,
+            #formula-input2 {
+                font-size: 12px;
+                padding: 8px;
+            }
+            select,
+            button {
+                padding: 5px 8px;
+                font-size: 10px;
+            }
+            .slider-group input[type=range] {
+                width: 45px;
+            }
+            .layer-row {
+                gap: 4px;
+                padding: 4px 6px;
+            }
+            .layer-row input[type="text"] {
+                font-size: 10px;
+                min-width: 100px;
+                padding: 4px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>🌊 Neurowave Lab</h3>
+        Variables: <kbd>x</kbd> <kbd>y</kbd> <kbd>t</kbd> <kbd>d</kbd> <kbd>a</kbd>(audio) <kbd>b</kbd>(bass) <kbd>m</kbd>(mid)<br>
+        New: <kbd>noise(x,y)</kbd> <kbd>fbm(x,y,o)</kbd> <kbd>noise3(x,y,t)</kbd> <kbd>dist</kbd> <kbd>rotx/roty</kbd> <kbd>warpX/warpY</kbd> <kbd>prev(x,y)</kbd><br>
+        <kbd>R</kbd> Ripple · <kbd>1-4</kbd> Weapons · <kbd>B</kbd> Battle · <kbd>M</kbd> Mic · <kbd>V</kbd> Vector · <kbd>F</kbd> Feedback · <kbd>L</kbd> Add Layer
+    </div>
+
+    <div id="dna-card">
+        <div><strong>Equation DNA</strong></div>
+        <div class="rarity" id="dna-rarity">Common</div>
+        <div class="signature" id="dna-signature">Harmonic Drift</div>
+        <div><span style="color:#aaa;">Complexity:</span> <span id="dna-complexity">0</span></div>
+        <div><span style="color:#aaa;">Layers:</span> <span id="dna-layers">1</span></div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="ui-container">
+        <input type="text" id="formula-input" value="sin(d*3 - t*2) * cos(x*2 + y*2 + t)" placeholder="Main equation…">
+        <div id="battle-row">
+            <input type="text" id="formula-input2" value="cos(y*3 - t*1.5) * sin(x*2 + t)" placeholder="Second equation…">
+        </div>
+        <div id="layers-container">
+            <div id="layers-header">
+                🧬 Layers <button id="btn-add-layer" title="Add layer (L)">+ Add</button>
+                <span style="font-size:9px;color:#666;">(stackable noise/field layers)</span>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <select id="preset-selector">
+                <option value="" disabled selected>📂 Presets</option>
+                <optgroup label="Ocean">
+                    <option value="sin(d*3 - t*2) * cos(x*2 + y*2 + t)">Rolling Tide</option>
+                    <option value="sin(x*3 + t*2) * cos(y*3 - t*1.5)">Interference</option>
+                </optgroup>
+                <optgroup label="Noise Terrain">
+                    <option value="fbm(x*0.8,y*0.8,4)*3.5 + sin(t*0.7)*0.6">Noise Mountains</option>
+                    <option value="noise(x*1.5+t*0.3,y*1.5)*2.8 + noise3(x,y,t)*1.2">Drifting Dunes</option>
+                    <option value="fbm(warpX(x,y,1.8),warpY(x,y,1.8),3)*3">Warped Terrain</option>
+                </optgroup>
+                <optgroup label="Quantum">
+                    <option value="cos(t)*sin(d*3.5)*cos(d*3.5)*2.5">Reactor</option>
+                    <option value="4*sin(t+d)/(d+0.25)">Foam</option>
+                </optgroup>
+                <optgroup label="Terrain">
+                    <option value="sin(x/2.2)+cos(y/2.2)+sin(d)/2.5">Hills</option>
+                    <option value="abs(sin(x*1.8)*cos(y*1.8))*2.2">Peaks</option>
+                </optgroup>
+                <optgroup label="Audio">
+                    <option value="sin(d*3 - t*2 + a*4) * cos(x + y)">Audio Wave</option>
+                    <option value="b * sin(x*2 + t) + m * cos(y*2 - t)">Bass & Mid</option>
+                </optgroup>
+                <optgroup label="Feedback">
+                    <option value="sin(x*2+t)*cos(y*2-t) + prev(x,y)*0.85">Echo Field</option>
+                    <option value="noise(x,y)*2 + prev(x,y)*0.7">Memory Noise</option>
+                </optgroup>
+            </select>
+
+            <div class="slider-group"><label>Spatial</label><input type="range" id="freq-slider" min="0.2" max="5" step="0.05" value="1"><span class="slider-val" id="freq-val">1.00</span></div>
+            <div class="slider-group"><label>Speed</label><input type="range" id="time-speed" min="-3" max="3" step="0.05" value="1"><span class="slider-val" id="speed-val">1.00</span></div>
+            <div class="slider-group"><label>Phase</label><input type="range" id="phase-slider" min="0" max="6.283" step="0.01" value="0"><span class="slider-val" id="phase-val">0.00</span></div>
+            <div class="slider-group"><label>Damp</label><input type="range" id="damp-slider" min="0" max="2.5" step="0.01" value="0"><span class="slider-val" id="damp-val">0.00</span></div>
+        </div>
+
+        <div class="controls-row space-between">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                <button id="btn-play-pause">⏸ Pause</button>
+                <button id="btn-random">🎲 Random</button>
+                <button id="btn-battle-mode">⚔️ Battle: OFF</button>
+                <button id="btn-feedback-mode" title="Feedback: use prev(x,y) in equations (F)">🔄 Fb: OFF</button>
+                <button id="btn-vector-field" title="Vector field arrows (V)">🏹 VField: OFF</button>
+                <select id="ripple-weapon-select">
+                    <option value="normal">🌊 Normal</option>
+                    <option value="amplify">🔥 Amplify</option>
+                    <option value="stabilize">❄️ Stabilize</option>
+                    <option value="destroy">💥 Destroy</option>
+                    <option value="resonate">✨ Resonate</option>
+                </select>
+                <button id="btn-ripple-mode">🎯 Ripple: OFF</button>
+                <button id="btn-clear-ripples" disabled>✕ Clear (0)</button>
+                <button id="btn-audio-mode">🎤 Mic: OFF</button>
+                <span id="ripple-count" style="font-size:10px;color:#889;"></span>
+            </div>
+            <button id="btn-reset-cam">📷 Reset</button>
+        </div>
+    </div>
+
+    <button id="ui-toggle" title="Toggle panel">▲</button>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.150.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.150.0/examples/jsm/",
+                "mathjs": "https://cdn.jsdelivr.net/npm/mathjs@11.8.0/+esm"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import * as math from 'mathjs';
+
+        // ────────────────────────────────────────────────────────────
+        // SIMPLEX NOISE IMPLEMENTATION (compact 2D)
+        // ────────────────────────────────────────────────────────────
+        const perm = new Uint8Array(512);
+        const grad3 = [
+            [1, 1, 0],
+            [-1, 1, 0],
+            [1, -1, 0],
+            [-1, -1, 0],
+            [1, 0, 1],
+            [-1, 0, 1],
+            [1, 0, -1],
+            [-1, 0, -1],
+            [0, 1, 1],
+            [0, -1, 1],
+            [0, 1, -1],
+            [0, -1, -1]
+        ];
+        (function initPerm() {
+            const p = [];
+            for (let i = 0; i < 256; i++) p[i] = i;
+            for (let i = 255; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [p[i], p[j]] = [p[j], p[i]];
+            }
+            for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+        })();
+
+        function dot3(g, x, y) { return g[0] * x + g[1] * y; }
+
+        function simplex2D(xin, yin) {
+            const F2 = 0.5 * (Math.sqrt(3) - 1);
+            const G2 = (3 - Math.sqrt(3)) / 6;
+            const s = (xin + yin) * F2;
+            const i = Math.floor(xin + s);
+            const j = Math.floor(yin + s);
+            const t = (i + j) * G2;
+            const X0 = i - t;
+            const Y0 = j - t;
+            const x0 = xin - X0;
+            const y0 = yin - Y0;
+            let i1, j1;
+            if (x0 > y0) { i1 = 1;
+                j1 = 0; } else { i1 = 0;
+                j1 = 1; }
+            const x1 = x0 - i1 + G2;
+            const y1 = y0 - j1 + G2;
+            const x2 = x0 - 1 + 2 * G2;
+            const y2 = y0 - 1 + 2 * G2;
+            const ii = i & 255;
+            const jj = j & 255;
+            const gi0 = perm[ii + perm[jj]] % 12;
+            const gi1 = perm[ii + i1 + perm[jj + j1]] % 12;
+            const gi2 = perm[ii + 1 + perm[jj + 1]] % 12;
+            let n0 = 0,
+                n1 = 0,
+                n2 = 0;
+            let t0 = 0.5 - x0 * x0 - y0 * y0;
+            if (t0 > 0) { t0 *= t0;
+                n0 = t0 * t0 * dot3(grad3[gi0], x0, y0); }
+            let t1 = 0.5 - x1 * x1 - y1 * y1;
+            if (t1 > 0) { t1 *= t1;
+                n1 = t1 * t1 * dot3(grad3[gi1], x1, y1); }
+            let t2 = 0.5 - x2 * x2 - y2 * y2;
+            if (t2 > 0) { t2 *= t2;
+                n2 = t2 * t2 * dot3(grad3[gi2], x2, y2); }
+            return 70 * (n0 + n1 + n2);
+        }
+
+        function fbmNoise(x, y, octaves = 4) {
+            let val = 0,
+                amp = 1,
+                freq = 1,
+                maxVal = 0;
+            for (let o = 0; o < Math.max(1, Math.min(8, Math.floor(octaves))); o++) {
+                val += amp * simplex2D(x * freq, y * freq);
+                maxVal += amp;
+                amp *= 0.5;
+                freq *= 2;
+            }
+            return val / maxVal;
+        }
+
+        function noise3D(x, y, t) {
+            return simplex2D(x + Math.sin(t) * 0.6, y + Math.cos(t) * 0.6) * 0.7 +
+                simplex2D(x - t * 0.4, y + t * 0.35) * 0.3;
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // DOM REFS
+        // ────────────────────────────────────────────────────────────
+        const formulaInput = document.getElementById('formula-input');
+        const formulaInput2 = document.getElementById('formula-input2');
+        const battleRow = document.getElementById('battle-row');
+        const presetSelector = document.getElementById('preset-selector');
+        const freqSlider = document.getElementById('freq-slider');
+        const freqVal = document.getElementById('freq-val');
+        const timeSpeedSlider = document.getElementById('time-speed');
+        const speedVal = document.getElementById('speed-val');
+        const phaseSlider = document.getElementById('phase-slider');
+        const phaseVal = document.getElementById('phase-val');
+        const dampSlider = document.getElementById('damp-slider');
+        const dampVal = document.getElementById('damp-val');
+        const playPauseBtn = document.getElementById('btn-play-pause');
+        const randomBtn = document.getElementById('btn-random');
+        const battleModeBtn = document.getElementById('btn-battle-mode');
+        const feedbackModeBtn = document.getElementById('btn-feedback-mode');
+        const vectorFieldBtn = document.getElementById('btn-vector-field');
+        const rippleWeaponSelect = document.getElementById('ripple-weapon-select');
+        const rippleModeBtn = document.getElementById('btn-ripple-mode');
+        const clearRipplesBtn = document.getElementById('btn-clear-ripples');
+        const rippleCountSpan = document.getElementById('ripple-count');
+        const audioModeBtn = document.getElementById('btn-audio-mode');
+        const resetCamBtn = document.getElementById('btn-reset-cam');
+        const uiToggle = document.getElementById('ui-toggle');
+        const uiContainer = document.getElementById('ui-container');
+        const layersContainer = document.getElementById('layers-container');
+        const btnAddLayer = document.getElementById('btn-add-layer');
+        const dnaRarity = document.getElementById('dna-rarity');
+        const dnaSignature = document.getElementById('dna-signature');
+        const dnaComplexity = document.getElementById('dna-complexity');
+        const dnaLayers = document.getElementById('dna-layers');
+        const toastContainer = document.getElementById('toast-container');
+
+        // ────────────────────────────────────────────────────────────
+        // THREE.JS SETUP
+        // ────────────────────────────────────────────────────────────
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.body.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.background = null;
+        scene.fog = new THREE.FogExp2(0x0a1022, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.15, 120);
+        camera.position.set(4, -22, 14);
+        camera.lookAt(0, 0, 0);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 0, -1);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 6;
+        controls.maxDistance = 55;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.25;
+        controls.update();
+
+        scene.add(new THREE.AmbientLight(0x1a2240, 2.2));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+        dirLight.position.set(10, -10, 22);
+        scene.add(dirLight);
+        scene.add(new THREE.PointLight(0x88ccff, 2.2, 65).add(new THREE.PointLight(0xff7799, 1.4, 40).position.set(-6, 4,
+            -3)));
+
+        // ────────────────────────────────────────────────────────────
+        // SURFACE GEOMETRY
+        // ────────────────────────────────────────────────────────────
+        const SURFACE_SIZE = 30,
+            SEGMENTS = 95;
+        const geometry = new THREE.PlaneGeometry(SURFACE_SIZE, SURFACE_SIZE, SEGMENTS, SEGMENTS);
+        const vertexCount = geometry.attributes.position.count;
+        const GRID_RES = SEGMENTS + 1;
+        const CELL_SIZE = SURFACE_SIZE / SEGMENTS;
+        const origX = new Float32Array(vertexCount),
+            origY = new Float32Array(vertexCount);
+        {
+            const pos = geometry.attributes.position;
+            for (let i = 0; i < vertexCount; i++) { origX[i] = pos.getX(i);
+                origY[i] = pos.getY(i);
+                pos.setZ(i, 0); }
+            pos.needsUpdate = true;
+        }
+        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(vertexCount * 3), 3));
+        const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.32, metalness: 0.7,
+            side: THREE.DoubleSide });
+        const surfaceMesh = new THREE.Mesh(geometry, material);
+        surfaceMesh.castShadow = surfaceMesh.receiveShadow = true;
+        scene.add(surfaceMesh);
+        const wireframeMesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: '#1a1a3a', wireframe: true,
+            transparent: true, opacity: 0.06 }));
+        wireframeMesh.renderOrder = 1;
+        scene.add(wireframeMesh);
+
+        // Bloom
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.4, 0.35, 0.8);
+        bloomPass.threshold = 0.08;
+        bloomPass.strength = 1.1;
+        bloomPass.radius = 0.55;
+        composer.addPass(bloomPass);
+
+        // ────────────────────────────────────────────────────────────
+        // VECTOR FIELD ARROW SYSTEM
+        // ────────────────────────────────────────────────────────────
+        const ARROW_STRIDE = 4;
+        const arrowSampleRows = Math.floor(GRID_RES / ARROW_STRIDE);
+        const arrowSampleCols = Math.floor(GRID_RES / ARROW_STRIDE);
+        const numArrows = arrowSampleRows * arrowSampleCols;
+        const arrowVertices = new Float32Array(numArrows * 8 * 3);
+        const arrowGeometry = new THREE.BufferGeometry();
+        arrowGeometry.setAttribute('position', new THREE.BufferAttribute(arrowVertices, 3));
+        arrowGeometry.setDrawRange(0, 0);
+        const arrowMaterial = new THREE.LineBasicMaterial({ color: '#ffcc66', transparent: true, opacity: 0.55,
+            linewidth: 1, depthTest: true, depthWrite: false });
+        const arrowLines = new THREE.LineSegments(arrowGeometry, arrowMaterial);
+        arrowLines.visible = false;
+        arrowLines.renderOrder = 2;
+        scene.add(arrowLines);
+        let vectorFieldVisible = false;
+
+        function updateVectorField(zValues) {
+            if (!vectorFieldVisible) { arrowGeometry.setDrawRange(0, 0);
+                arrowGeometry.attributes.position.needsUpdate = true; return; }
+            const posArr = geometry.attributes.position.array;
+            const arr = arrowGeometry.attributes.position.array;
+            let vi = 0;
+            const halfSize = SURFACE_SIZE / 2;
+            const arrowScale = 1.8;
+            const headSize = 0.22;
+            for (let ar = 0; ar < arrowSampleRows; ar++) {
+                for (let ac = 0; ac < arrowSampleCols; ac++) {
+                    const ci = ac * ARROW_STRIDE;
+                    const ri = ar * ARROW_STRIDE;
+                    const idx = ri * GRID_RES + ci;
+                    const px = origX[idx],
+                        py = origY[idx],
+                        pz = posArr[idx * 3 + 2];
+                    const ciL = Math.max(0, ci - 1),
+                        ciR = Math.min(SEGMENTS, ci + 1);
+                    const riU = Math.max(0, ri - 1),
+                        riD = Math.min(SEGMENTS, ri + 1);
+                    const zL = zValues[ri * GRID_RES + ciL],
+                        zR = zValues[ri * GRID_RES + ciR];
+                    const zU = zValues[riU * GRID_RES + ci],
+                        zD = zValues[riD * GRID_RES + ci];
+                    const dzdx = (zR - zL) / (Math.max(0.001, (ciR - ciL) * CELL_SIZE));
+                    const dzdy = (zD - zU) / (Math.max(0.001, (riD - riU) * CELL_SIZE));
+                    const mag = Math.sqrt(dzdx * dzdx + dzdy * dzdy);
+                    if (mag < 0.005) {
+                        for (let k = 0; k < 24; k++) arr[vi++] = 0;
+                        continue;
+                    }
+                    const nx = dzdx / mag,
+                        ny = dzdy / mag;
+                    const len = Math.min(1.5, mag * arrowScale);
+                    const tipX = px + nx * len;
+                    const tipY = py + ny * len;
+                    const tipZ = pz + (dzdx * nx + dzdy * ny) * len;
+                    const perpX = -ny,
+                        perpY = nx;
+                    const hx1 = tipX - nx * headSize + perpX * headSize * 0.6;
+                    const hy1 = tipY - ny * headSize + perpY * headSize * 0.6;
+                    const hx2 = tipX - nx * headSize - perpX * headSize * 0.6;
+                    const hy2 = tipY - ny * headSize - perpY * headSize * 0.6;
+                    const hz1 = tipZ - mag * headSize * 0.3;
+                    const hz2 = hz1;
+                    const surfOff = 0.15;
+                    arr[vi] = px;
+                    arr[vi + 1] = py;
+                    arr[vi + 2] = pz + surfOff;
+                    arr[vi + 3] = tipX;
+                    arr[vi + 4] = tipY;
+                    arr[vi + 5] = tipZ + surfOff;
+                    arr[vi + 6] = tipX;
+                    arr[vi + 7] = tipY;
+                    arr[vi + 8] = tipZ + surfOff;
+                    arr[vi + 9] = hx1;
+                    arr[vi + 10] = hy1;
+                    arr[vi + 11] = hz1 + surfOff;
+                    arr[vi + 12] = tipX;
+                    arr[vi + 13] = tipY;
+                    arr[vi + 14] = tipZ + surfOff;
+                    arr[vi + 15] = hx2;
+                    arr[vi + 16] = hy2;
+                    arr[vi + 17] = hz2 + surfOff;
+                    arr[vi + 18] = hx1;
+                    arr[vi + 19] = hy1;
+                    arr[vi + 20] = hz1 + surfOff;
+                    arr[vi + 21] = hx2;
+                    arr[vi + 22] = hy2;
+                    arr[vi + 23] = hz2 + surfOff;
+                    vi += 24;
+                }
+            }
+            arrowGeometry.setDrawRange(0, vi / 3);
+            arrowGeometry.attributes.position.needsUpdate = true;
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // RIPPLE SYSTEM
+        // ────────────────────────────────────────────────────────────
+        const rippleEmitters = [],
+            MAX_RIPPLES = 28;
+        const RIPPLE_LIFETIME = 5.5;
+        const markerGroup = new THREE.Group();
+        scene.add(markerGroup);
+        const rippleMarkers = [];
+
+        function createRippleMarker(wx, wy) {
+            const g = new THREE.Group();
+            const s = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 7), new THREE.MeshBasicMaterial({ color: '#ffeebb',
+                transparent: true, opacity: 0.9 }));
+            const r = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.022, 8, 18), new THREE.MeshBasicMaterial({ color: '#ffcc66',
+                transparent: true, opacity: 0.65 }));
+            g.add(s);
+            g.add(r);
+            g.position.set(wx, wy, 0);
+            markerGroup.add(g);
+            return { group: g, sphere: s, ring: r, wx, wy };
+        }
+
+        function addRippleEmitter(wx, wy, type = 'normal') {
+            if (rippleEmitters.length >= MAX_RIPPLES) {
+                const old = rippleEmitters.shift();
+                const oldM = rippleMarkers.shift();
+                if (oldM) { markerGroup.remove(oldM.group);
+                    oldM.group.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material
+                        .dispose(); }); }
+            }
+            const amp = type === 'amplify' ? 1.2 : type === 'destroy' ? 1.5 : type === 'stabilize' ? 0.5 : 0.65;
+            const spatialDecay = type === 'stabilize' ? 0.4 : 0.7;
+            const freqFact = type === 'resonate' ? 5.5 : 3.8;
+            rippleEmitters.push({ x: wx, y: wy, startTime: performance.now() / 1000, amplitude: amp, spatialDecay,
+                freqFact, type });
+            rippleMarkers.push(createRippleMarker(wx, wy));
+            updateRippleUI();
+        }
+
+        function clearAllRipples() {
+            rippleEmitters.length = 0;
+            for (const m of rippleMarkers) { markerGroup.remove(m.group);
+                m.group.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); }); }
+            rippleMarkers.length = 0;
+            updateRippleUI();
+        }
+
+        function updateRippleUI() {
+            const n = rippleEmitters.length;
+            clearRipplesBtn.textContent = `✕ Clear (${n})`;
+            clearRipplesBtn.disabled = n === 0;
+            rippleCountSpan.textContent = n > 0 ? `${n} emitter${n>1?'s':''}` : '';
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // FEEDBACK BUFFER
+        // ────────────────────────────────────────────────────────────
+        let prevZBuffer = new Float32Array(vertexCount);
+        let feedbackEnabled = false;
+
+        function worldToIndex(wx, wy) {
+            const col = Math.round((wx + SURFACE_SIZE / 2) / CELL_SIZE);
+            const row = Math.round((wy + SURFACE_SIZE / 2) / CELL_SIZE);
+            const c = Math.max(0, Math.min(SEGMENTS, col));
+            const r = Math.max(0, Math.min(SEGMENTS, row));
+            return r * GRID_RES + c;
+        }
+
+        function prevLookup(sx, sy) {
+            const wx = sx / spatialFreq;
+            const wy = sy / spatialFreq;
+            const idx = worldToIndex(wx, wy);
+            return prevZBuffer[idx] || 0;
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // LAYER SYSTEM
+        // ────────────────────────────────────────────────────────────
+        let layers = [];
+        let layerIdCounter = 0;
+
+        function createLayer(equationStr = 'noise(x*1.5, y*1.5) * 1.2') {
+            const id = ++layerIdCounter;
+            let compiled = null;
+            try { if (equationStr.trim()) compiled = math.compile(equationStr); } catch (e) { compiled = null; }
+            return {
+                id,
+                equation: equationStr,
+                compiled,
+                enabled: true,
+                blendMode: 'add',
+                opacity: 1.0,
+                error: compiled === null && equationStr.trim() !== ''
+            };
+        }
+
+        function renderLayerRow(layer) {
+            const row = document.createElement('div');
+            row.className = 'layer-row';
+            row.dataset.layerId = layer.id;
+            row.innerHTML = `
+            <span class="layer-number">L${layer.id}</span>
+            <input type="checkbox" class="layer-toggle" ${layer.enabled?'checked':''} title="Toggle layer">
+            <input type="text" class="layer-eq" value="${layer.equation.replace(/"/g,'&quot;')}" placeholder="e.g. noise(x,y)*1.5">
+            <select class="layer-blend">
+              <option value="add" ${layer.blendMode==='add'?'selected':''}>+ Add</option>
+              <option value="multiply" ${layer.blendMode==='multiply'?'selected':''}>× Mul</option>
+              <option value="subtract" ${layer.blendMode==='subtract'?'selected':''}>− Sub</option>
+              <option value="replace" ${layer.blendMode==='replace'?'selected':''}>= Rep</option>
+            </select>
+            <input type="range" class="layer-opacity" min="0" max="2" step="0.05" value="${layer.opacity}" title="Opacity">
+            <span class="slider-val" style="min-width:20px;">${layer.opacity.toFixed(2)}</span>
+            <button class="btn-layer-remove" title="Remove layer">✕</button>
+          `;
+            const eqInput = row.querySelector('.layer-eq');
+            const toggleCheck = row.querySelector('.layer-toggle');
+            const blendSel = row.querySelector('.layer-blend');
+            const opacitySlider = row.querySelector('.layer-opacity');
+            const opacityVal = row.querySelector('.slider-val');
+            const removeBtn = row.querySelector('.btn-layer-remove');
+
+            eqInput.addEventListener('input', () => {
+                layer.equation = eqInput.value;
+                try {
+                    if (eqInput.value.trim()) { layer.compiled = math.compile(eqInput.value);
+                        layer.error = false;
+                        eqInput.style.borderColor = '#444'; } else { layer.compiled = null;
+                        layer.error = true;
+                        eqInput.style.borderColor = '#ff5577'; }
+                } catch (e) { layer.error = true;
+                    layer.compiled = null;
+                    eqInput.style.borderColor = '#ff5577'; }
+                updateEquationDNA();
+            });
+            eqInput.addEventListener('keydown', e => { if (e.key === 'Enter') eqInput.blur(); });
+            toggleCheck.addEventListener('change', () => { layer.enabled = toggleCheck.checked;
+                updateEquationDNA(); });
+            blendSel.addEventListener('change', () => { layer.blendMode = blendSel.value; });
+            opacitySlider.addEventListener('input', () => { layer.opacity = parseFloat(opacitySlider.value);
+                opacityVal.textContent = layer.opacity.toFixed(2); });
+            removeBtn.addEventListener('click', () => {
+                layers = layers.filter(l => l.id !== layer.id);
+                row.remove();
+                updateEquationDNA();
+                updateLayerNumbers();
+            });
+            if (layer.error && eqInput.value.trim()) eqInput.style.borderColor = '#ff5577';
+            return row;
+        }
+
+        function updateLayerNumbers() {
+            const rows = layersContainer.querySelectorAll('.layer-row');
+            let num = 1;
+            rows.forEach(r => {
+                const lid = parseInt(r.dataset.layerId);
+                const layer = layers.find(l => l.id === lid);
+                const span = r.querySelector('.layer-number');
+                if (span && layer) span.textContent = 'L' + (layers.indexOf(layer) + 1);
+            });
+            dnaLayers.textContent = 1 + layers.filter(l => l.enabled).length;
+        }
+
+        function addLayerUI(equationStr) {
+            const layer = createLayer(equationStr);
+            layers.push(layer);
+            const row = renderLayerRow(layer);
+            const header = document.getElementById('layers-header');
+            header.after(row);
+            updateEquationDNA();
+            updateLayerNumbers();
+            return layer;
+        }
+
+        function compileAllLayers() {
+            for (const layer of layers) {
+                try {
+                    if (layer.equation.trim()) { layer.compiled = math.compile(layer.equation);
+                        layer.error = false; } else { layer.compiled = null;
+                        layer.error = true; }
+                } catch (e) { layer.error = true;
+                    layer.compiled = null; }
+            }
+        }
+
+        btnAddLayer.addEventListener('click', () => addLayerUI('noise(x*1.5, y*1.5) * 1.2'));
+
+        // ────────────────────────────────────────────────────────────
+        // MATHJS CUSTOM FUNCTIONS
+        // ────────────────────────────────────────────────────────────
+        const customFunctions = {
+            noise: (x, y) => simplex2D(x, y),
+            noise3: (x, y, t) => noise3D(x, y, t),
+            fbm: (x, y, octaves) => fbmNoise(x, y, Math.round(octaves || 4)),
+            dist: (x, y, cx, cy) => Math.sqrt((x - (cx || 0)) ** 2 + (y - (cy || 0)) ** 2),
+            rotx: (x, y, angle) => x * Math.cos(angle || 0) - y * Math.sin(angle || 0),
+            roty: (x, y, angle) => x * Math.sin(angle || 0) + y * Math.cos(angle || 0),
+            warpX: (x, y, s) => x + Math.sin(y * (s || 1)) * 0.8,
+            warpY: (x, y, s) => y + Math.cos(x * (s || 1)) * 0.8,
+            prev: (x, y) => prevLookup(x || 0, y || 0),
+        };
+
+        function createMathScope() {
+            const scope = { x: 0, y: 0, t: 0, d: 0, pi: Math.PI, e: Math.E, a: 0, b: 0, m: 0 };
+            for (const [name, fn] of Object.entries(customFunctions)) {
+                scope[name] = fn;
+            }
+            return scope;
+        }
+
+        let mathScope = createMathScope();
+
+        // ────────────────────────────────────────────────────────────
+        // EQUATION COMPILER
+        // ────────────────────────────────────────────────────────────
+        let compiledExpr = null,
+            compiledExpr2 = null,
+            battleMode = false;
+        let equationError = false;
+
+        function compileFormula() {
+            try {
+                let raw = formulaInput.value.trim();
+                if (!raw) { compiledExpr = null;
+                    equationError = true;
+                    formulaInput.classList.add('error'); return; }
+                if (raw.toLowerCase().startsWith('z=')) raw = raw.substring(2);
+                compiledExpr = math.compile(raw);
+                mathScope.x = 1;
+                mathScope.y = 1;
+                mathScope.t = 0.5;
+                mathScope.d = Math.SQRT2;
+                compiledExpr.evaluate(mathScope);
+                equationError = false;
+                formulaInput.classList.remove('error');
+            } catch (e) { equationError = true;
+                formulaInput.classList.add('error'); }
+            if (battleMode) compileFormula2();
+            compileAllLayers();
+            updateEquationDNA();
+        }
+
+        function compileFormula2() {
+            try {
+                let raw = formulaInput2.value.trim();
+                if (!raw) { compiledExpr2 = null;
+                    formulaInput2.classList.add('error'); return; }
+                if (raw.toLowerCase().startsWith('z=')) raw = raw.substring(2);
+                compiledExpr2 = math.compile(raw);
+                formulaInput2.classList.remove('error');
+            } catch (e) { formulaInput2.classList.add('error');
+                compiledExpr2 = null; }
+        }
+        formulaInput.addEventListener('input', compileFormula);
+        formulaInput.addEventListener('keydown', e => { if (e.key === 'Enter') { compileFormula();
+                formulaInput.blur(); } });
+        formulaInput2.addEventListener('input', compileFormula2);
+        compileFormula();
+
+        // ────────────────────────────────────────────────────────────
+        // EQUATION DNA
+        // ────────────────────────────────────────────────────────────
+        function updateEquationDNA() {
+            const str = formulaInput.value + layers.filter(l => l.enabled).map(l => l.equation).join('');
+            const complexity = str.replace(/\s/g, '').length + (str.match(/[+\-*/^()]/g) || []).length * 0.5 +
+                (str.includes('noise') ? 8 : 0) + (str.includes('fbm') ? 12 : 0) + (str.includes('prev') ? 15 : 0) + (
+                    str.includes('warp') ? 10 : 0);
+            dnaComplexity.textContent = Math.round(complexity * 10) / 10;
+            dnaLayers.textContent = 1 + layers.filter(l => l.enabled).length;
+            const hash = str.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 100;
+            let rarity = 'Common',
+                rarityClass = 'rarity-common';
+            if (hash > 85) { rarity = 'Legendary';
+                rarityClass = 'rarity-legendary'; } else if (hash > 65) { rarity = 'Rare';
+                rarityClass = 'rarity-rare'; } else if (hash > 38) { rarity = 'Uncommon';
+                rarityClass = 'rarity-uncommon'; }
+            dnaRarity.textContent = rarity;
+            dnaRarity.className = 'rarity ' + rarityClass;
+            const sigs = ['Neon Spiral', 'Quantum Bloom', 'Harmonic Web', 'Void Resonator', 'Stellar Oscillator',
+                'Crystal Cascade', 'Pulsar Drift', 'Noise Weaver', 'Feedback Echo', 'Warp Shaper'
+            ];
+            dnaSignature.textContent = sigs[Math.floor(hash % sigs.length)];
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // AUDIO REACTIVE
+        // ────────────────────────────────────────────────────────────
+        let audioContext = null,
+            analyser = null,
+            audioDataArray = null;
+        let audioActive = false,
+            audioAmplitude = 0,
+            audioBass = 0,
+            audioMid = 0;
+        async function startAudio() {
+            if (audioActive) return;
+            try {
+                audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+                audioDataArray = new Uint8Array(analyser.frequencyBinCount);
+                audioActive = true;
+                audioModeBtn.textContent = '🎤 Mic: ON';
+                audioModeBtn.classList.add('active-mode');
+            } catch (e) { alert('Microphone access denied');
+                audioActive = false; }
+        }
+
+        function stopAudio() {
+            if (audioContext) { audioContext.close();
+                audioContext = null;
+                analyser = null;
+                audioDataArray = null; }
+            audioActive = false;
+            audioModeBtn.textContent = '🎤 Mic: OFF';
+            audioModeBtn.classList.remove('active-mode');
+            audioAmplitude = 0;
+            audioBass = 0;
+            audioMid = 0;
+        }
+
+        function updateAudioData() {
+            if (!audioActive || !analyser) return;
+            analyser.getByteFrequencyData(audioDataArray);
+            let sum = 0;
+            const len = audioDataArray.length;
+            for (let i = 0; i < len; i++) sum += audioDataArray[i];
+            audioAmplitude = sum / len / 255;
+            let bassSum = 0,
+                midSum = 0;
+            const third = Math.floor(len / 3);
+            for (let i = 0; i < third; i++) bassSum += audioDataArray[i];
+            for (let i = third; i < 2 * third; i++) midSum += audioDataArray[i];
+            audioBass = bassSum / third / 255;
+            audioMid = midSum / third / 255;
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // DISCOVERIES
+        // ────────────────────────────────────────────────────────────
+        const discoveryPatterns = [
+            { name: 'Neon Spiral Collapse', check: (avg, max, std) => std > 1.1 && max > 3.5 },
+            { name: 'Quantum Bloom', check: (avg, max, std) => avg > 1.2 && max > 4.2 },
+            { name: 'Crystal Cascade', check: (avg, max, std) => max > 4.8 && std < 0.9 },
+            { name: 'Harmonic Web', check: (avg, max, std) => std > 1.4 && avg < 0.8 },
+            { name: 'Void Resonance', check: (avg, max, std) => max > 2.5 && std > 1.0 && avg < 0.5 },
+            { name: 'Pulsar Core', check: (avg, max, std) => max > 5.0 },
+            { name: 'Noise Weaver', check: (avg, max, std) => std > 1.6 && max > 3.0 && avg < 1.0 },
+            { name: 'Feedback Singularity', check: (avg, max, std) => max > 6.5 && std > 2.0 },
+        ];
+        let discoveredPatterns = JSON.parse(localStorage.getItem('waveDiscoveries') || '[]');
+        let lastDiscoveryTime = 0;
+
+        function checkDiscovery() {
+            const now = performance.now() / 1000;
+            if (now - lastDiscoveryTime < 4) return;
+            const pos = geometry.attributes.position;
+            let sum = 0,
+                max = -Infinity,
+                min = Infinity;
+            for (let i = 0; i < vertexCount; i++) { const z = pos.getZ(i);
+                sum += z; if (z > max) max = z; if (z < min) min = z; }
+            const avg = sum / vertexCount;
+            let sqSum = 0;
+            for (let i = 0; i < vertexCount; i++) { const dz = pos.getZ(i) - avg;
+                sqSum += dz * dz; }
+            const std = Math.sqrt(sqSum / vertexCount);
+            for (const pat of discoveryPatterns) {
+                if (pat.check(avg, max, std)) {
+                    const name = pat.name;
+                    if (!discoveredPatterns.includes(name)) {
+                        discoveredPatterns.push(name);
+                        localStorage.setItem('waveDiscoveries', JSON.stringify(discoveredPatterns));
+                        showDiscoveryToast(name);
+                        lastDiscoveryTime = now;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function showDiscoveryToast(name) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML =
+                `✨ Discovery: <strong>${name}</strong> <button id="clear-toast">OK</button>`;
+            toastContainer.appendChild(toast);
+            toast.querySelector('button').addEventListener('click', () => toast.remove());
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // COLOR MAPPING
+        // ────────────────────────────────────────────────────────────
+        const tempColor = new THREE.Color();
+
+        function heightToColor(norm) {
+            const h = Math.max(0, Math.min(1, norm));
+            let hue, sat = 0.85,
+                light;
+            if (h < 0.3) { hue = 0.62;
+                light = 0.28 + h * 0.6; } else if (h < 0.5) { hue = 0.55;
+                light = 0.46 + (h - 0.3) * 0.4; } else if (h < 0.7) { hue = 0.78;
+                light = 0.54 + (h - 0.5) * 0.35; } else { hue = 0.92;
+                light = 0.61 + (h - 0.7) * 0.3; }
+            tempColor.setHSL(hue, sat, Math.min(0.82, light));
+            return { r: tempColor.r, g: tempColor.g, b: tempColor.b };
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // STATE
+        // ────────────────────────────────────────────────────────────
+        let globalTime = 0,
+            isPaused = false;
+        let spatialFreq = 1.0,
+            timeSpeed = 1.0,
+            phaseOffset = 0.0,
+            dampingFactor = 0.0;
+        let rippleModeActive = false;
+
+        // ────────────────────────────────────────────────────────────
+        // VERTEX UPDATE (with layers, feedback, vector field)
+        // ────────────────────────────────────────────────────────────
+        function updateSurface(time) {
+            const pos = geometry.attributes.position;
+            const col = geometry.attributes.color;
+            const posArr = pos.array,
+                colArr = col.array;
+            const freq = spatialFreq;
+            const tEff = time * timeSpeed + phaseOffset;
+            const damp = dampingFactor;
+
+            const zValues = new Float32Array(vertexCount);
+            let zMin = Infinity,
+                zMax = -Infinity;
+            const ripples = [...rippleEmitters];
+            const activeLayers = layers.filter(l => l.enabled && l.compiled && !l.error);
+
+            for (let i = 0; i < vertexCount; i++) {
+                const ux = origX[i] * freq,
+                    uy = origY[i] * freq;
+                const d = Math.sqrt(ux * ux + uy * uy);
+                mathScope.x = ux;
+                mathScope.y = uy;
+                mathScope.d = d;
+                mathScope.t = tEff;
+                mathScope.a = audioAmplitude;
+                mathScope.b = audioBass;
+                mathScope.m = audioMid;
+                for (const [name, fn] of Object.entries(customFunctions)) {
+                    mathScope[name] = fn;
+                }
+
+                let z = 0;
+                if (compiledExpr && !equationError) {
+                    try { z = compiledExpr.evaluate(mathScope); if (!isFinite(z)) z = 0; } catch (e) { z = 0; }
+                }
+                // Apply layers
+                for (const layer of activeLayers) {
+                    try {
+                        const lz = layer.compiled.evaluate(mathScope);
+                        if (!isFinite(lz)) continue;
+                        const lzo = lz * layer.opacity;
+                        switch (layer.blendMode) {
+                            case 'add':
+                                z += lzo;
+                                break;
+                            case 'multiply':
+                                z *= (1 + lzo * 0.3);
+                                break;
+                            case 'subtract':
+                                z -= lzo;
+                                break;
+                            case 'replace':
+                                z = z * (1 - layer.opacity) + lz * layer.opacity;
+                                break;
+                            default:
+                                z += lzo;
+                        }
+                    } catch (e) { /* skip */ }
+                }
+                if (battleMode && compiledExpr2) {
+                    try { z += compiledExpr2.evaluate(mathScope); if (!isFinite(z)) z = 0; } catch (e) {}
+                }
+                if (damp > 0.0005) {
+                    const rawD = Math.sqrt(origX[i] * origX[i] + origY[i] * origY[i]);
+                    z *= Math.exp(-rawD * damp);
+                }
+                for (const r of ripples) {
+                    const elapsed = time - r.startTime;
+                    if (elapsed < 0 || elapsed > RIPPLE_LIFETIME) continue;
+                    const rdx = origX[i] - r.x,
+                        rdy = origY[i] - r.y;
+                    const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+                    const temporalDecay = Math.exp(-0.85 * elapsed);
+                    const spatialDecay = Math.exp(-r.spatialDecay * rDist);
+                    let rippleZ = r.amplitude * temporalDecay * spatialDecay * Math.sin(rDist * r.freqFact - elapsed *
+                        3.2);
+                    if (r.type === 'stabilize') rippleZ *= -0.6;
+                    else if (r.type === 'destroy') rippleZ *= 1.8 * Math.sin(elapsed * 10);
+                    z += rippleZ;
+                }
+                zValues[i] = z;
+                if (z < zMin) zMin = z;
+                if (z > zMax) zMax = z;
+            }
+            const zRange = zMax - zMin;
+            const effMin = zRange > 0.0001 ? zMin : zMin - 0.5;
+            const effRange = zRange > 0.0001 ? zRange : 1.0;
+
+            for (let i = 0; i < vertexCount; i++) {
+                const z = zValues[i];
+                const norm = (z - effMin) / effRange;
+                const color = heightToColor(norm);
+                const idx = i * 3;
+                posArr[idx] = origX[i];
+                posArr[idx + 1] = origY[i];
+                posArr[idx + 2] = z;
+                colArr[idx] = color.r;
+                colArr[idx + 1] = color.g;
+                colArr[idx + 2] = color.b;
+            }
+            pos.needsUpdate = true;
+            col.needsUpdate = true;
+            geometry.computeVertexNormals();
+            geometry.computeBoundingSphere();
+            geometry.computeBoundingBox();
+            wireframeMesh.geometry = geometry;
+
+            // Update feedback buffer
+            if (feedbackEnabled) {
+                prevZBuffer.set(zValues);
+            }
+            // Update vector field
+            updateVectorField(zValues);
+        }
+
+        function updateRippleMarkers(time) {
+            const pos = geometry.attributes.position;
+            for (let i = 0; i < rippleMarkers.length; i++) {
+                const marker = rippleMarkers[i],
+                    ripple = rippleEmitters[i];
+                if (!ripple) continue;
+                let bestDist = Infinity,
+                    bestZ = 0;
+                for (let j = 0; j < vertexCount; j++) {
+                    const dx = origX[j] - marker.wx,
+                        dy = origY[j] - marker.wy;
+                    const dist = dx * dx + dy * dy;
+                    if (dist < bestDist) { bestDist = dist;
+                        bestZ = pos.getZ(j); }
+                }
+                marker.group.position.z = bestZ + 0.1;
+                const elapsed = time - ripple.startTime;
+                const pulse = 1 + 0.3 * Math.sin(time * 7 + marker.wx * 2);
+                marker.ring.scale.setScalar(Math.max(0.3, pulse * (1 - elapsed / RIPPLE_LIFETIME)));
+                marker.ring.material.opacity = 0.25 + 0.4 * Math.max(0, 1 - elapsed / RIPPLE_LIFETIME);
+                marker.sphere.material.opacity = 0.5 + 0.35 * Math.max(0, 1 - elapsed / RIPPLE_LIFETIME);
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // RAYCASTER
+        // ────────────────────────────────────────────────────────────
+        const raycaster = new THREE.Raycaster(),
+            mouse = new THREE.Vector2();
+
+        function getSurfaceIntersection(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObject(surfaceMesh, false);
+            return hits.length ? { x: hits[0].point.x, y: hits[0].point.y } : null;
+        }
+        renderer.domElement.addEventListener('click', e => {
+            if (!rippleModeActive || uiContainer.contains(e.target)) return;
+            const pt = getSurfaceIntersection(e);
+            if (pt) addRippleEmitter(pt.x, pt.y, rippleWeaponSelect.value);
+        });
+
+        // ────────────────────────────────────────────────────────────
+        // UI EVENTS
+        // ────────────────────────────────────────────────────────────
+        presetSelector.addEventListener('change', e => {
+            if (!e.target.value) return;
+            formulaInput.value = e.target.value;
+            compileFormula();
+            presetSelector.value = '';
+        });
+        freqSlider.addEventListener('input', () => { spatialFreq = +freqSlider.value;
+            freqVal.textContent = spatialFreq.toFixed(2); });
+        timeSpeedSlider.addEventListener('input', () => { timeSpeed = +timeSpeedSlider.value;
+            speedVal.textContent = timeSpeed.toFixed(2); });
+        phaseSlider.addEventListener('input', () => { phaseOffset = +phaseSlider.value;
+            phaseVal.textContent = phaseOffset.toFixed(2); });
+        dampSlider.addEventListener('input', () => { dampingFactor = +dampSlider.value;
+            dampVal.textContent = dampingFactor.toFixed(2); });
+        playPauseBtn.addEventListener('click', () => { isPaused = !isPaused;
+            playPauseBtn.textContent = isPaused ? '▶ Play' : '⏸ Pause'; });
+        randomBtn.addEventListener('click', () => {
+            const opts = presetSelector.querySelectorAll('option:not([disabled])');
+            const valid = Array.from(opts).filter(o => o.value);
+            if (!valid.length) return;
+            formulaInput.value = valid[Math.floor(Math.random() * valid.length)].value;
+            compileFormula();
+        });
+        battleModeBtn.addEventListener('click', () => {
+            battleMode = !battleMode;
+            battleRow.style.display = battleMode ? 'block' : 'none';
+            battleModeBtn.textContent = battleMode ? '⚔️ Battle: ON' : '⚔️ Battle: OFF';
+            if (battleMode) compileFormula2();
+        });
+        feedbackModeBtn.addEventListener('click', () => {
+            feedbackEnabled = !feedbackEnabled;
+            feedbackModeBtn.textContent = feedbackEnabled ? '🔄 Fb: ON' : '🔄 Fb: OFF';
+            feedbackModeBtn.classList.toggle('active-mode', feedbackEnabled);
+            if (!feedbackEnabled) { prevZBuffer.fill(0); }
+        });
+        vectorFieldBtn.addEventListener('click', () => {
+            vectorFieldVisible = !vectorFieldVisible;
+            arrowLines.visible = vectorFieldVisible;
+            vectorFieldBtn.textContent = vectorFieldVisible ? '🏹 VField: ON' : '🏹 VField: OFF';
+            vectorFieldBtn.classList.toggle('active-mode', vectorFieldVisible);
+            if (!vectorFieldVisible) arrowGeometry.setDrawRange(0, 0);
+        });
+        rippleModeBtn.addEventListener('click', () => {
+            rippleModeActive = !rippleModeActive;
+            rippleModeBtn.textContent = rippleModeActive ? '🎯 Ripple: ON' : '🎯 Ripple: OFF';
+            rippleModeBtn.classList.toggle('active-mode', rippleModeActive);
+        });
+        clearRipplesBtn.addEventListener('click', clearAllRipples);
+        audioModeBtn.addEventListener('click', () => { if (audioActive) stopAudio();
+            else startAudio(); });
+        resetCamBtn.addEventListener('click', () => { camera.position.set(4, -22, 14);
+            controls.target.set(0, 0, -1);
+            controls.update(); });
+        uiToggle.addEventListener('click', () => {
+            const vis = !uiContainer.classList.contains('collapsed');
+            uiContainer.classList.toggle('collapsed', vis);
+            uiToggle.textContent = vis ? '▼' : '▲';
+        });
+
+        // Keyboard shortcuts
+        window.addEventListener('keydown', e => {
+            if (document.activeElement === document.body || document.activeElement === formulaInput ||
+                document.activeElement === formulaInput2) {
+                const k = e.key.toLowerCase();
+                if (k === 'r') { rippleModeBtn.click(); }
+                if (k === 'c') { clearAllRipples(); }
+                if (k === 'h') { uiToggle.click(); }
+                if (k === ' ') { e.preventDefault();
+                    playPauseBtn.click(); }
+                if (k === 'b') { battleModeBtn.click(); }
+                if (k === 'm') { audioModeBtn.click(); }
+                if (k === 'v') { vectorFieldBtn.click(); }
+                if (k === 'f') { feedbackModeBtn.click(); }
+                if (k === 'l') { btnAddLayer.click(); }
+                if (k >= '1' && k <= '4') {
+                    const weapons = ['normal', 'amplify', 'stabilize', 'destroy'];
+                    rippleWeaponSelect.value = weapons[parseInt(k) - 1];
+                }
+            }
+        });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ────────────────────────────────────────────────────────────
+        // ANIMATION LOOP
+        // ────────────────────────────────────────────────────────────
+        const clock = new THREE.Clock();
+        let lastCleanup = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.12);
+            if (!isPaused) globalTime += dt;
+            if (audioActive) updateAudioData();
+            updateSurface(globalTime);
+            if (rippleMarkers.length) updateRippleMarkers(globalTime);
+            if (globalTime - lastCleanup > 1.5) {
+                lastCleanup = globalTime;
+                let removed = false;
+                for (let i = rippleEmitters.length - 1; i >= 0; i--) {
+                    if (globalTime - rippleEmitters[i].startTime > RIPPLE_LIFETIME) {
+                        rippleEmitters.splice(i, 1);
+                        const m = rippleMarkers.splice(i, 1)[0];
+                        if (m) { markerGroup.remove(m.group);
+                            m.group.traverse(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material
+                                .dispose(); }); }
+                        removed = true;
+                    }
+                }
+                if (removed) updateRippleUI();
+            }
+            checkDiscovery();
+            controls.update();
+            composer.render();
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // INIT
+        // ────────────────────────────────────────────────────────────
+        freqVal.textContent = spatialFreq.toFixed(2);
+        speedVal.textContent = timeSpeed.toFixed(2);
+        phaseVal.textContent = phaseOffset.toFixed(2);
+        dampVal.textContent = dampingFactor.toFixed(2);
+        updateRippleUI();
+        updateSurface(0);
+        updateEquationDNA();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
