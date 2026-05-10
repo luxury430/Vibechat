@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Learning Hub · Ultra</title>
+    <style>
+        :root {
+            --bg: #08080e;
+            --surface: #111119;
+            --surface-elevated: #1a1a26;
+            --text-primary: #f2f2f7;
+            --text-secondary: #a0a0b8;
+            --accent-1: #7c5cfc;
+            --accent-2: #5c9eff;
+            --accent-3: #ff6b9d;
+            --accent-4: #4ade80;
+            --accent-5: #f59e0b;
+            --accent-6: #a78bfa;
+            --accent-7: #06b6d4;
+            --border: rgba(255, 255, 255, 0.07);
+            --glow-1: rgba(124, 92, 252, 0.35);
+            --glow-2: rgba(92, 158, 255, 0.35);
+            --glow-3: rgba(255, 107, 157, 0.3);
+            --glow-4: rgba(74, 222, 128, 0.3);
+            --glow-5: rgba(245, 158, 11, 0.3);
+            --glow-6: rgba(167, 139, 250, 0.35);
+            --glow-7: rgba(6, 182, 212, 0.3);
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+            --transition-smooth: 0.45s var(--ease-out-expo);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% 0%, rgba(124, 92, 252, 0.06), transparent),
+                radial-gradient(ellipse 50% 40% at 80% 70%, rgba(92, 158, 255, 0.04), transparent);
+            animation: drift 20s ease-in-out infinite alternate;
+        }
+        @keyframes drift {
+            0% { opacity: 0.7; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+
+        #light-flash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.06) 40%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.15s ease-out;
+            will-change: opacity;
+        }
+        #light-flash.active {
+            opacity: 1;
+            transition: opacity 0.05s ease-in;
+        }
+        #light-flash.fading {
+            opacity: 0;
+            transition: opacity 0.45s ease-out;
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 20px 24px 70px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── HERO ────────────────────────── */
+        .hero {
+            text-align: center;
+            padding: 50px 0 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 8px 18px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.03em;
+            opacity: 0;
+            animation: fadeSlideDown 0.7s var(--ease-out-expo) forwards;
+        }
+        .hero-badge .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-4);
+            box-shadow: 0 0 8px var(--glow-4);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 6px var(--glow-4); }
+            50% { box-shadow: 0 0 16px var(--glow-4), 0 0 28px var(--glow-4); }
+        }
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero h1 {
+            font-size: clamp(2.2rem, 5.5vw, 2.9rem);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin: 0;
+            opacity: 0;
+            animation: fadeSlideDown 0.7s 0.08s forwards;
+        }
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, #c4b5fd, #7c5cfc, #5c9eff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 460px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeSlideDown 0.7s 0.16s forwards;
+        }
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #08080e;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 14px 30px;
+            border-radius: 100px;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo);
+            opacity: 0;
+            animation: fadeSlideDown 0.7s 0.24s forwards;
+            will-change: transform;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hero-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.18);
+        }
+        .hero-cta:active {
+            transform: scale(0.97);
+        }
+
+        /* ── HERO ILLUSTRATION ── */
+        .hero-illustration {
+            width: 100%;
+            max-width: 500px;
+            margin: 8px auto 0;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s 0.3s forwards;
+            pointer-events: none;
+        }
+        .hero-illustration svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── CARDS ───────────────────────── */
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 26px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            cursor: pointer;
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeSlideUp 0.6s var(--ease-out-expo) forwards;
+            will-change: transform, box-shadow, border-color;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        .card:focus-visible {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.45s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card:hover::before { opacity: 1; }
+        .card:nth-child(1)::before { background: radial-gradient(circle at 20% 50%, var(--glow-1), transparent 70%); }
+        .card:nth-child(2)::before { background: radial-gradient(circle at 20% 50%, var(--glow-2), transparent 70%); }
+        .card:nth-child(3)::before { background: radial-gradient(circle at 20% 50%, var(--glow-3), transparent 70%); }
+        .card:nth-child(4)::before { background: radial-gradient(circle at 20% 50%, var(--glow-4), transparent 70%); }
+        .card:nth-child(5)::before { background: radial-gradient(circle at 20% 50%, var(--glow-5), transparent 70%); }
+        .card:nth-child(6)::before { background: radial-gradient(circle at 20% 50%, var(--glow-6), transparent 70%); }
+        .card:nth-child(7)::before { background: radial-gradient(circle at 20% 50%, var(--glow-7), transparent 70%); }
+
+        .card-clicked {
+            animation: cardClickPulse 0.45s var(--ease-out-expo) !important;
+        }
+        @keyframes cardClickPulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            25% { transform: scale(0.965); filter: brightness(1.35); }
+            55% { transform: scale(1.025); filter: brightness(1.7); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:nth-child(1) { animation-delay: 0.04s; }
+        .card:nth-child(2) { animation-delay: 0.10s; }
+        .card:nth-child(3) { animation-delay: 0.16s; }
+        .card:nth-child(4) { animation-delay: 0.22s; }
+        .card:nth-child(5) { animation-delay: 0.28s; }
+        .card:nth-child(6) { animation-delay: 0.34s; }
+        .card:nth-child(7) { animation-delay: 0.40s; }
+
+        .card:hover {
+            transform: translateY(-3px) scale(1.015);
+            border-color: rgba(255, 255, 255, 0.17);
+            box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.6);
+        }
+        .card:active {
+            transform: scale(0.98);
+            transition: transform 0.12s var(--ease-out-expo);
+        }
+
+        .card-icon {
+            flex-shrink: 0;
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo);
+        }
+        .card:hover .card-icon {
+            transform: scale(1.08) translateY(-2px);
+        }
+        .card:nth-child(1) .card-icon { background: rgba(124, 92, 252, 0.18); box-shadow: 0 0 24px rgba(124, 92, 252, 0.25); }
+        .card:nth-child(2) .card-icon { background: rgba(92, 158, 255, 0.18); box-shadow: 0 0 24px rgba(92, 158, 255, 0.25); }
+        .card:nth-child(3) .card-icon { background: rgba(255, 107, 157, 0.18); box-shadow: 0 0 24px rgba(255, 107, 157, 0.25); }
+        .card:nth-child(4) .card-icon { background: rgba(74, 222, 128, 0.18); box-shadow: 0 0 24px rgba(74, 222, 128, 0.25); }
+        .card:nth-child(5) .card-icon { background: rgba(245, 158, 11, 0.18); box-shadow: 0 0 24px rgba(245, 158, 11, 0.25); }
+        .card:nth-child(6) .card-icon { background: rgba(167, 139, 250, 0.18); box-shadow: 0 0 24px rgba(167, 139, 250, 0.25); }
+        .card:nth-child(7) .card-icon { background: rgba(6, 182, 212, 0.18); box-shadow: 0 0 24px rgba(6, 182, 212, 0.25); }
+
+        .card-icon svg {
+            width: 32px;
+            height: 32px;
+            transition: transform 0.35s var(--ease-out-expo);
+            pointer-events: none;
+        }
+        .card:hover .card-icon svg {
+            transform: rotate(-2deg) scale(1.06);
+        }
+
+        .card-body {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .card-body h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+        .card-body p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .card-arrow {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-smooth);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(6px);
+            pointer-events: none;
+        }
+        .card-arrow svg {
+            width: 18px;
+            height: 18px;
+            stroke: #fff;
+            transition: transform 0.3s ease;
+        }
+        .card:hover .card-arrow {
+            background: #fff;
+            border-color: #fff;
+            box-shadow: 0 6px 24px rgba(255, 255, 255, 0.25);
+        }
+        .card:hover .card-arrow svg {
+            stroke: #08080e;
+            transform: translateX(2px);
+        }
+
+        /* ── RESPONSIVE ──────────────────── */
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px 16px 50px;
+            }
+            .hero {
+                padding: 40px 0 28px;
+            }
+            .hero-badge {
+                font-size: 0.75rem;
+                padding: 6px 14px;
+            }
+            .hero h1 {
+                font-size: 1.9rem;
+            }
+            .hero p {
+                font-size: 0.95rem;
+            }
+            .hero-cta {
+                padding: 12px 24px;
+                font-size: 0.9rem;
+            }
+            .hero-illustration {
+                max-width: 320px;
+            }
+            .card {
+                padding: 20px 18px;
+                gap: 16px;
+                border-radius: var(--radius-md);
+            }
+            .card-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+            }
+            .card-icon svg {
+                width: 26px;
+                height: 26px;
+            }
+            .card-body h3 {
+                font-size: 1rem;
+            }
+            .card-body p {
+                font-size: 0.8rem;
+            }
+            .card-arrow {
+                width: 38px;
+                height: 38px;
+            }
+        }
+        .hp-hero-banner {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  padding: 24px 22px 22px;
+  background: linear-gradient(135deg, #0f2a56 0%, #1a3a72 40%, #0d4a8a 70%, #1565C0 100%);
+  border: 1px solid rgba(96,165,250,.22);
+  box-shadow: 0 8px 32px rgba(0,0,80,.45), inset 0 1px 0 rgba(255,255,255,.1);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 148px;
+}
+.hp-hero-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 80% 50%, rgba(96,165,250,.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hp-hero-banner::after {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hp-hero-text { position: relative; z-index: 1; flex: 1; }
+.hp-hero-eyebrow {
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(147,197,253,.75);
+  margin-bottom: 8px;
+}
+.hp-hero-title {
+  font-family: var(--font-d);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.22;
+  letter-spacing: -.3px;
+  margin-bottom: 18px;
+  max-width: 190px;
+}
+.hp-hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  background: rgba(255,255,255,.97);
+  color: #0f2a56;
+  font-family: var(--font-b);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.3) inset;
+  transition: all .22s var(--spring);
+  white-space: nowrap;
+}
+.hp-hero-cta-btn:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,.5);
+}
+.hp-hero-cta-btn:active { transform: scale(.96); }
+.hp-hero-cta-btn svg { flex-shrink: 0; }
+/* floating illustration placeholder */
+.hp-hero-illus {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  width: 112px;
+  height: 112px;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.hp-hero-illus-circle {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(96,165,250,.25), rgba(59,130,246,.08));
+  border: 1px solid rgba(96,165,250,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0,0,60,.4);
+  animation: hp-float 4s ease-in-out infinite;
+}
+@keyframes hp-float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+    </style>
+</head>
+<body>
+
+      <!-- ══════════ 0A. PREMIUM HERO BANNER ══════════ -->
+      <div class="hp-hero-banner">
+        <div class="hp-hero-text">
+          <div class="hp-hero-eyebrow">NeuroForge · Learn</div>
+          <div class="hp-hero-title">What would you like to learn today?</div>
+          <button class="hp-hero-cta-btn" onclick="window.openMathTrainer && window.openMathTrainer()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="m15 6 6 6-6 6"/></svg>
+            View Performance
+          </button>
+        </div>
+        <div class="hp-hero-illus">
+          <div class="hp-hero-illus-circle">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(147,197,253,.85)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+    <div id="light-flash"></div>
+
+    <div class="container">
+        <!-- Hero section -->
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span> premium learning suite
+            </div>
+            <h1>Master concepts with <span class="gradient-text">precision</span></h1>
+            <p>Interactive courses, quizzes, and cutting-edge labs for deep understanding and rapid growth.</p>
+            <button class="hero-cta">
+                Get started
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+            </button>
+
+            <!-- Full hero illustration – now properly visible and responsive -->
+            <div class="hero-illustration">
+                <svg viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="bgGlow">
+                            <stop offset="0%" stop-color="#8b5cf6"/>
+                            <stop offset="100%" stop-color="#0f172a"/>
+                        </radialGradient>
+                        <linearGradient id="charGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#7c5cff"/>
+                            <stop offset="100%" stop-color="#00d4ff"/>
+                        </linearGradient>
+                        <linearGradient id="formulaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00e5ff"/>
+                            <stop offset="50%" stop-color="#ffffff"/>
+                            <stop offset="100%" stop-color="#ff4fd8"/>
+                        </linearGradient>
+                        <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="12" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <!-- Ambient background -->
+                    <circle cx="350" cy="350" r="240" fill="url(#bgGlow)" opacity="0.12" filter="url(#softGlow)"/>
+                    <!-- Floating equations -->
+                    <g fill="url(#formulaGrad)" font-family="monospace" font-weight="bold" opacity="0.88" filter="url(#softGlow)">
+                        <text x="120" y="160" font-size="34">E = mc²</text>
+                        <text x="420" y="140" font-size="32">∫ f(x)dx</text>
+                        <text x="470" y="250" font-size="30">π ≈ 3.14</text>
+                        <text x="120" y="290" font-size="28">a² + b²</text>
+                        <text x="300" y="110" font-size="36">Σ</text>
+                        <text x="210" y="210" font-size="26">lim x→∞</text>
+                        <text x="390" y="340" font-size="32">f(x)</text>
+                    </g>
+                    <!-- Orbit rings -->
+                    <ellipse cx="350" cy="250" rx="240" ry="90" fill="none" stroke="#7c5cff" stroke-width="2" opacity="0.18" transform="rotate(-10 350 250)"/>
+                    <ellipse cx="350" cy="250" rx="180" ry="60" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.14" transform="rotate(18 350 250)"/>
+                    <!-- Character -->
+                    <circle cx="350" cy="370" r="58" fill="url(#charGrad)" filter="url(#softGlow)"/>
+                    <path d="M305 360 Q350 300 395 360" fill="none" stroke="#ffffff" stroke-width="6" opacity="0.22" stroke-linecap="round"/>
+                    <circle cx="330" cy="372" r="5" fill="#ffffff"/>
+                    <circle cx="370" cy="372" r="5" fill="#ffffff"/>
+                    <path d="M330 400 Q350 415 370 400" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M290 510 Q350 450 410 510 L430 620 L270 620 Z" fill="url(#charGrad)" opacity="0.95" filter="url(#softGlow)"/>
+                    <rect x="295" y="500" width="110" height="70" rx="14" fill="#111827" stroke="#00d4ff" stroke-width="3"/>
+                    <text x="318" y="545" fill="#00e5ff" font-size="20" font-family="monospace">y=x²</text>
+                    <path d="M300 520 Q280 535 270 560" stroke="#8b5cf6" stroke-width="16" stroke-linecap="round" fill="none"/>
+                    <path d="M400 520 Q420 535 430 560" stroke="#00d4ff" stroke-width="16" stroke-linecap="round" fill="none"/>
+                    <g filter="url(#softGlow)">
+                        <circle cx="160" cy="420" r="5" fill="#00d4ff"/>
+                        <circle cx="560" cy="390" r="6" fill="#ff4fd8"/>
+                        <circle cx="530" cy="180" r="5" fill="#8b5cf6"/>
+                        <circle cx="190" cy="180" r="5" fill="#ffffff"/>
+                    </g>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Cards list -->
+        <div class="cards-list">
+            <!-- 1. Course → cube.html -->
+            <article class="card" tabindex="0" aria-label="Course" data-link="cube.html">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                        <path d="M8 7h8M8 11h6"/>
+                        <polyline points="14 2 18 6 14 10" stroke="currentColor" fill="none"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>Course</h3>
+                    <p>Structured learning paths with rich content</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- 2. Quiz -->
+            <article class="card" tabindex="0" aria-label="Quiz">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#5c9eff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <rect x="8" y="2" width="8" height="4" rx="1"/>
+                        <circle cx="10" cy="15" r="1.2" fill="#5c9eff" stroke="none"/>
+                        <path d="M10 13.5v-2a2.5 2.5 0 0 1 2.5-2.5c1.2 0 2.2 1 2.2 2.2 0 1.3-1.5 2-1.5 3"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>Quiz</h3>
+                    <p>Test your knowledge with interactive challenges</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- 3. Quick Easy Revision -->
+            <article class="card" tabindex="0" aria-label="Quick Easy Revision">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b9d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        <path d="M18 8l-2 4h3l-3 5" stroke-width="1.5" opacity="0.7"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>Quick Easy Revision</h3>
+                    <p>Flashcards & summaries for rapid recall</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- 4. Explore Basic Formulas -->
+            <article class="card" tabindex="0" aria-label="Explore Basic Formulas">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 18L8 4l4 14 4-10 2 6"/>
+                        <path d="M6 12h12" stroke-width="1.2" opacity="0.6"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>Explore Basic Formulas</h3>
+                    <p>Comprehensive formula library with examples</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- 5. Neuro Lab -->
+            <article class="card" tabindex="0" aria-label="Neuro Lab" data-link="GoCourse.html">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 4a3 3 0 0 1 3 3c0 1.1-.5 2.1-1.5 2.6V12h-3V9.6A3.2 3.2 0 0 1 9 7a3 3 0 0 1 3-3z"/>
+                        <circle cx="5" cy="16" r="1.8"/>
+                        <circle cx="19" cy="16" r="1.8"/>
+                        <line x1="12" y1="12" x2="12" y2="15"/>
+                        <line x1="5" y1="14.5" x2="9" y2="16"/>
+                        <line x1="19" y1="14.5" x2="15" y2="16"/>
+                        <circle cx="10" cy="10" r="1" fill="#f59e0b" stroke="none"/>
+                        <circle cx="14" cy="8" r="1.2" fill="#f59e0b" stroke="none"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>Neuro Lab</h3>
+                    <p>Brain-training experiments & cognitive games</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- 6. Gravity Lab -->
+            <article class="card" tabindex="0" aria-label="Gravity Lab" data-link="ad999.html">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3a2.5 2.5 0 0 1 2.2 1.5c.4.8.2 1.6-.4 2.2l-1.5 1.5"/>
+                        <path d="M14 8c2 1 3 3 3 5.5a5 5 0 0 1-10 0c0-2.5 1-4.5 3-5.5"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                        <line x1="9" y1="19" x2="15" y2="19"/>
+                        <circle cx="12" cy="13" r="1.2" fill="#a78bfa" stroke="none"/>
+                        <path d="M12 10v2.5" stroke-width="1.2" opacity="0.7"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>Gravity Lab</h3>
+                    <p>Interactive physics simulations & experiments</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- 7. play Maths → until.html -->
+            <article class="card" tabindex="0" aria-label="play Maths" data-link="unt.html">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/>
+                        <circle cx="12" cy="12" r="8" stroke-dasharray="4 2" opacity="0.5"/>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <h3>play Maths</h3>
+                    <p>Fun interactive math games & puzzles</p>
+                </div>
+                <div class="card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const lightFlash = document.getElementById('light-flash');
+            const linkedCards = document.querySelectorAll('.card[data-link]');
+
+            function launchWithAnimation(url, title) {
+                // ── Send to parent (chat-11.html) to open as in-app modal ──
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage(
+                        { type: 'neuroforge_openModal', url: url, title: title },
+                        '*'
+                    );
+                } else {
+                    // Fallback: opened standalone (not in iframe)
+                    window.open(url, '_blank');
+                }
+
+                // Keep the existing light-flash animation
+                lightFlash.classList.remove('fading');
+                lightFlash.classList.add('active');
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        lightFlash.classList.remove('active');
+                        lightFlash.classList.add('fading');
+                    });
+                });
+                setTimeout(() => {
+                    lightFlash.classList.remove('fading');
+                }, 500);
+            }
+
+            function handleCardClick(card, url) {
+                card.classList.remove('card-clicked');
+                void card.offsetWidth;
+                card.classList.add('card-clicked');
+                setTimeout(() => {
+                    card.classList.remove('card-clicked');
+                }, 500);
+
+                // Grab the card title so the parent can label the modal header
+                const title = card.querySelector('h3')?.textContent?.trim() || 'Explore';
+                launchWithAnimation(url, title);
+            }
+
+            linkedCards.forEach(card => {
+                const url = card.getAttribute('data-link');
+                if (!url) return;
+
+                card.addEventListener('click', function(e) {
+                    handleCardClick(card, url);
+                });
+
+                card.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleCardClick(card, url);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
