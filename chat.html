@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neuro Forge — Chat</title>
+<title>Neuro Forge — Learn</title>
 <!-- ── PWA Manifest (App Shell Architecture) ── -->
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -101,9 +101,31 @@
    RESET
 ───────────────────────────────────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
-body{font-family:var(--font-b);background:var(--bg-app);color:var(--tp);height:100vh;width:100vw;overflow:hidden;transition:background var(--dur) var(--ease),color var(--dur) var(--ease);letter-spacing:.01em;}
+html,
+body{
+  width:100%;
+  height:100%;
+}
 
+body{
+  min-height:100dvh;
+  overflow:hidden;
+
+  font-family:var(--font-b);
+  background:var(--bg-app);
+  color:var(--tp);
+
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+
+  letter-spacing:.01em;
+}
+   
 /* ── NO OUTLINE / TAP HIGHLIGHT on ALL interactive elements ── */
 button,
 [role="button"],
@@ -176,9 +198,29 @@ textarea{font-family:var(--font-b);}
 /* ─────────────────────────────────────────────────────────────
    LAYOUT
 ───────────────────────────────────────────────────────────── */
-.app{display:flex;height:100vh;width:100vw;overflow:hidden;position:relative;}
+.app{
+  display:flex;
 
+  width:100%;
+  min-height:100dvh;
 
+  overflow:hidden;
+  position:relative;
+
+  isolation:isolate;
+}
+   .main-scroll{
+  flex:1;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+
+  -webkit-overflow-scrolling:touch;
+
+  overscroll-behavior-y:contain;
+
+  transform:translateZ(0);
+   }
 
 /* ─────────────────────────────────────────────────────────────
    SIDEBAR
