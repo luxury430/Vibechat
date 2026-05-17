@@ -32373,31 +32373,34 @@ window._errHtml = function(name, msg) {
    bindings (bnHome, bnQuiz, bnChat, bnLeaderboard).
    This block only handles:
      1. The + expand sub-menu (opens community + shows Create/Upload/Cancel)
-     2. Scroll-based hide / reveal (listens on homeBody scroller)
-     3. Active state sync for the new .active class
+     2. Scroll-based hide / reveal (universal SPA approach)
 ═══════════════════════════════════════════════════ */
 (function() {
   const _$ = id => document.getElementById(id);
 
   /* ── 1. Expand menu ─────────────────────────────── */
+  const nav         = _$('bottomNav');
   const expandBtn   = _$('nfNavExpand');
   const expandList  = _$('nfNavExpandList');
   const expandIcon  = _$('nfNavExpandIcon');
   const expandClose = _$('nfNavExpandClose');
   const postBtn     = _$('nfNavPost');    // "Upload"
-  const createBtn   = _$('nfNavCreate'); // "Create"
+  const createBtn   = _$('nfNavCreate');  // "Create"
 
   function openExpandMenu() {
     expandList?.classList.add('show-list');
     expandIcon?.classList.add('nf-rotate');
   }
+
   function closeExpandMenu() {
     expandList?.classList.remove('show-list');
     expandIcon?.classList.remove('nf-rotate');
   }
 
   /* + button: show sub-icons AND open community page */
-  expandBtn?.addEventListener('click', () => {
+  expandBtn?.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent the document click listener from instantly closing it
+
     if (expandList?.classList.contains('show-list')) {
       closeExpandMenu();
     } else {
@@ -32411,28 +32414,35 @@ window._errHtml = function(name, msg) {
 
   /* Cancel — just close sub-icons, stay on community */
   expandClose?.addEventListener('click', (e) => {
+    e.preventDefault();
     e.stopPropagation();
     closeExpandMenu();
   });
 
   /* Upload → open community post modal */
-  postBtn?.addEventListener('click', () => {
+  postBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
     closeExpandMenu();
+
     const inp = _$('commPostInp');
     const ov  = _$('commPostOv');
     if (!ov) return;
+
     if (inp) inp.value = '';
     // Reset category to General
     document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(o => {
       o.classList.toggle('selected', o.dataset.cat === 'general');
     });
+
     ov.classList.add('show');
     setTimeout(() => inp?.focus(), 140);
   });
 
   /* Create → open chapter picker (test creation) */
-  createBtn?.addEventListener('click', () => {
+  createBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
     closeExpandMenu();
+
     if (typeof window.openChapterPicker === 'function') {
       window.openChapterPicker();
     } else {
@@ -32447,8 +32457,7 @@ window._errHtml = function(name, msg) {
     }
   });
 
-  /* ── 2. Scroll hide / reveal ────────────────────── */
-  const nav = _$('bottomNav');
+  /* ── 2. Scroll hide / reveal (Universal SPA Approach) ── */
   let lastY = 0;
   let isNavigating = false;
   let navTimer;
@@ -32462,53 +32471,41 @@ window._errHtml = function(name, msg) {
     });
   });
 
-  function handleScroll(currentY) {
-    const delta = Math.abs(currentY - lastY);
-    // Close expand list if user starts scrolling
-    if (delta > 10 && expandList?.classList.contains('show-list')) {
-      closeExpandMenu();
-    }
-    if (!isNavigating && nav?.classList.contains('visible')) {
-      if (currentY > lastY && currentY > 50) {
-        nav.classList.add('nf-hide');
-      } else if (currentY < lastY) {
-        nav.classList.remove('nf-hide');
+  // Use the "capture" phase to catch all scrolling div events globally
+  document.addEventListener('scroll', (e) => {
+    const target = e.target;
+    if (!target.classList) return;
+
+    // Check if the scroll event belongs to one of the main content wrappers
+    const isMainScroller = target.classList.contains('home-body') ||
+                           target.classList.contains('comm-feed') ||
+                           target.classList.contains('test-feed-scroll') ||
+                           target.classList.contains('chan-list') ||
+                           target.classList.contains('disc-body') ||
+                           target.classList.contains('msgs') ||
+                           target.classList.contains('discuss-dashboard');
+
+    if (isMainScroller) {
+      const currentY = target.scrollTop;
+      const delta = Math.abs(currentY - lastY);
+
+      // Close expand list if user starts scrolling
+      if (delta > 10 && expandList?.classList.contains('show-list')) {
+        closeExpandMenu();
       }
+
+      // Hide or show the bottom navigation bar
+      if (!isNavigating && nav?.classList.contains('visible')) {
+        if (currentY > lastY && currentY > 50) {
+          nav.classList.add('nf-hide');
+        } else if (currentY < lastY) {
+          nav.classList.remove('nf-hide');
+        }
+      }
+
+      lastY = currentY;
     }
-    lastY = currentY;
-  }
-
-  // Primary: listen on the homeBody inner scroller (where the page actually scrolls)
-  const homeBody = _$('homeBody');
-  if (homeBody) {
-    homeBody.addEventListener('scroll', () => {
-      handleScroll(homeBody.scrollTop);
-    }, { passive: true });
-  }
-
-  // Fallback: also listen on the community feed scroller
-  const commFeed = _$('commFeed');
-  if (commFeed) {
-    commFeed.addEventListener('scroll', () => {
-      handleScroll(commFeed.scrollTop);
-    }, { passive: true });
-  }
-
-  // Fallback: window scroll (for any other scroll context)
-  window.addEventListener('scroll', () => {
-    handleScroll(window.scrollY);
-  }, { passive: true });
-
-  /* ── 3. Active state bridge ─────────────────────── */
-  const NFNavIds = ['bnHome','bnQuiz','bnChat','bnLeaderboard'];
-  const nav2 = _$('bottomNav');
-  if (nav2 && window.MutationObserver) {
-    const obs = new MutationObserver(() => {});
-    NFNavIds.forEach(id => {
-      const el = _$(id);
-      if (el) obs.observe(el, { attributes: true, attributeFilter: ['class'] });
-    });
-  }
+  }, { capture: true, passive: true });
 
 })();
 </script>
