@@ -4294,6 +4294,30 @@ body::before {
   transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(80,30,160,.55);
 }
+/* ── Math Formula Test Card ── */
+.hp-fy-card-mathtest {
+  background: linear-gradient(145deg, #0f2027 0%, #1a3a4a 50%, #0d2233 100%);
+  border-color: rgba(56,189,248,.28);
+  box-shadow: 0 6px 24px rgba(14,116,144,.45), inset 0 1px 0 rgba(255,255,255,.10);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.hp-fy-card-mathtest::before {
+  content: '';
+  position: absolute;
+  top: -16px; right: -16px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56,189,248,.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hp-fy-card-mathtest:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(14,116,144,.55);
+}
+
 .hp-fy-card-tag {
   font-size: .55rem;
   font-weight: 700;
@@ -13555,7 +13579,7 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
             </div>
 
             <!-- Violet: Math Formula Explorer -->
-            <div class="hp-fy-card hp-fy-card-formula" onclick="window.openSubModal&&window.openSubModal('math-formula.html','Math Formula Explorer')">
+            <div class="hp-fy-card hp-fy-card-formula" style="opacity:.5;cursor:default;" title="Moved to test card below">
               <div class="hp-fy-card-tag">Formulas</div>
               <div class="hp-fy-card-title">Math Formula Explorer</div>
               <div class="hp-fy-card-desc">Visualise &amp; compute identities step-by-step.</div>
@@ -13592,7 +13616,20 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
               <div class="hp-fy-art-title">Tips for better teamwork</div>
             </div>
 
-          </div>
+          
+            <!-- ── Math Formula Explorer Test Card ── -->
+            <div class="hp-fy-card hp-fy-card-mathtest" style="cursor:pointer;border-radius:18px;padding:20px 18px 16px;" onclick="window.openSubModal('math-formula.html','Math Formula Explorer')">
+              <div class="hp-fy-card-tag" style="color:rgba(56,189,248,.75);">Formulas ✦ Test</div>
+              <div class="hp-fy-card-title" style="font-size:1rem;">Math Formula Explorer</div>
+              <div class="hp-fy-card-desc">Tap to open — step-by-step formula calculator.</div>
+              <div class="hp-fy-card-footer" style="margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
+                <span class="hp-fy-card-duration" style="color:rgba(56,189,248,.7);">Interactive</span>
+                <div class="hp-fy-play-btn" style="background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.35);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              </div>
+            </div>
+</div>
         </div>
       </div>
 
