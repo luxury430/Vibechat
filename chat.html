@@ -16599,44 +16599,35 @@ function _resetPaginationState() {
 }
 
 function _attachScrollPagination(box, chatId, isGroup, otherUser, session) {
-  // Detach any existing scroll listener
+  // Clean up previous listener first
   if (_scrollPaginateOff) { _scrollPaginateOff(); _scrollPaginateOff = null; }
 
-  // ── onNearTop: fired by VirtualizationEngine when the first rendered
-  //   .mw is within 400px of the container top edge. ──
-  const onNearTop = async () => {
+  const handler = async () => {
     if (session !== _chatSession) return;
     if (_isLoadingOlder || _noMoreOlderMsgs) return;
+    // Fire when user is within 160px of the top
+    if (box.scrollTop > 160) return;
 
     _isLoadingOlder = true;
     _showLoadMoreSpinner(box);
 
+    // ── Phase 1: check if cached messages can fill from above without a network round-trip ──
     const domOldestEl = box.querySelector('.mw[data-mid]');
     const domOldestId = domOldestEl?.dataset?.mid;
 
-    // ── Phase 1: MessageStore — zero network round-trip ──────────
-    // Expand the DOM window upward using messages already in memory.
-    // This fires instead of a Firebase fetch whenever we have older
-    // messages in the store above the current window start.
-    if (domOldestId) {
-      const { start: wStart } = VirtualizationEngine.getWindow(chatId);
-      const storeIdx = MessageStore.indexOf(chatId, domOldestId);
-      if (wStart > 0 || storeIdx > 0) {
-        const allMsgs  = MessageStore.getAll(chatId);
-        const newStart = Math.max(0, wStart - 30);      // expand by up to 30
-        const toRender = allMsgs
-          .slice(newStart, wStart)
-          .filter(m => !_isExpiredNormalMsg(m));         // skip expired
-        if (toRender.length > 0) {
-          await _prependMsgs(box, toRender, isGroup, otherUser, session);
-          _hideLoadMoreSpinner(box);
-          _isLoadingOlder = false;
-          return;
-        }
+    if (_msgCache.size > 0 && domOldestId) {
+      const cacheIds = Array.from(_msgCache.keys());
+      const domIdx   = cacheIds.indexOf(domOldestId);
+      if (domIdx > 0) {
+        const toRender = cacheIds.slice(0, domIdx).map(id => _msgCache.get(id));
+        await _prependMsgs(box, toRender, isGroup, otherUser, session);
+        _hideLoadMoreSpinner(box);
+        _isLoadingOlder = false;
+        return;
       }
     }
 
-    // ── Phase 2: Firebase — fetch the next older page ─────────────
+    // ── Phase 2: delegate to NeuroBridge — no getDocs in chat.html ──
     const { messages: olderMsgs, exhausted } = await NeuroBridge.loadOlderMessages(chatId, isGroup);
     if (session !== _chatSession) { _isLoadingOlder = false; return; }
 
@@ -16648,171 +16639,31 @@ function _attachScrollPagination(box, chatId, isGroup, otherUser, session) {
       return;
     }
 
-    // Sync both _msgCache (legacy DOM lookup) and MessageStore
-    olderMsgs.forEach(m => { if (!_msgCache.has(m.id)) _msgCache.set(m.id, m); });
-    MessageStore.upsertMany(chatId, olderMsgs);
+    // Sync local _msgCache with the newly fetched older messages
+    olderMsgs.forEach(m => {
+      if (!_msgCache.has(m.id)) _msgCache.set(m.id, m);
+    });
 
     await _prependMsgs(box, olderMsgs, isGroup, otherUser, session);
+
     _hideLoadMoreSpinner(box);
     _isLoadingOlder = false;
   };
 
-  // VE.activate: injects spacers into the DOM, trims excess nodes,
-  // sets window to the last WINDOW_SIZE messages, and wires the
-  // rAF-throttled scroll handler that drives onNearTop + top-trimming.
-  VirtualizationEngine.activate(chatId, box, onNearTop);
-  _scrollPaginateOff = () => VirtualizationEngine.detachScroll(chatId);
+  box.addEventListener('scroll', handler, { passive: true });
+  _scrollPaginateOff = () => box.removeEventListener('scroll', handler);
 }
 
 async function _prependMsgs(box, msgs, isGroup, otherUser, session) {
   if (!msgs.length) return;
+  const prevScrollHeight = box.scrollHeight;
+  const prevScrollTop    = box.scrollTop;
 
-  // ── Capture scroll anchor BEFORE any DOM mutation ──
-  // The anchor is the first .mw currently visible in the box.
-  // After insertion we re-measure its position and correct scrollTop.
-  const _anchorEl  = box.querySelector('.mw[data-mid]');
-  const _anchorTop = _anchorEl ? _anchorEl.getBoundingClientRect().top : null;
-
-  // Suppress browser-native overflow-anchor during our manual correction
-  box.style.overflowAnchor = 'none';
+  // Suppress scroll-anchor during prepend to prevent jump
+  box.style.overflowY = 'hidden';
 
   const fragment = document.createDocumentFragment();
-  // Insertion reference: _vt spacer (placed right before the first rendered message).
-  // Older messages go BEFORE _vt so that _inject() can reposition _vt
-  // to sit before the new oldest message after the insert completes.
-  const _vtEl = box.querySelector('._vt');
-
-  let _lastPrependedDay = null;
-  let prependedCount    = 0; // actual count added (skips already-in-DOM messages)
-
-  for (const m of msgs) {
-    if (session !== _chatSession) break;
-    if (box.querySelector(`[data-mid="${m.id}"]`)) continue; // already in DOM
-
-    m.s = (m.sender === currentUser.uid);
-    m.formattedTime = formatTime(m.time);
-
-    let senderInfo = otherUser;
-    if (isGroup && !m.s) {
-      senderInfo = await getCachedUser(m.sender);
-      if (session !== _chatSession) break;
-    }
-
-    // Build element
-    let w = document.createElement('div');
-    w.className = 'mw ' + (m.s ? 'sent' : 'received');
-    w.dataset.mid = m.id;
-    // Suppress entry animation for history
-    w.style.animation = 'none';
-
-    const _isNFMsg = !m.s && isNF(senderInfo || {});
-    if (_isNFMsg) w.classList.add('nf-msg');
-
-    let rpH = '';
-    if (m.rp) rpH = `<div class="rp-prev"><div class="rp-prev-name">Replied</div>${esc(m.rp.text||'').slice(0,60)}</div>`;
-    const fwdH = m.fwd ? '<div class="fwd-badge">↪ Forwarded</div>' : '';
-    const senderNameH = (isGroup && !m.s && senderInfo?.name && !_isNFMsg)
-      ? `<div style="font-size:.67rem;font-weight:700;color:var(--accent2);margin-bottom:3px;padding-left:2px;">${esc(senderInfo.name)}</div>` : '';
-    const nfLabelH = _isNFMsg
-      ? `<div class="nf-msg-label"><span class="nf-badge" style="width:12px;height:12px;"></span> NeuroForge &nbsp;•&nbsp; Official</div>` : '';
-    const tickClass = m.seen ? 'seen-tick' : 'sent-tick';
-    const tickH = m.s ? `<span class="m-tick-wrap"><span class="m-tick ${tickClass}">
-      <svg viewBox="0 0 15 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1 4.5L4.5 8L10 1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M5 4.5L8.5 8L14 1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg></span></span>` : '';
-    const c = senderInfo || { ini: '?', g: '#333', name: 'Unknown' };
-    const avHtml = !m.s ? (_isNFMsg
-      ? `<div class="m-av nf-m-av" style="background:${NF_GRADIENT};width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;overflow:hidden;">${NF_INI}</div>`
-      : `<div class="m-av" style="${_buildAvStyle(c)};width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;overflow:hidden;">${_buildAvContent(c, 'sm')}</div>`)
-    : '';
-    const _replyText = m.sticker ? '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"emoji-icon\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M8 14s1.5 2 4 2 4-2 4-2\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/></svg> Sticker' : (m.img && !m.text ? '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"emoji-icon\"><path d=\"M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z\"/><circle cx=\"12\" cy=\"13\" r=\"3\"/></svg> Photo' : esc(m.text || ''));
-
-    let contentH;
-    if (m.sticker) {
-      contentH = `
-        <div class="sticker-bubble" style="padding:0;background:transparent;box-shadow:none;border:none;">
-          <img src="${m.img}" alt="sticker" draggable="false"
-               onload="this.style.opacity='1'"
-               style="opacity:0;transition:opacity .2s ease;width:145px;height:145px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.28));"></div>`;
-    } else {
-      contentH = m.img
-        ? `<div class="chat-img-wrap"><img class="chat-img-real" src="${m.img}" alt="Image" loading="lazy" style="opacity:0;"
-             onload="this.style.transition='opacity .35s ease';this.style.opacity='1';"
-             onerror="this.closest('.chat-img-wrap').innerHTML='<span style=\\'font-size:.8rem;color:var(--tm);\\'>Image</span>'"></div>`
-        : `<div class="mb">${esc(m.text||'')}</div>`;
-    }
-
-    const _mbwStyle = m.sticker ? ' style="background:transparent;box-shadow:none;border:none;padding:2px 0;"' : '';
-
-    w.innerHTML = `
-      ${avHtml}
-      <div class="mbw"${_mbwStyle}>
-        <div class="m-acts">
-          <button class="act-b" onclick="doReply('${m.id}', \`${_replyText}\`)" title="Reply">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
-          </button>
-          <button class="act-b" onclick="doForward(\`${_replyText}\`, '${m.img||''}', ${!!m.sticker})" title="Forward">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
-          </button>
-          ${m.s ? `<button class="act-b del" onclick="delMsg('${m.id}')" title="Delete">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-          </button>` : ''}
-        </div>
-        ${fwdH}${senderNameH}${nfLabelH}${rpH}
-        ${contentH}
-        <div class="m-time" style="display:flex;align-items:center;gap:2px;">${m.formattedTime}${tickH}</div>
-      </div>`;
-
-    // Insert date separator when day changes (history pagination)
-    if (m.time) {
-      const msgDay = new Date(m.time).toDateString();
-      if (msgDay !== _lastPrependedDay) {
-        fragment.appendChild(makeDateSep(m.time));
-        _lastPrependedDay = msgDay;
-      }
-    }
-
-    fragment.appendChild(w);
-    VirtualMsgPool.register(m.id, w);
-    prependedCount++;
-    if (typeof GesturePhysics !== 'undefined') {
-      GesturePhysics.attachReplySwipe(w, () => doReply(m.id, m.text || ''));
-    }
-  }
-
-  // ── Insert fragment immediately before the _vt spacer ──────────
-  // This places older messages in the correct position:
-  //   [chatIntro?] [spinner?] [new older msgs] [_vt] [current window] [_vb]
-  // VE.onPrepend will then reposition _vt before the new oldest message.
-  const _refNode = (_vtEl && _vtEl.parentNode === box)
-    ? _vtEl
-    : (box.querySelector('.mw[data-mid]') || null);
-  if (_refNode) box.insertBefore(fragment, _refNode);
-  else          box.appendChild(fragment);
-
-  // ── Deduplicate stacked date separators at the old/new boundary ──
-  const allDates = box.querySelectorAll('.date-div');
-  for (let i = 0; i < allDates.length - 1; i++) {
-    if (allDates[i].dataset.day === allDates[i + 1].dataset.day) allDates[i + 1].remove();
-  }
-
-  // ── Update VirtualizationEngine: expand window, reposition _vt, recalc spacers ──
-  if (prependedCount > 0 && window.curChatId) {
-    VirtualizationEngine.onPrepend(window.curChatId, box, prependedCount);
-  }
-
-  // ── Restore scroll anchor: user sees no jump ───────────────────
-  // After VE.onPrepend repositioned _vt and updated spacers,
-  // the anchor element's viewport position may have shifted.
-  // We compensate by adjusting scrollTop by exactly that delta.
-  box.style.overflowAnchor = '';
-  if (_anchorEl && box.contains(_anchorEl) && _anchorTop !== null) {
-    const _newTop = _anchorEl.getBoundingClientRect().top;
-    const _delta  = _newTop - _anchorTop;
-    if (Math.abs(_delta) > 1) box.scrollTop += _delta;
-  }
-}
+  const insertAfter = box.querySelector('#_msgLoadMore') || box.querySelector('.date-div') || box.firstChild;
 
   let _lastPrependedDay = null; // tracks day boundary as we walk the old batch
 
@@ -16913,7 +16764,27 @@ async function _prependMsgs(box, msgs, isGroup, otherUser, session) {
     }
   }
 
-  // (insertion, dedup, VE update, and anchor restore are handled above)
+  // Insert the entire fragment before the first real message (after spinner if present)
+  const refNode = insertAfter && insertAfter.parentNode === box ? insertAfter : box.firstChild;
+  if (refNode) {
+    box.insertBefore(fragment, refNode);
+  } else {
+    box.appendChild(fragment);
+  }
+
+  // ── Deduplicate stacked date separators at the old/new batch boundary ──
+  const allDates = box.querySelectorAll('.date-div');
+  for (let i = 0; i < allDates.length - 1; i++) {
+    if (allDates[i].dataset.day === allDates[i + 1].dataset.day) {
+      allDates[i + 1].remove();
+    }
+  }
+
+  // Restore scroll position — user sees no jump
+  box.style.overflowY = '';
+  const newScrollHeight = box.scrollHeight;
+  box.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+}
 
 /* ─────────────────────────────────────────────────────────────
    INSTAGRAM-STYLE CHAT INTRO CARD BUILDER
@@ -19724,8 +19595,6 @@ function listenMessages() {
     messages.forEach(m => {
       if (!_msgCache.has(m.id)) _msgCache.set(m.id, m);
     });
-    // ── Also feed into MessageStore (persistent in-memory store for VE) ──
-    MessageStore.upsertMany(chatId, messages);
 
     // ── Collect unseen IDs (always, regardless of render path) ──
     const unseenBatch = messages
@@ -19747,18 +19616,6 @@ function listenMessages() {
 
       box.innerHTML = '';
       VirtualMsgPool.reset();
-
-      // ── Feed all messages into MessageStore (Layer 1) ──
-      // MessageStore holds the full history in memory so Phase 1 of
-      // scroll-up pagination can serve older messages without a network
-      // round-trip, and VirtualizationEngine can recalculate spacers.
-      MessageStore.upsertMany(chatId, sortedMsgs);
-
-      // ── Init VirtualizationEngine for this chat ──
-      // Creates spacer elements + ResizeObserver. Spacers are NOT
-      // injected into the DOM yet — that happens in activate() which
-      // is called from _attachScrollPagination after the render loop.
-      VirtualizationEngine.init(chatId);
 
       // ── INSTAGRAM-STYLE CHAT INTRO ── inject for DM chats only ──
       if (!isGroup && otherUser) {
@@ -19933,98 +19790,101 @@ function listenMessages() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIRTUALIZED MESSAGE SYSTEM
-//  ───────────────────────────────────────────────────────────────
-//  Architecture (replaces the old destructive DOM-recycling pool):
-//
-//    MessageStore (ALL messages in JS memory — Layer 1)
-//      ↓
-//    VirtualizationEngine (DOM window wStart..wEnd — Layer 2)
-//      ↓
-//    DOM: [chatIntro?] [._vt spacer] [~80 .mw nodes] [._vb spacer]
-//
-//  Aliases from NeuroCore._modules so chat.html has short names:
-// ───────────────────────────────────────────────────────────────
-const MessageStore         = window.NeuroCore._modules.MessageStore;
-const VirtualizationEngine = window.NeuroCore._modules.VirtualizationEngine;
-
-/* ── VirtualMsgPool — public-interface shim ──────────────────────
-   Keeps the same API surface used throughout chat.html so call
-   sites do not need to change.  All real work is now delegated to
-   MessageStore and VirtualizationEngine.
-
-   Key differences from the old pool:
-   • claimFreeNode() always returns null  — no more DOM recycling.
-     Fresh nodes are cheap; the old recycling was premature optimization
-     that made deletion and scroll anchoring fragile.
-   • trim(box)  → VE.onAppend — slides the window instead of
-     permanently destroying history.
-   • remove(id) → VE.del      — single node.remove(), no rerender.
-   • reset()    resets only the new chat's state (curChatId).
-─────────────────────────────────────────────────────────────── */
+//  VIRTUAL MSG LIST — True DOM Recycling Pool
+//  Instead of destroying and recreating nodes, we maintain a fixed
+//  pool and SWAP data inside existing elements.  Zero GC pressure,
+//  zero layout thrash from node insertion/removal at steady state.
+// ═══════════════════════════════════════════════════════════════
 const VirtualMsgPool = (function () {
-  // msgId → DOM node — guards duplicate renders (VirtualMsgPool.has check)
-  let _M = new Map();
-  // Remember the last reset's chatId so we can also clean up its RO
-  let _prevChatId = null;
+  // MAX pool size. The visible viewport shows ~15–20 messages;
+  // we keep 60 nodes so we always have buffer above and below.
+  const MAX = 60;
 
-  function _cid() { return window.curChatId || '__default__'; }
-  function _box() { return document.getElementById('msgs'); }
+  // Pool registry: msgId → DOMNode (for fast lookup)
+  let _idToNode = new Map();
+  // Ordered list of msgIds (oldest first)
+  let _orderedIds = [];
 
-  /** True if this message id has already been rendered into the DOM. */
-  function has(id) { return _M.has(id); }
+  // ── Public: does this msgId already have a node in the pool? ──
+  function has(id) { return _idToNode.has(id); }
 
-  /** Get the live DOM node for a message id (or null). */
-  function getNode(id) { return _M.get(id) || null; }
+  // ── Public: get node for an id ─────────────────────────────────
+  function getNode(id) { return _idToNode.get(id); }
 
-  /**
-   * Register a newly created .mw node.
-   * Also wires ResizeObserver for dynamic height tracking.
-   */
+  // ── Public: register a freshly-created node ───────────────────
   function register(id, node) {
-    _M.set(id, node);
-    VirtualizationEngine.observe(_cid(), node);
+    _idToNode.set(id, node);
+    _orderedIds.push(id);
   }
 
-  /**
-   * Called after each appendMsg batch.
-   * Slides the DOM window (trim old top nodes + update spacers)
-   * instead of permanently destroying history.
-   */
+  // ── Public: trim pool to MAX, recycling oldest nodes ──────────
+  // Returns { removedH, pxToAdjust } so the caller can compensate
+  // scroll position in O(1) — no re-query needed.
   function trim(box) {
-    VirtualizationEngine.onAppend(_cid(), box || _box());
+    if (_orderedIds.length <= MAX) return 0;
+    const excess = _orderedIds.length - MAX;
+    let removedH = 0;
+
+    // Snapshot scrollTop BEFORE any DOM mutation
+    const prevTop = box.scrollTop;
+
+    // We'll batch-detach using a DocumentFragment trick:
+    // Read all heights first (single reflow), then detach (no reflow per node)
+    const toRecycle = _orderedIds.splice(0, excess);
+    const heights   = toRecycle.map(id => {
+      const el = _idToNode.get(id);
+      return el ? (el.getBoundingClientRect().height + 3) : 0; // 3px gap
+    });
+    removedH = heights.reduce((a, b) => a + b, 0);
+
+    // Suppress scroll-anchor, remove nodes, restore position
+    box.style.overflowY = 'hidden';
+    toRecycle.forEach(id => {
+      const el = _idToNode.get(id);
+      if (el) {
+        el.remove();
+        // Return to a detached "free pool" for future recycling
+        _freeNodes.push(el);
+      }
+      _idToNode.delete(id);
+    });
+    box.scrollTop = Math.max(0, prevTop - removedH);
+    box.style.overflowY = '';
+
+    return removedH;
   }
 
-  /** No-op: free-node recycling is retired. Always return null. */
-  function claimFreeNode() { return null; }
+  // ── Free-node pool: detached nodes ready for content reuse ────
+  const _freeNodes = [];
 
-  /**
-   * Reset for chat switch.
-   * Disconnects the PREVIOUS chat's ResizeObserver and clears
-   * the NEW chat's VE + MessageStore state so it starts fresh.
-   */
+  // ── Public: claim a free recycled node, or null if none ───────
+  function claimFreeNode() {
+    return _freeNodes.length > 0 ? _freeNodes.pop() : null;
+  }
+
+  // ── Public: reset (called when chat changes) ──────────────────
   function reset() {
-    const cid = _cid();
-    // Clean up previous chat's ResizeObserver (elements are gone from DOM)
-    if (_prevChatId && _prevChatId !== cid) VirtualizationEngine.reset(_prevChatId);
-    _prevChatId = cid;
-    _M.clear();
-    VirtualizationEngine.reset(cid);
-    MessageStore.clearChat(cid);
+    _idToNode.clear();
+    _orderedIds.length = 0;
+    _freeNodes.length  = 0;
   }
 
-  /**
-   * Remove a single message — deletion path.
-   * VE.del handles both MessageStore removal and direct DOM node removal.
-   * No re-render of any surrounding messages.
-   */
+  // ── Public: remove a single message node from the pool ────────
+  // Called after a message is deleted so the ghost node doesn't
+  // linger in the pool or get recycled with stale data.
   function remove(id) {
-    _M.delete(id);
-    VirtualizationEngine.del(_cid(), id, _box());
+    const el = _idToNode.get(id);
+    if (el) {
+      el.remove();           // detach from DOM if still attached
+      _freeNodes.push(el);   // return to free pool for future reuse
+    }
+    _idToNode.delete(id);
+    const idx = _orderedIds.indexOf(id);
+    if (idx !== -1) _orderedIds.splice(idx, 1);
   }
 
   return { has, getNode, register, trim, claimFreeNode, reset, remove };
-}());
+})();
 
 function _trimMsgDom(box) {
   VirtualMsgPool.trim(box);
@@ -20236,12 +20096,7 @@ function appendMsg(box, m, c) {
     }
   })();
 
-  // Insert before the bottom spacer (_vb) if present, otherwise append.
-  // This keeps new messages inside the virtualized window region:
-  //   [_vt top spacer] [...messages...] [NEW MSG] [_vb bot spacer]
-  const _vbEl = box.querySelector('._vb');
-  if (_vbEl) box.insertBefore(w, _vbEl);
-  else        box.appendChild(w);
+  box.appendChild(w);
 
   // Register in pool AFTER appending (so getBoundingClientRect is accurate in trim)
   VirtualMsgPool.register(m.id, w);
@@ -30082,7 +29937,7 @@ window._toggleHpChannelFollow = _toggleHpChannelFollow;
   const TIME_PREFIX = 'mb_time_'; // mb_time_YYYY-MM-DD → seconds
 
   /* ── Session tracking state ── */
-  let _sessionStart = null; // Date.now() when MathQuiz opened
+  let _sessionStart = null; // Date.now() when MathBot opened
 
   /* ── Today's date string YYYY-MM-DD ── */
   function _today() {
@@ -30739,7 +30594,7 @@ setTimeout(_bootImpactFeaturesOnce, 6000);
 
   // ?deps=react@18 forces esm.sh to reuse the shared React instance above
   import NovaEngine from 'https://esm.sh/gh/luxury430/Vibechat/nova-engine.jsx?deps=react@18&v=2';
-  // MathQuiz is loaded from inline compiled source (window._MathQuizComponent).
+  // MathBot is loaded from inline compiled source (window._MathBotComponent).
 
   // ════════════════════════════════════════════════════════
   // NOVA ENGINE LOGIC
@@ -30827,19 +30682,22 @@ window._errHtml = function(name, msg) {
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════
-     MATHQUIZ — standalone plain script, zero dependency on the
+     MATHBOT — standalone plain script, zero dependency on the
      module above. window.openMath is set synchronously so the
-     inline onclick always fires. React + MathQuiz are fetched
+     inline onclick always fires. React + MathBot are fetched
      lazily on first open via dynamic import(). If that fetch
      fails the overlay still opens and shows a clear error.
 ══════════════════════════════════════════════════════════════ -->
 <script>
 /* ══════════════════════════════════════════════════════════════
-   MATHQUIZ LOADER
-   All getElementById calls are LAZY (inside the functions)
-   because the mathAppOverlay element is defined AFTER this
-   script tag in the HTML. window.openMath is set synchronously
-   so the inline onclick always finds it.
+   MATHBOT — fixed script.
+   BUG FIX: All getElementById calls are now LAZY (inside the
+   functions) because the mathAppOverlay element is defined
+   AFTER this script tag in the HTML, so the DOM nodes do not
+   exist yet when this IIFE executes. Capturing them here
+   would return null, causing a silent crash on click.
+   window.openMath is still set synchronously so the inline
+   onclick handler always finds it.
 ══════════════════════════════════════════════════════════════ */
 (function () {
   let mathMounted = false;
@@ -30848,12 +30706,12 @@ window._errHtml = function(name, msg) {
   function _overlay()  { return document.getElementById('mathAppOverlay'); }
   function _mathRoot() { return document.getElementById('mathRoot'); }
 
-  /* ── openMath — called by the green "Start Quiz" card and settings row ── */
+  /* ── openMath — called by settings page Maths row ── */
   window.openMath = async function () {
     const mathOverlay = _overlay();
     const mathRootEl  = _mathRoot();
     if (!mathOverlay || !mathRootEl) {
-      console.error('[MathQuiz] Overlay or root element not found in DOM.');
+      console.error('[MathBot] Overlay or root element not found in DOM.');
       return;
     }
 
@@ -30863,9 +30721,9 @@ window._errHtml = function(name, msg) {
     if (mathMounted) return;
 
     mathRootEl.innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;gap:10px;color:#10b981;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:.95rem;">' +
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;gap:10px;color:#60a5fa;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:.95rem;">' +
       '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
-      'Loading Quiz\u2026</div>' +
+      'Loading MathBot\u2026</div>' +
       '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
 
     try {
@@ -30878,21 +30736,21 @@ window._errHtml = function(name, msg) {
         throw new Error('React not ready — importmap may not be supported on this browser. Try Chrome or Safari 16.4+.');
       }
 
-      /* ── Wait briefly for Babel inline compilation of MathQuiz.jsx ── */
-      let MathQuiz = await _waitForComponent('_MathQuizComponent', 500);
+      /* ── Wait up to 4 s for Babel to compile the inline component ── */
+      let MathBot = await _waitForComponent('_MathBotComponent', 4000);
 
-      /* ── Primary / fallback: load MathQuiz.jsx from GitHub via esm.sh ── */
-      if (!MathQuiz) {
-        const mod = await _fetchWithRetry('https://esm.sh/gh/luxury430/Vibechat/MathQuiz.jsx?deps=react@18&v=1');
-        MathQuiz = mod.default;
+      /* ── Fallback: load from GitHub via esm.sh (last resort) ── */
+      if (!MathBot) {
+        const mod = await _fetchWithRetry('https://esm.sh/gh/luxury430/Vibechat/MathBot.jsx?deps=react@18&v=5');
+        MathBot = mod.default;
       }
 
       mathRootEl.innerHTML = '';
-      _createRoot(mathRootEl).render(_React.createElement(MathQuiz));
+      _createRoot(mathRootEl).render(_React.createElement(MathBot));
       mathMounted = true;
     } catch (err) {
-      console.error('[MathQuiz] Load failed:', err);
-      mathRootEl.innerHTML = _errHtml('MathQuiz', err.message);
+      console.error('[MathBot] Load failed:', err);
+      mathRootEl.innerHTML = _errHtml('MathBot', err.message);
     }
   };
 
@@ -30923,7 +30781,7 @@ window._errHtml = function(name, msg) {
 <script>
 /* ══════════════════════════════════════════════════════════════
    MATH TRAINER OVERLAY  — openMathTrainer / closeMathTrainer
-   Same lazy-React pattern as openMath / MathQuiz
+   Same lazy-React pattern as openMath / MathBot
 ══════════════════════════════════════════════════════════════ */
 (function () {
   let trainerMounted = false;
@@ -31014,14 +30872,14 @@ window._errHtml = function(name, msg) {
       const _createRoot = window.ReactCreateRoot;
       if (!_React || !_createRoot) throw new Error('React not ready — try refreshing.');
 
-      let MathFormula = await _waitForComponent('_MathFormulaComponent', 500);
-      if (!MathFormula) {
-        const mod = await _fetchWithRetry('https://esm.sh/gh/luxury430/Vibechat/MathFormula.jsx?deps=react@18&v=1');
-        MathFormula = mod.default;
+      let MathFormulaExplorer = await _waitForComponent('_MathFormulaExplorerComponent', 4000);
+      if (!MathFormulaExplorer) {
+        const mod = await _fetchWithRetry('https://esm.sh/gh/luxury430/Vibechat/MathFormulaExplorer.jsx?deps=react@18&v=1');
+        MathFormulaExplorer = mod.default;
       }
 
       root.innerHTML = '';
-      _createRoot(root).render(_React.createElement(MathFormula));
+      _createRoot(root).render(_React.createElement(MathFormulaExplorer));
       formulaMounted = true;
     } catch (err) {
       console.error('[MathFormula] Load failed:', err);
@@ -33648,9 +33506,9 @@ setTimeout(initFCM, 0);
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════
-     MATHQUIZ INLINE — self-contained, no GitHub dependency.
+     MATHBOT INLINE — self-contained, no GitHub dependency.
      1) Babel Standalone transpiles the JSX in the <text/babel> tag.
-     2) The compiled component is stored on window._MathQuizComponent.
+     2) The compiled component is stored on window._MathBotComponent.
      3) openMath() uses it directly; GitHub URL is only a fallback.
 ══════════════════════════════════════════════════════════════ -->
 <!-- KaTeX for TestCreationPage math rendering -->
@@ -33665,15 +33523,12 @@ setTimeout(initFCM, 0);
 <script src="discuss-engine.js"></script>
 <script src="discuss-card-patch.js"></script>
 <!-- mathjs CDN — used by math-trainer.jsx and MathFormulaExplorer.jsx -->
-<!-- mathjs: use cdnjs UMD build (dist/), no crossorigin to avoid opaque "Script error." -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
-<!-- Plotly for MathFormulaExplorer interactive graphs -->
-<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjs@12/lib/browser/math.js" crossorigin="anonymous"></script>
 
-<!-- MathQuiz, MathTrainer, MathFormula — external Babel-compiled components -->
-<script type="text/babel" src="MathQuiz.jsx" data-presets="react"></script>
+<!-- MathBot, MathTrainer, MathFormulaExplorer — external Babel-compiled components -->
+<script type="text/babel" src="MathBot.jsx" data-presets="react"></script>
 <script type="text/babel" src="math-trainer.jsx" data-presets="react"></script>
-<script type="text/babel" src="MathFormula.jsx" data-presets="react"></script>
+<script type="text/babel" src="MathFormulaExplorer.jsx" data-presets="react"></script>
 
 
 <!-- ══════════════ ULTRA-PREMIUM GLOBAL LEADERBOARD ══════════════ -->
