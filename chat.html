@@ -33441,6 +33441,80 @@ setTimeout(initFCM, 0);
 <!-- ════════════════════════════════════════════════════════
      MATH FORMULA EXPLORER OVERLAY
 ════════════════════════════════════════════════════════ -->
+<div id="mathFormulaOverlay" style="
+  display:none; position:fixed; inset:0; z-index:199997;
+  background:#0a080f; overflow:hidden;
+  flex-direction:column;
+">
+<style>
+  #mathFormulaOverlay.open { display: flex !important; }
+  #mathFormulaRoot {
+    width:100%; flex:1; min-height:0;
+    overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+</style>
+  <button id="closeMathFormulaBtn" style="
+    position:fixed; top:max(env(safe-area-inset-top,14px),14px); left:16px;
+    z-index:200001;
+    background:rgba(13,17,23,0.88); border:1px solid rgba(255,255,255,.1);
+    color:#8b9ab5; padding:8px 16px 8px 12px;
+    border-radius:24px; font-size:.8rem; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 2px 12px rgba(0,0,0,.5);
+    transition:background .18s ease, color .18s ease, border-color .18s ease;
+    font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:.02em;
+  " onclick="window.closeMathFormula && window.closeMathFormula()"
+     onmouseover="this.style.background='rgba(30,40,60,.95)';this.style.color='#f0f4ff';this.style.borderColor='rgba(139,92,246,.45)'"
+     onmouseout="this.style.background='rgba(13,17,23,0.88)';this.style.color='#8b9ab5';this.style.borderColor='rgba(255,255,255,.1)'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Chat
+  </button>
+  <div id="mathFormulaRoot"></div>
+</div>
+
+<div id="mathAppOverlay" style="
+  display:none; position:fixed; inset:0; z-index:199999;
+  background:#07090f; overflow:hidden;
+  flex-direction:column;
+">
+<style>
+  #mathAppOverlay.open { display: flex !important; }
+  #mathRoot {
+    width:100%; flex:1; min-height:0;
+    overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  /* Push game content below the fixed back button on mobile */
+  #mathRoot .app { padding-top: 60px !important; }
+</style>
+  <!-- Custom back button — matches the app's style language -->
+  <button id="closeMathAppBtn" style="
+    position:fixed; top:max(env(safe-area-inset-top,14px),14px); left:16px;
+    z-index:200001;
+    background:rgba(13,17,23,0.88); border:1px solid rgba(255,255,255,.1);
+    color:#8b9ab5; padding:8px 16px 8px 12px;
+    border-radius:24px; font-size:.8rem; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 2px 12px rgba(0,0,0,.5);
+    transition:background .18s ease, color .18s ease, border-color .18s ease;
+    font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:.02em;
+  " onmouseover="this.style.background='rgba(30,40,60,.95)';this.style.color='#f0f4ff';this.style.borderColor='rgba(59,130,246,.35)'"
+     onmouseout="this.style.background='rgba(13,17,23,0.88)';this.style.color='#8b9ab5';this.style.borderColor='rgba(255,255,255,.1)'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Chat
+  </button>
+  <!-- React mount point -->
+  <div id="mathRoot"></div>
+</div>
+
+<!-- ── MathBot Level-up toast ── -->
+<div id="mbLvlToast"></div>
+
 <!-- ════════════════════════════════════════════════════════
      MATH TRAINER OVERLAY  (opened by "View Performance" on home hero)
 ════════════════════════════════════════════════════════ -->
@@ -33480,6 +33554,98 @@ setTimeout(initFCM, 0);
   <div id="mathTrainerRoot"></div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════
+     MATHBOT XP & PROFILE LEVELING SYSTEM
+     Formula: Total XP to reach Level N = (N-1)·N·500
+     → Level 2 = 1,000 XP  ·  Level 3 = 3,000 XP  ·  Level 4 = 6,000 XP …
+════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  const MAX_LEVEL = 25;
+
+  /* XP required to REACH a given level (cumulative) */
+  function xpForLevel(lv) {
+    return lv <= 1 ? 0 : (lv - 1) * lv * 500;
+  }
+
+  /* Derive current level from total XP */
+  function calcLevel(totalXP) {
+    let lv = 1;
+    while (lv < MAX_LEVEL && totalXP >= xpForLevel(lv + 1)) lv++;
+    return lv;
+  }
+
+  /* Progress bar fill [0–100] within the current level */
+  function calcPct(totalXP, lv) {
+    if (lv >= MAX_LEVEL) return 100;
+    const from = xpForLevel(lv);
+    const to   = xpForLevel(lv + 1);
+    return Math.min(((totalXP - from) / (to - from)) * 100, 100);
+  }
+
+  const fmt = n => n.toLocaleString();
+
+  let elLevel, elXP, elNext, elBar, elMax, elToast;
+
+  function grab() {
+    elLevel = document.getElementById('profileLevel');
+    elXP    = document.getElementById('profileXP');
+    elNext  = document.getElementById('profileNextLevelXP');
+    elBar   = document.getElementById('mbXpBarFill');
+    elMax   = document.getElementById('mbMaxBadge');
+    elToast = document.getElementById('mbLvlToast');
+  }
+
+  let _lastLevel = 1;
+
+  function updateUI(totalXP) {
+    if (!elLevel) grab();
+    if (!elLevel) return;
+
+    const lv    = calcLevel(totalXP);
+    const pct   = calcPct(totalXP, lv);
+    const isMax = lv >= MAX_LEVEL;
+
+    elLevel.innerHTML = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"emoji-icon\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg> Level ${lv}`;
+    elXP.textContent    = fmt(totalXP);
+    elBar.style.width   = pct.toFixed(1) + '%';
+
+    if (isMax) {
+      elNext.textContent  = 'Maximum level reached!';
+      elMax.style.display = 'inline-flex';
+    } else {
+      const gap = xpForLevel(lv + 1) - totalXP;
+      elNext.textContent  = `${fmt(gap)} XP to Level ${lv + 1}`;
+      elMax.style.display = 'none';
+    }
+
+    if (lv > _lastLevel) showLevelUpToast(lv);
+    _lastLevel = lv;
+  }
+
+  function showLevelUpToast(newLevel) {
+    if (!elToast) return;
+    elToast.innerHTML = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"emoji-icon\"><path d=\"M5.8 11.3 2 22l10.7-3.79\"/><path d=\"M4 3h.01\"/><path d=\"M22 8h.01\"/><path d=\"M15 2h.01\"/><path d=\"M22 20h.01\"/><path d=\"m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10\"/><path d=\"m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17\"/><path d=\"m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.51 9 6.22V7\"/><path d=\"M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z\"/></svg> Level Up!  You are now Level ${newLevel}`;
+    elToast.classList.remove('hide');
+    elToast.classList.add('show');
+    clearTimeout(elToast._t);
+    elToast._t = setTimeout(() => {
+      elToast.classList.add('hide');
+      setTimeout(() => elToast.classList.remove('show', 'hide'), 350);
+    }, 3000);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    grab();
+    const saved = parseInt(localStorage.getItem('userXP') || '0', 10);
+    _lastLevel = calcLevel(saved);   // seed silently — no toast on page load
+    updateUI(saved);
+  });
+
+  /* Real-time updates fired by MathBot */
+  window.addEventListener('xpUpdated', e => updateUI(e.detail.xp));
+})();
+</script>
 
 <!-- ══════════════════════════════════════════════════════════════
      MATHQUIZ INLINE — self-contained, no GitHub dependency.
@@ -33498,12 +33664,16 @@ setTimeout(initFCM, 0);
 <script type="text/babel" src="TestTakingPage.jsx" data-presets="react"></script>
 <script src="discuss-engine.js"></script>
 <script src="discuss-card-patch.js"></script>
-<!-- mathjs CDN — used by math-trainer.jsx -->
+<!-- mathjs CDN — used by math-trainer.jsx and MathFormulaExplorer.jsx -->
 <!-- mathjs: use cdnjs UMD build (dist/), no crossorigin to avoid opaque "Script error." -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+<!-- Plotly for MathFormulaExplorer interactive graphs -->
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
 
-<!-- MathTrainer — external Babel-compiled component -->
+<!-- MathQuiz, MathTrainer, MathFormula — external Babel-compiled components -->
+<script type="text/babel" src="MathQuiz.jsx" data-presets="react"></script>
 <script type="text/babel" src="math-trainer.jsx" data-presets="react"></script>
+<script type="text/babel" src="MathFormula.jsx" data-presets="react"></script>
 
 
 <!-- ══════════════ ULTRA-PREMIUM GLOBAL LEADERBOARD ══════════════ -->
