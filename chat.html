@@ -32369,16 +32369,10 @@ window._errHtml = function(name, msg) {
 <script>
 /* ═══════════════════════════════════════════════════
    PILL NAV — expand menu + scroll hide/show
-   All tab switching is handled by existing safeClick
-   bindings (bnHome, bnQuiz, bnChat, bnLeaderboard).
-   This block only handles:
-     1. The + expand sub-menu (opens community + shows Create/Upload/Cancel)
-     2. Scroll-based hide / reveal (universal SPA approach)
 ═══════════════════════════════════════════════════ */
 (function() {
   const _$ = id => document.getElementById(id);
 
-  /* ── 1. Expand menu ─────────────────────────────── */
   const nav         = _$('bottomNav');
   const expandBtn   = _$('nfNavExpand');
   const expandList  = _$('nfNavExpandList');
@@ -32391,58 +32385,66 @@ window._errHtml = function(name, msg) {
     expandList?.classList.add('show-list');
     expandIcon?.classList.add('nf-rotate');
   }
-
+  
   function closeExpandMenu() {
     expandList?.classList.remove('show-list');
     expandIcon?.classList.remove('nf-rotate');
   }
 
-  /* + button: show sub-icons AND open community page */
+  /* 1. + Button: Open Community AND Show Sub-Icons */
   expandBtn?.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent the document click listener from instantly closing it
+    e.preventDefault();
+    e.stopPropagation(); // Prevents the outside-click listener from immediately closing it
 
-    if (expandList?.classList.contains('show-list')) {
-      closeExpandMenu();
-    } else {
-      openExpandMenu();
-      // Open community page so the sub-icons are in context
+    const isShowing = expandList?.classList.contains('show-list');
+
+    if (!isShowing) {
+      // Open community page FIRST
       if (typeof window.openCommunity === 'function') {
         window.openCommunity();
       }
+      // THEN show sub icons
+      openExpandMenu();
+    } else {
+      // Hide sub icons if already open
+      closeExpandMenu();
     }
   });
 
-  /* Cancel — just close sub-icons, stay on community */
+  /* 2. Sub-Icon: Cancel */
   expandClose?.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    closeExpandMenu();
+    closeExpandMenu(); // Nothing else, just hide the icons
   });
 
-  /* Upload → open community post modal */
+  /* 3. Sub-Icon: Upload (Community Post Modal) */
   postBtn?.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     closeExpandMenu();
-
+    
     const inp = _$('commPostInp');
     const ov  = _$('commPostOv');
     if (!ov) return;
-
+    
     if (inp) inp.value = '';
     // Reset category to General
     document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(o => {
       o.classList.toggle('selected', o.dataset.cat === 'general');
     });
-
+    
     ov.classList.add('show');
     setTimeout(() => inp?.focus(), 140);
   });
 
-  /* Create → open chapter picker (test creation) */
+  /* 4. Sub-Icon: Create (Chapter Picker / Test) */
   createBtn?.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     closeExpandMenu();
-
+    
+    // Open chapter selection modal immediately
     if (typeof window.openChapterPicker === 'function') {
       window.openChapterPicker();
     } else {
@@ -32457,12 +32459,11 @@ window._errHtml = function(name, msg) {
     }
   });
 
-  /* ── 2. Scroll hide / reveal (Universal SPA Approach) ── */
-  let lastY = 0;
+  /* ── Scroll hide / reveal logic (Container-Specific) ── */
   let isNavigating = false;
   let navTimer;
 
-  // Freeze hide-on-scroll briefly when a tab button is clicked
+  // Freeze hide-on-scroll briefly when a tab button is clicked so it doesn't glitch during page transitions
   document.querySelectorAll('.nf-nav__link').forEach(btn => {
     btn.addEventListener('click', () => {
       isNavigating = true;
@@ -32471,22 +32472,16 @@ window._errHtml = function(name, msg) {
     });
   });
 
-  // Use the "capture" phase to catch all scrolling div events globally
-  document.addEventListener('scroll', (e) => {
-    const target = e.target;
-    if (!target.classList) return;
+  // Track scroll state PER CONTAINER to prevent jumping when switching pages
+  const scrollStates = new Map();
 
-    // Check if the scroll event belongs to one of the main content wrappers
-    const isMainScroller = target.classList.contains('home-body') ||
-                           target.classList.contains('comm-feed') ||
-                           target.classList.contains('test-feed-scroll') ||
-                           target.classList.contains('chan-list') ||
-                           target.classList.contains('disc-body') ||
-                           target.classList.contains('msgs') ||
-                           target.classList.contains('discuss-dashboard');
-
-    if (isMainScroller) {
-      const currentY = target.scrollTop;
+  function attachScroll(container) {
+    if (!container) return;
+    scrollStates.set(container, container.scrollTop || 0);
+    
+    container.addEventListener('scroll', () => {
+      const currentY = container.scrollTop;
+      const lastY = scrollStates.get(container) || 0;
       const delta = Math.abs(currentY - lastY);
 
       // Close expand list if user starts scrolling
@@ -32494,18 +32489,31 @@ window._errHtml = function(name, msg) {
         closeExpandMenu();
       }
 
-      // Hide or show the bottom navigation bar
+      // Hide or show the bottom navigation bar based on scroll direction
       if (!isNavigating && nav?.classList.contains('visible')) {
         if (currentY > lastY && currentY > 50) {
-          nav.classList.add('nf-hide');
+          nav.classList.add('nf-hide'); // Scroll Down -> Disappears
         } else if (currentY < lastY) {
-          nav.classList.remove('nf-hide');
+          nav.classList.remove('nf-hide'); // Scroll Up -> Appears
         }
       }
+      
+      scrollStates.set(container, currentY);
+    }, { passive: true });
+  }
 
-      lastY = currentY;
-    }
-  }, { capture: true, passive: true });
+  // Attach independent scroll listeners to all major scrollable areas in the app
+  const scrollers = [
+    _$('homeBody'),
+    _$('commFeed'),
+    _$('chanList'),
+    _$('discBody'),
+    _$('msgs'),
+    _$('discussRecentList'),
+    ...document.querySelectorAll('.test-feed-scroll')
+  ];
+
+  scrollers.forEach(el => attachScroll(el));
 
 })();
 </script>
