@@ -5283,7 +5283,7 @@ body::before {
 }
 /* ── Explore header ── */
 .explore-head {
-  padding: 14px 18px 13px 54px; /* 54px left clears the back button */
+  padding: 14px 18px 13px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-sidebar);
   display: flex;
@@ -5314,36 +5314,6 @@ body::before {
   color: var(--tp);
   letter-spacing: -.01em;
 }
-/* ── Corner back button (desktop / any breakpoint without native back) ── */
-.explore-back-btn {
-  position: absolute;
-  top: 10px;
-  left: 12px;
-  z-index: 10;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-  background: var(--bg-input);
-  color: var(--ts);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background .18s var(--ease), border-color .18s var(--ease),
-              color .18s var(--ease), transform .18s var(--ease),
-              box-shadow .18s var(--ease);
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,.35);
-}
-.explore-back-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent);
-  color: var(--accent2);
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(59,130,246,.2);
-}
-.explore-back-btn:active { transform: scale(.94); }
-
 /* ── iframe wrapper fills remaining height ── */
 .explore-iframe-wrap {
   flex: 1;
@@ -8764,96 +8734,6 @@ body::before {
   outline: none; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
 }
 .notif-fs-close:hover { color: var(--tp); background: var(--bg-hover); transform: scale(1.08); }
-
-/* ── Select-mode toggle button ── */
-.notif-select-btn {
-  font-size: .68rem; color: var(--accent2); background: none;
-  border: 1px solid rgba(96,165,250,.35); cursor: pointer; font-family: var(--font-b);
-  font-weight: 600; padding: 5px 11px; border-radius: var(--r-f);
-  transition: all .18s; letter-spacing: .2px;
-  outline: none; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
-}
-.notif-select-btn:hover { background: rgba(59,130,246,.1); border-color: var(--accent); }
-.notif-select-btn.done-mode {
-  color: #fff; border-color: var(--accent);
-  background: linear-gradient(135deg, var(--accent3), var(--accent));
-}
-
-/* ── Clear-all button (red, destructive) ── */
-.notif-clear-all-btn {
-  font-size: .68rem; color: #f87171; background: none;
-  border: 1px solid rgba(248,113,113,.28); cursor: pointer; font-family: var(--font-b);
-  font-weight: 600; padding: 5px 11px; border-radius: var(--r-f);
-  transition: all .18s; letter-spacing: .2px;
-  outline: none; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
-}
-.notif-clear-all-btn:hover { background: rgba(248,113,113,.1); border-color: #f87171; }
-
-/* ── Per-item checkbox circle ── */
-.notif-check {
-  position: absolute;
-  left: 13px; top: 50%; transform: translateY(-50%);
-  width: 21px; height: 21px; border-radius: 50%;
-  border: 1.5px solid var(--border2);
-  background: var(--bg-input);
-  display: flex; align-items: center; justify-content: center;
-  transition: background .16s var(--ease), border-color .16s var(--ease), opacity .16s var(--ease);
-  pointer-events: none;
-  opacity: 0;
-}
-.notif-check svg { opacity: 0; transition: opacity .14s; }
-
-/* Active select-mode on body container */
-.notif-fs-body.select-mode .notif-item { padding-left: 46px; }
-.notif-fs-body.select-mode .notif-check { opacity: 1; }
-.notif-fs-body.select-mode .notif-item.selected { background: rgba(59,130,246,.09); }
-.notif-fs-body.select-mode .notif-item.selected .notif-check {
-  background: var(--accent); border-color: var(--accent);
-}
-.notif-fs-body.select-mode .notif-item.selected .notif-check svg { opacity: 1; }
-
-/* ── Floating selection action bar (sticky bottom) ── */
-.notif-select-bar {
-  padding: 10px 14px 12px;
-  background: var(--bg-sidebar);
-  border-top: 1px solid var(--border);
-  display: none; /* shown via JS when in select mode */
-  align-items: center; gap: 10px;
-  flex-shrink: 0;
-  position: relative; z-index: 5;
-}
-.notif-select-bar.visible { display: flex; }
-.notif-select-bar::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,.08), transparent);
-}
-.notif-sel-count-txt {
-  flex: 1; font-size: .8rem; font-weight: 700;
-  color: var(--ts); font-family: var(--font-b);
-}
-.notif-sel-count-txt span { color: var(--tp); }
-.notif-sel-all-btn {
-  font-size: .72rem; color: var(--accent2);
-  border: 1px solid rgba(96,165,250,.35); background: none;
-  font-family: var(--font-b); font-weight: 600;
-  padding: 7px 13px; border-radius: var(--r-f);
-  cursor: pointer; transition: all .18s;
-  outline: none; -webkit-tap-highlight-color: transparent;
-}
-.notif-sel-all-btn:hover { background: rgba(59,130,246,.08); border-color: var(--accent); }
-.notif-del-sel-btn {
-  font-size: .72rem; color: #fff;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  border: none; font-family: var(--font-b); font-weight: 700;
-  padding: 7px 15px; border-radius: var(--r-f);
-  cursor: pointer; transition: all .18s;
-  outline: none; -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 2px 8px rgba(239,68,68,.3);
-  display: flex; align-items: center; gap: 6px;
-}
-.notif-del-sel-btn:hover { transform: scale(1.04); box-shadow: 0 4px 14px rgba(239,68,68,.4); }
-.notif-del-sel-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ── Tab Filters ── */
 .notif-tabs {
@@ -13635,8 +13515,8 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
         <div class="hp-hero-text">
           <div class="hp-hero-eyebrow">NeuroForge · Learn</div>
           <div class="hp-hero-title">What would you like to learn today?</div>
-          <button class="hp-hero-cta-btn" onclick="window.openPerformanceDashboard && window.openPerformanceDashboard()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <button class="hp-hero-cta-btn" onclick="window.openMathTrainer && window.openMathTrainer()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="m15 6 6 6-6 6"/></svg>
             View Performance
           </button>
         </div>
@@ -13898,12 +13778,6 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
 
   <!-- ── Header ── -->
   <div class="explore-head">
-    <!-- Corner back button — always visible, no bottom-nav dependency -->
-    <button class="explore-back-btn" id="exploreBackBtn" title="Go back" onclick="window.closeExplore && window.closeExplore()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
-    </button>
     <div class="explore-head-icon">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v5l-4.5 8.5A2 2 0 0 0 7.27 19h9.46a2 2 0 0 0 1.77-2.5L14 8V3"/></svg>
     </div>
@@ -27648,8 +27522,6 @@ let _notifList       = [];            // Array of notification objects
 let _notifUnread     = 0;             // Count of unread
 let _notifPanelOpen  = false;
 let _notifActiveTab  = 'all';         // active filter tab
-let _notifSelectMode = false;         // Instagram-style select mode
-let _notifSelected   = new Set();     // Set of selected notif IDs
 let _prevContactUnread = new Map();   // contactId → lastKnownUnreadCount
 let _prevPostData      = new Map();   // postId    → { likedBy[], commentCount }
 let _notifBarTimer     = null;        // Auto-dismiss timer
@@ -27708,102 +27580,6 @@ window.clearAllNotifs = function() {
   _saveNotifs();
   _updateBellBadge();
   _renderNotifPanel();
-};
-
-/* ── Confirm before wiping everything ── */
-window._confirmClearAllNotifs = function() {
-  if (!_notifList.length) return;
-  if (!confirm('Clear all notifications? This cannot be undone.')) return;
-  window.clearAllNotifs();
-};
-
-/* ── Enter / exit Instagram-style select mode ── */
-window._toggleNotifSelectMode = function() {
-  _notifSelectMode = !_notifSelectMode;
-  if (!_notifSelectMode) _notifSelected.clear();
-  _applySelectModeUI();
-  _renderNotifPanel();
-};
-
-function _applySelectModeUI() {
-  const selectBtn   = document.getElementById('notifSelectBtn');
-  const markAllBtn  = document.getElementById('notifMarkAllBtn');
-  const clearAllBtn = document.getElementById('notifClearAllBtn');
-  const ttl         = document.getElementById('notifFsTtl');
-  const bar         = document.getElementById('notifSelectBar');
-  const body        = document.getElementById('notifFsBody');
-  if (!selectBtn) return;
-
-  if (_notifSelectMode) {
-    selectBtn.textContent  = 'Done';
-    selectBtn.classList.add('done-mode');
-    if (markAllBtn)  markAllBtn.style.display  = 'none';
-    if (clearAllBtn) clearAllBtn.style.display = 'none';
-    if (ttl) ttl.textContent = '0 selected';
-    if (bar) bar.classList.add('visible');
-    if (body) body.classList.add('select-mode');
-  } else {
-    selectBtn.textContent  = 'Select';
-    selectBtn.classList.remove('done-mode');
-    if (markAllBtn)  markAllBtn.style.display  = '';
-    if (clearAllBtn) clearAllBtn.style.display = '';
-    if (ttl) ttl.textContent = 'Notifications';
-    if (bar) bar.classList.remove('visible');
-    if (body) body.classList.remove('select-mode');
-  }
-  _updateSelectBar();
-}
-
-function _updateSelectBar() {
-  const ttl       = document.getElementById('notifFsTtl');
-  const countTxt  = document.getElementById('notifSelCountTxt');
-  const delBtn    = document.getElementById('notifDelSelBtn');
-  const selAllBtn = document.getElementById('notifSelAllBtn');
-  const n = _notifSelected.size;
-  if (ttl && _notifSelectMode) ttl.textContent = n + ' selected';
-  if (countTxt) countTxt.innerHTML = `<span>${n}</span> selected`;
-  if (delBtn) { delBtn.disabled = n === 0; delBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete${n ? ' (' + n + ')' : ''}`; }
-  // Toggle Select-all / Deselect-all label
-  const filtered = _getFilteredNotifs();
-  if (selAllBtn) selAllBtn.textContent = (n > 0 && n >= filtered.length) ? 'Deselect all' : 'Select all';
-}
-
-function _getFilteredNotifs() {
-  const tabMap = { messages: ['message'], activity: ['like','comment','achievement','nf_broadcast'], system: ['mod_warn','mod_mute','mod_ban','mentor'] };
-  if (_notifActiveTab === 'all') return _notifList;
-  const types = tabMap[_notifActiveTab] || [];
-  return _notifList.filter(n => types.includes(n.type));
-}
-
-/* ── Select-all / Deselect-all ── */
-window._selectAllNotifs = function() {
-  const filtered = _getFilteredNotifs();
-  if (_notifSelected.size >= filtered.length) {
-    // Deselect all
-    _notifSelected.clear();
-  } else {
-    // Select all visible
-    filtered.forEach(n => _notifSelected.add(n.id));
-  }
-  _renderNotifPanel();
-  _updateSelectBar();
-};
-
-/* ── Delete only the selected notifications ── */
-window._deleteSelectedNotifs = function() {
-  if (!_notifSelected.size) return;
-  _notifList   = _notifList.filter(n => !_notifSelected.has(n.id));
-  _notifUnread = _notifList.filter(n => !n.read).length;
-  _notifSelected.clear();
-  _saveNotifs();
-  _updateBellBadge();
-  _renderNotifPanel();
-  _updateSelectBar();
-  // Auto-exit select mode if nothing left
-  if (!_notifList.length) {
-    _notifSelectMode = false;
-    _applySelectModeUI();
-  }
 };
 
 function _markNotifRead(notifId) {
@@ -27971,7 +27747,6 @@ function _renderNotifPanel() {
         : '';
 
       el.innerHTML = `
-        <div class="notif-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         <div class="notif-ico">${f.icon}</div>
         <div class="notif-body">
           ${tagHtml ? `<div class="notif-meta-row">${tagHtml}</div>` : ''}
@@ -27983,9 +27758,6 @@ function _renderNotifPanel() {
           <div class="notif-time">${f.line2.split(' · ')[0]}</div>
           ${!n.read ? '<div class="notif-dot"></div>' : ''}
         </div>`;
-
-      // Apply selected state if in select mode
-      if (_notifSelectMode && _notifSelected.has(n.id)) el.classList.add('selected');
 
       el.querySelector('.notif-claim-btn')?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -28004,21 +27776,6 @@ function _renderNotifPanel() {
       el.addEventListener('click', (e) => {
         if (e.target.closest('.notif-claim-btn')) return;
         const nid = el.dataset.nid;
-
-        // ── Select mode: toggle this item ──
-        if (_notifSelectMode) {
-          if (_notifSelected.has(nid)) {
-            _notifSelected.delete(nid);
-            el.classList.remove('selected');
-          } else {
-            _notifSelected.add(nid);
-            el.classList.add('selected');
-          }
-          _updateSelectBar();
-          return;
-        }
-
-        // ── Normal mode: mark read + navigate ──
         _markNotifRead(nid);
         const nt = _notifList.find(x => x.id === nid);
         if (nt && nt.type === 'message' && nt.senderId) {
@@ -28035,11 +27792,6 @@ function _renderNotifPanel() {
   });
 
   body.appendChild(wrap);
-
-  // Re-apply select-mode CSS class (body was rebuilt by innerHTML='')
-  if (_notifSelectMode) body.classList.add('select-mode');
-  _updateSelectBar();
-  _applySelectModeUI();
 }
 
 // ── Toggle fullscreen notif overlay open/close ──────────────────
@@ -28072,12 +27824,6 @@ function _toggleNotifPanel(forceState) {
   } else {
     ov.classList.remove('open');
     btn && btn.classList.remove('active-bell');
-    // Always exit select mode when panel closes
-    if (_notifSelectMode) {
-      _notifSelectMode = false;
-      _notifSelected.clear();
-      _applySelectModeUI();
-    }
   }
 }
 
@@ -29104,12 +28850,21 @@ function _attachLongPress(el, contact, isGroup) {
 // (pinned set is loaded directly inside the main onAuthStateChanged handler above)
 
 /* ══════════════════════════════════════════════════════════════
-   SPLASH SCREEN — handled by the standalone plain <script> that
-   sits right after #splashScreen in the DOM.  That script fires
-   after 0.7 s with zero network dependency, so this block is
-   intentionally left as a no-op to avoid any race condition.
+   SPLASH SCREEN — dismiss after 1.4 s (≥1.2 s per spec)
 ══════════════════════════════════════════════════════════════ */
-// splash dismiss → see standalone <script> after #splashScreen
+(function() {
+  const splash = document.getElementById('splashScreen');
+  if (!splash) return;
+  // Start fade-out at 1.4 s, fully hidden after transition (~550 ms)
+  const SHOW_MS  = 1400;
+  const FADE_MS  = 600;
+  setTimeout(() => {
+    splash.classList.add('hiding');
+    setTimeout(() => {
+      splash.classList.add('hidden');
+    }, FADE_MS);
+  }, SHOW_MS);
+})();
 
 /* ══════════════════════════════════════════════════════════════
    ③ OFF-MAIN-THREAD PROCESSING — DataWorker (Web Worker)
@@ -30788,12 +30543,8 @@ setTimeout(_bootImpactFeaturesOnce, 6000);
 
     <!-- Header -->
     <div class="notif-fs-hdr">
-      <div class="notif-fs-ttl" id="notifFsTtl">Notifications</div>
-      <button class="notif-mark-all" id="notifMarkAllBtn" onclick="markAllNotifsRead()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Mark all read</button>
-      <button class="notif-select-btn" id="notifSelectBtn" onclick="window._toggleNotifSelectMode()">Select</button>
-      <button class="notif-clear-all-btn" id="notifClearAllBtn" onclick="window._confirmClearAllNotifs()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg> Clear all
-      </button>
+      <div class="notif-fs-ttl">Notifications</div>
+      <button class="notif-mark-all" onclick="markAllNotifsRead()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Mark all read</button>
       <button class="notif-fs-close" id="notifFsClose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
@@ -30814,18 +30565,8 @@ setTimeout(_bootImpactFeaturesOnce, 6000);
       </div>
     </div>
 
-    <!-- Selection action bar (shown in select mode) -->
-    <div class="notif-select-bar" id="notifSelectBar">
-      <div class="notif-sel-count-txt" id="notifSelCountTxt"><span>0</span> selected</div>
-      <button class="notif-sel-all-btn" id="notifSelAllBtn" onclick="window._selectAllNotifs()">Select all</button>
-      <button class="notif-del-sel-btn" id="notifDelSelBtn" onclick="window._deleteSelectedNotifs()" disabled>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-        Delete
-      </button>
-    </div>
-
-  </div><!-- /notif-fs-panel -->
-</div><!-- /notif-fs-ov -->
+  </div>
+</div>
 
 <!-- ══════════════ OFFLINE OVERLAY ══════════════ -->
 <div class="offline-overlay" id="offlineOverlay">
@@ -30863,38 +30604,6 @@ setTimeout(_bootImpactFeaturesOnce, 6000);
     <div class="splash-from-brand">NeuroForge</div>
   </div>
 </div>
-
-<!-- ══════════════ SPLASH DISMISS — guaranteed, no network dependency ══════════════ -->
-<script>
-(function () {
-  /* This plain <script> is NOT a module — it has zero imports and runs
-     independently of Firebase or any network resource.  It is the SOLE
-     authority for hiding the splash; the copy inside the module script
-     is now a harmless no-op (the element will already be hidden).      */
-  var SHOW_MS = 700;   // fade starts after 0.7 s
-  var FADE_MS = 550;   // matches the CSS transition duration
-
-  function hideSplash() {
-    var splash = document.getElementById('splashScreen');
-    if (!splash || splash.classList.contains('hiding')) return;
-    splash.classList.add('hiding');
-    setTimeout(function () {
-      splash.classList.add('hidden');
-    }, FADE_MS);
-  }
-
-  // Fire after 0.7 s regardless of network / Firebase state
-  setTimeout(hideSplash, SHOW_MS);
-
-  // Belt-and-suspenders: if somehow the element isn't in the DOM yet
-  // (e.g. script evaluated very early), retry once DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      setTimeout(hideSplash, SHOW_MS);
-    });
-  }
-}());
-</script>
 
 <!-- ══════════════ CONTACT CONTEXT MENU ══════════════ -->
 <div class="ci-ctx-menu" id="ciCtxMenu" style="display:none;"></div>
@@ -31213,428 +30922,64 @@ window._errHtml = function(name, msg) {
 
 <script>
 /* ══════════════════════════════════════════════════════════════
-   PERFORMANCE DASHBOARD — IndexedDB layer + open/close
-   Replaces the old MathTrainer overlay.
-   Data stored in NF_QuizDB (IndexedDB), synced from localStorage.
+   MATH TRAINER OVERLAY  — openMathTrainer / closeMathTrainer
+   Same lazy-React pattern as openMath / MathQuiz
 ══════════════════════════════════════════════════════════════ */
 (function () {
-  /* ── IndexedDB Setup ── */
-  const DB_NAME    = 'NF_QuizDB';
-  const DB_VERSION = 1;
-  let   _db        = null;
+  let trainerMounted = false;
 
-  function _openDB() {
-    if (_db) return Promise.resolve(_db);
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('quiz_daily')) {
-          db.createObjectStore('quiz_daily', { keyPath: 'date' });
-        }
-        if (!db.objectStoreNames.contains('quiz_answers')) {
-          const st = db.createObjectStore('quiz_answers', { keyPath: 'id', autoIncrement: true });
-          st.createIndex('by_timestamp', 'timestamp', { unique: false });
-          st.createIndex('by_date',      'date',      { unique: false });
-        }
-      };
-      req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
-      req.onerror   = () => reject(req.error);
-    });
-  }
+  function _overlay()  { return document.getElementById('mathTrainerOverlay'); }
+  function _root()     { return document.getElementById('mathTrainerRoot'); }
 
-  function _today() {
-    return new Date().toISOString().slice(0, 10);
-  }
+  window.openMathTrainer = async function () {
+    const ov   = _overlay();
+    const root = _root();
+    if (!ov || !root) { console.error('[MathTrainer] Overlay or root not found.'); return; }
 
-  /* ── Snapshot current localStorage quiz state into today's DB record ── */
-  async function _syncDailySnapshot() {
-    try {
-      const db   = await _openDB();
-      const date = _today();
-      const snap = {
-        date,
-        answered:   parseInt(localStorage.getItem('mbTotalAnswered') || '0'),
-        correct:    parseInt(localStorage.getItem('mbTotalCorrect')  || '0'),
-        accuracy:   parseInt(localStorage.getItem('mbAccuracy')      || '0'),
-        avgMs:      parseInt(localStorage.getItem('mbAvgTimeMs')     || '0'),
-        xp:         parseInt(localStorage.getItem('userXP')          || '0'),
-        streak:     parseInt(localStorage.getItem('mbStreak')        || '0'),
-        topicStats: (()=>{ try{ return JSON.parse(localStorage.getItem('mbTopicStats')||'{}'); }catch(e){ return {}; } })(),
-        updatedAt:  Date.now()
-      };
-      const tx = db.transaction('quiz_daily', 'readwrite');
-      const st = tx.objectStore('quiz_daily');
-      const existing = await new Promise(res => {
-        const r = st.get(date); r.onsuccess = () => res(r.result); r.onerror = () => res(null);
-      });
-      if (existing) {
-        snap.answered = Math.max(existing.answered, snap.answered);
-        snap.correct  = Math.max(existing.correct,  snap.correct);
-      }
-      st.put(snap);
-    } catch(err) {
-      console.warn('[NF QuizDB] sync failed:', err);
-    }
-  }
-
-  /* ── Intercept localStorage writes to auto-sync ── */
-  const TRACKED = new Set(['mbTotalAnswered','mbTotalCorrect','mbAccuracy','mbAvgTimeMs','mbTopicStats','userXP','mbStreak']);
-  const _origSet = localStorage.setItem.bind(localStorage);
-  let   _syncTimer = null;
-  localStorage.setItem = function(key, val) {
-    _origSet(key, val);
-    if (TRACKED.has(key)) {
-      clearTimeout(_syncTimer);
-      _syncTimer = setTimeout(_syncDailySnapshot, 200);
-    }
-  };
-
-  /* ── Public API: record individual answer ── */
-  window.nfRecordAnswer = async function(data) {
-    // Called by quiz components: { topic, correct, timeMs, question, userAnswer, correctAnswer }
-    try {
-      const db = await _openDB();
-      const tx = db.transaction('quiz_answers', 'readwrite');
-      const st = tx.objectStore('quiz_answers');
-      st.add({
-        timestamp:     Date.now(),
-        date:          _today(),
-        topic:         data.topic         || 'General',
-        correct:       !!data.correct,
-        timeMs:        data.timeMs        || 0,
-        question:      data.question      || '',
-        userAnswer:    data.userAnswer    || '',
-        correctAnswer: data.correctAnswer || ''
-      });
-      // Trim to 200 newest entries
-      const cnt = await new Promise(res => {
-        const r = st.count(); r.onsuccess = () => res(r.result); r.onerror = () => res(0);
-      });
-      if (cnt > 200) {
-        const cur = st.openCursor();
-        let   rem = cnt - 200;
-        cur.onsuccess = (e) => {
-          const c = e.target.result;
-          if (c && rem > 0) { c.delete(); rem--; c.continue(); }
-        };
-      }
-    } catch(err) { console.warn('[NF QuizDB] recordAnswer failed:', err); }
-  };
-
-  /* ── Fetch N days of daily snapshots (0 = all time) ── */
-  async function _getDailyStats(days) {
-    try {
-      const db  = await _openDB();
-      const tx  = db.transaction('quiz_daily', 'readonly');
-      const st  = tx.objectStore('quiz_daily');
-      const all = await new Promise(res => {
-        const r = st.getAll(); r.onsuccess = () => res(r.result); r.onerror = () => res([]);
-      });
-      if (!days) return all.sort((a,b) => a.date.localeCompare(b.date));
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
-      const c = cutoff.toISOString().slice(0,10);
-      return all.filter(d => d.date >= c).sort((a,b) => a.date.localeCompare(b.date));
-    } catch(e) { return []; }
-  }
-
-  /* ── Fetch recent individual answers ── */
-  async function _getRecentAnswers(limit) {
-    try {
-      const db = await _openDB();
-      const tx = db.transaction('quiz_answers', 'readonly');
-      const ix = tx.objectStore('quiz_answers').index('by_timestamp');
-      const results = [];
-      return new Promise(res => {
-        const cur = ix.openCursor(null, 'prev');
-        cur.onsuccess = (e) => {
-          const c = e.target.result;
-          if (c && results.length < (limit||10)) { results.push(c.value); c.continue(); }
-          else res(results);
-        };
-        cur.onerror = () => res([]);
-      });
-    } catch(e) { return []; }
-  }
-
-  /* ════════════════════════════════
-     OPEN / CLOSE
-  ════════════════════════════════ */
-  let _currentPeriod = 'all';
-
-  window.openPerformanceDashboard = async function() {
-    const ov = document.getElementById('perfDashOverlay');
-    if (!ov) return;
-    await _syncDailySnapshot();
     ov.classList.add('open');
     document.body.style.overflow = 'hidden';
-    _currentPeriod = 'all';
-    _activatePeriodBtn('all');
-    await _renderDashboard('all');
+
+    if (trainerMounted) return;
+
+    root.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;gap:10px;color:#FFE449;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:.95rem;">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' +
+      'Loading MathTrainer\u2026</div>' +
+      '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+
+    try {
+      const _React = window.React;
+      const _createRoot = window.ReactCreateRoot;
+      if (!_React || !_createRoot) throw new Error('React not ready — try refreshing.');
+
+      let MathTrainer = await _waitForComponent('_MathTrainerComponent', 4000);
+      if (!MathTrainer) {
+        const mod = await _fetchWithRetry('https://esm.sh/gh/luxury430/Vibechat/math-trainer.jsx?deps=react@18&v=1');
+        MathTrainer = mod.default;
+      }
+
+      root.innerHTML = '';
+      _createRoot(root).render(_React.createElement(MathTrainer));
+      trainerMounted = true;
+    } catch (err) {
+      console.error('[MathTrainer] Load failed:', err);
+      root.innerHTML = _errHtml('MathTrainer', err.message);
+    }
   };
 
-  window.closePerformanceDashboard = function() {
-    const ov = document.getElementById('perfDashOverlay');
+  window.closeMathTrainer = function () {
+    const ov = _overlay();
     if (!ov) return;
     ov.classList.remove('open');
-    setTimeout(() => { document.body.style.overflow = ''; }, 380);
+    document.body.style.overflow = '';
   };
 
-  document.addEventListener('keydown', (e) => {
-    const ov = document.getElementById('perfDashOverlay');
-    if (e.key === 'Escape' && ov && ov.classList.contains('open')) window.closePerformanceDashboard();
+  document.addEventListener('keydown', function (e) {
+    const ov = _overlay();
+    if (e.key === 'Escape' && ov && ov.classList.contains('open')) {
+      window.closeMathTrainer();
+    }
   });
-
-  /* ════════════════════════════════
-     TIME FILTER
-  ════════════════════════════════ */
-  function _activatePeriodBtn(p) {
-    document.querySelectorAll('.perf-period-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.period === p));
-  }
-
-  window._perfSetPeriod = async function(p) {
-    if (p === _currentPeriod) return;
-    _currentPeriod = p;
-    _activatePeriodBtn(p);
-    const body = document.getElementById('perfDashBody');
-    if (body) { body.style.opacity = '.45'; body.style.transition = 'opacity .18s'; }
-    await _renderDashboard(p);
-    if (body) { body.style.opacity = '1'; }
-  };
-
-  /* ════════════════════════════════
-     RENDER PIPELINE
-  ════════════════════════════════ */
-  async function _renderDashboard(period) {
-    const days = period === '7' ? 7 : period === '30' ? 30 : 0;
-
-    const totalAns = parseInt(localStorage.getItem('mbTotalAnswered') || '0');
-    const totalCor = parseInt(localStorage.getItem('mbTotalCorrect')  || '0');
-    const accuracy = parseInt(localStorage.getItem('mbAccuracy')      || '0');
-    const avgMs    = parseInt(localStorage.getItem('mbAvgTimeMs')     || '0');
-    const streak   = parseInt(localStorage.getItem('mbStreak')        || '0');
-    const xp       = parseInt(localStorage.getItem('userXP')          || '0');
-    let   topicSt  = {};
-    try { topicSt = JSON.parse(localStorage.getItem('mbTopicStats') || '{}'); } catch(e) {}
-
-    const daily   = await _getDailyStats(days);
-    const recents = await _getRecentAnswers(8);
-
-    // Period-specific totals
-    let pAns = totalAns, pCor = totalCor, pAcc = accuracy;
-    if (days && daily.length) {
-      pAns = daily.reduce((s,d) => s + (d.answered||0), 0);
-      pCor = daily.reduce((s,d) => s + (d.correct||0),  0);
-      pAcc = pAns ? Math.round((pCor/pAns)*100) : 0;
-    }
-
-    _renderSummary({ pAns, pCor, pAcc, avgMs, streak, xp, period });
-    _renderInsight(pAcc, topicSt);
-    _renderTrend(daily, period);
-    _renderTopics(topicSt);
-    _renderRecent(recents, topicSt);
-  }
-
-  /* ── A: Summary strip ── */
-  function _renderSummary({ pAns, pCor, pAcc, avgMs, streak, xp, period }) {
-    const el = document.getElementById('perfSummaryStrip');
-    if (!el) return;
-    const accCls  = pAcc >= 70 ? 'perf-green' : pAcc >= 45 ? 'perf-yellow' : 'perf-red';
-    const fmtTime = ms => !ms ? '—' : ms < 1000 ? ms+'ms' : (ms/1000).toFixed(1)+'s';
-    const strCls  = streak >= 7 ? 'perf-gold' : '';
-    el.innerHTML = `
-      <div class="perf-metric-card ${accCls}">
-        <div class="perf-metric-val">${pAcc}<span class="perf-metric-unit">%</span></div>
-        <div class="perf-metric-lbl">Accuracy</div>
-      </div>
-      <div class="perf-metric-card">
-        <div class="perf-metric-val">${pAns.toLocaleString()}</div>
-        <div class="perf-metric-lbl">Questions</div>
-      </div>
-      <div class="perf-metric-card">
-        <div class="perf-metric-val">${fmtTime(avgMs)}</div>
-        <div class="perf-metric-lbl">Avg. Speed</div>
-      </div>
-      <div class="perf-metric-card ${strCls}">
-        <div class="perf-metric-val">${streak}<span class="perf-metric-unit" style="font-size:.9rem">🔥</span></div>
-        <div class="perf-metric-lbl">Day Streak</div>
-      </div>`;
-  }
-
-  /* ── Insight banner ── */
-  function _renderInsight(accuracy, topicSt) {
-    const banner = document.getElementById('perfInsightBanner');
-    const text   = document.getElementById('perfInsightText');
-    if (!banner || !text) return;
-
-    const entries = Object.entries(topicSt)
-      .filter(([,s]) => s.total >= 3)
-      .map(([t,s]) => ({ topic: t, pct: Math.round(s.correct/s.total*100) }))
-      .sort((a,b) => a.pct - b.pct);
-
-    let msg = '';
-    if (!entries.length && accuracy === 0) {
-      banner.style.display = 'none'; return;
-    } else if (accuracy >= 85) {
-      msg = `Excellent! You\'re at <strong>${accuracy}%</strong> accuracy. Keep the streak alive.`;
-    } else if (entries.length) {
-      const weak = entries[0];
-      msg = accuracy >= 70
-        ? `Good performance. Consider drilling <strong>${_esc(weak.topic)}</strong> (${weak.pct}%) to reach mastery.`
-        : `Your biggest gap is <strong>${_esc(weak.topic)}</strong> at ${weak.pct}%. Focus there first — it will move your overall score the most.`;
-    } else if (accuracy > 0) {
-      msg = `Your overall accuracy is <strong>${accuracy}%</strong>. Keep practising to build per-topic detail.`;
-    } else {
-      banner.style.display = 'none'; return;
-    }
-    text.innerHTML = msg;
-    banner.style.display = 'flex';
-  }
-
-  /* ── B: Trend chart ── */
-  function _renderTrend(daily, period) {
-    const el = document.getElementById('perfTrendChart');
-    if (!el) return;
-    if (!daily.length) {
-      el.innerHTML = `<div class="perf-empty-state">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <p>Practice on multiple days to see your accuracy trend.</p></div>`;
-      return;
-    }
-    const pts = daily.map(d => ({
-      date: d.date,
-      acc:  d.accuracy || (d.answered ? Math.round((d.correct||0)/d.answered*100) : 0)
-    }));
-    const W=320, H=128, PL=30, PR=10, PT=14, PB=26;
-    const cW=W-PL-PR, cH=H-PT-PB, n=pts.length;
-    const xOf = i => PL + (n===1 ? cW/2 : (i/(n-1))*cW);
-    const yOf = v => PT + cH - (v/100)*cH;
-    const pathD = pts.map((p,i)=>`${i===0?'M':'L'}${xOf(i).toFixed(1)},${yOf(p.acc).toFixed(1)}`).join(' ');
-    const fillD = pathD+` L${xOf(n-1).toFixed(1)},${(PT+cH).toFixed(1)} L${xOf(0).toFixed(1)},${(PT+cH).toFixed(1)} Z`;
-    const grids = [25,50,75].map(v=>{
-      const y=yOf(v).toFixed(1);
-      return `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="currentColor" stroke-width="0.6" opacity="0.1"/>
-              <text x="${PL-4}" y="${parseFloat(y)+3.5}" text-anchor="end" font-size="8" opacity="0.35" fill="currentColor">${v}</text>`;
-    }).join('');
-    const dots = pts.map((p,i)=>{
-      const cx=xOf(i).toFixed(1), cy=yOf(p.acc).toFixed(1);
-      const col=p.acc>=70?'#34d399':p.acc>=45?'#fbbf24':'#f87171';
-      const raw=p.date.slice(5);
-      const showLbl = n<=14 || i===0 || i===n-1 || i%Math.ceil(n/7)===0;
-      return `<circle cx="${cx}" cy="${cy}" r="3.5" fill="${col}" stroke="var(--bg-card,#141414)" stroke-width="1.5"/>
-              ${i===n-1?`<text x="${cx}" y="${parseFloat(cy)-9}" text-anchor="middle" font-size="8.5" fill="${col}" font-weight="700">${p.acc}%</text>`:''}
-              ${showLbl?`<text x="${cx}" y="${H-2}" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.45">${raw}</text>`:''}`;
-    }).join('');
-    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible">
-      <defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="#3B82F6" stop-opacity="0.2"/>
-        <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
-      </linearGradient></defs>
-      ${grids}
-      <path d="${fillD}" fill="url(#trendFill)"/>
-      <path d="${pathD}" fill="none" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      ${dots}</svg>`;
-  }
-
-  /* ── C: Topic Diagnosis ── */
-  function _renderTopics(topicSt) {
-    const el = document.getElementById('perfTopicList');
-    if (!el) return;
-    const entries = Object.entries(topicSt)
-      .filter(([,s])=>s.total>=1)
-      .map(([topic,s])=>({ topic, total:s.total, correct:s.correct, pct:Math.round((s.correct||0)/s.total*100) }))
-      .sort((a,b)=>a.pct-b.pct);
-    if (!entries.length) {
-      el.innerHTML=`<div class="perf-empty-state">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg>
-        <p>Complete quizzes to see your topic breakdown.</p></div>`;
-      return;
-    }
-    const icoChk=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-    const icoWv =`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
-    const icoWrn=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-    el.innerHTML=entries.map(({topic,total,correct,pct})=>{
-      const cls=pct>=70?'td-green':pct>=45?'td-yellow':'td-red';
-      const lbl=pct>=70?'Strong':pct>=45?'Improving':'Needs Work';
-      const ico=pct>=70?icoChk:pct>=45?icoWv:icoWrn;
-      return `<div class="perf-topic-row ${cls}">
-        <div class="perf-topic-main">
-          <div class="perf-topic-name">${_esc(topic)}</div>
-          <div class="perf-topic-meta">${total} attempt${total!==1?'s':''} · ${correct} correct</div>
-        </div>
-        <div class="perf-topic-right">
-          <div class="perf-topic-pct">${pct}%</div>
-          <div class="perf-topic-badge">${ico}${lbl}</div>
-        </div>
-        <div class="perf-topic-bar-wrap">
-          <div class="perf-topic-bar-fill" style="width:${pct}%"></div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  /* ── D: Recent Activity ── */
-  function _renderRecent(recents, topicSt) {
-    const el = document.getElementById('perfRecentList');
-    if (!el) return;
-
-    if (!recents.length) {
-      // Graceful fallback: derive from topic stats
-      const entries = Object.entries(topicSt)
-        .filter(([,s])=>s.total>=1)
-        .sort((a,b)=>(b[1].total||0)-(a[1].total||0))
-        .slice(0,6);
-      if (!entries.length) {
-        el.innerHTML=`<div class="perf-empty-state">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <p>Your recent session activity will appear here.</p></div>`;
-        return;
-      }
-      el.innerHTML=entries.map(([topic,s])=>{
-        const pct=Math.round((s.correct||0)/s.total*100);
-        const dotCls=pct>=70?'correct':pct>=45?'partial':'wrong';
-        return `<div class="perf-act-row">
-          <div class="perf-act-dot ${dotCls}"></div>
-          <div class="perf-act-content">
-            <div class="perf-act-label">${_esc(topic)}</div>
-            <div class="perf-act-sub">${s.total} question${s.total!==1?'s':''} attempted</div>
-          </div>
-          <div class="perf-act-stat">${pct}%</div>
-        </div>`;
-      }).join('');
-      return;
-    }
-
-    const todayStr = _today();
-    el.innerHTML=recents.map(a=>{
-      const t = new Date(a.timestamp);
-      const timeStr = t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-      const dateStr = a.date===todayStr?'Today':a.date.slice(5).replace('-','/');
-      const qSnip   = a.question ? ` · <em>${_esc(a.question.slice(0,38))}${a.question.length>38?'…':''}</em>` : '';
-      return `<div class="perf-act-row">
-        <div class="perf-act-dot ${a.correct?'correct':'wrong'}"></div>
-        <div class="perf-act-content">
-          <div class="perf-act-label">${_esc(a.topic)}${qSnip}</div>
-          <div class="perf-act-sub">${dateStr}, ${timeStr}${a.timeMs?` · ${(a.timeMs/1000).toFixed(1)}s`:''}</div>
-        </div>
-        <div class="perf-act-badge ${a.correct?'correct':'wrong'}">${a.correct?'✓':'✗'}</div>
-      </div>`;
-    }).join('');
-  }
-
-  function _esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  /* ── Boot: initial sync + hook xpUpdated ── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(_syncDailySnapshot, 600));
-  } else {
-    setTimeout(_syncDailySnapshot, 600);
-  }
-  window.addEventListener('xpUpdated', () => setTimeout(_syncDailySnapshot, 300));
-
 })();
 </script>
 
@@ -34171,415 +33516,43 @@ setTimeout(initFCM, 0);
 <div id="mbLvlToast"></div>
 
 <!-- ════════════════════════════════════════════════════════
-     PERFORMANCE DASHBOARD OVERLAY
-     Opened by "View Performance" on home hero.
+     MATH TRAINER OVERLAY  (opened by "View Performance" on home hero)
 ════════════════════════════════════════════════════════ -->
+<div id="mathTrainerOverlay" style="
+  display:none; position:fixed; inset:0; z-index:199998;
+  background:#08080D; overflow:hidden;
+  flex-direction:column;
+">
 <style>
-/* ═══ PERFORMANCE DASHBOARD ═══ */
-#perfDashOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 199998;
-  background: var(--bg-app);
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  transform: translateY(26px);
-  pointer-events: none;
-  transition: opacity .36s cubic-bezier(.22,.1,.36,1), transform .36s cubic-bezier(.22,.1,.36,1);
-  will-change: opacity, transform;
-}
-#perfDashOverlay.open {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: all;
-}
-.perf-dash-hdr {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px 12px;
-  padding-top: max(env(safe-area-inset-top, 14px), 14px);
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-app);
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
-.perf-dash-title-txt {
-  font-family: var(--font-d);
-  font-size: 1.06rem;
-  font-weight: 700;
-  color: var(--tp);
-  letter-spacing: .2px;
-  flex: 1;
-}
-.perf-period-wrap {
-  display: flex;
-  align-items: center;
-  background: var(--bg-surface);
-  border-radius: var(--r-f);
-  padding: 3px;
-  gap: 1px;
-}
-.perf-period-btn {
-  background: none;
-  border: none;
-  color: var(--ts);
-  font-family: var(--font-b);
-  font-size: .7rem;
-  font-weight: 700;
-  letter-spacing: .4px;
-  padding: 4px 11px;
-  border-radius: var(--r-f);
-  cursor: pointer;
-  transition: background .15s, color .15s;
-  white-space: nowrap;
-}
-.perf-period-btn.active {
-  background: var(--bg-card);
-  color: var(--tp);
-  box-shadow: 0 1px 6px rgba(0,0,0,.25);
-}
-.perf-close-btn {
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-f);
-  color: var(--ts);
-  cursor: pointer;
-  transition: background .15s, color .15s;
-  flex-shrink: 0;
-}
-.perf-close-btn:hover { background: var(--bg-hover); color: var(--tp); }
-
-/* ── Scrollable body ── */
-.perf-dash-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  padding: 18px 16px;
-  padding-bottom: max(env(safe-area-inset-bottom, 24px), 24px);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  transition: opacity .2s;
-}
-
-/* ── Section ── */
-.perf-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-l);
-  padding: 14px 14px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.perf-section-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2px;
-}
-.perf-section-title {
-  font-family: var(--font-d);
-  font-size: .72rem;
-  font-weight: 700;
-  color: var(--tm);
-  letter-spacing: 1.1px;
-  text-transform: uppercase;
-}
-
-/* ── A: Summary strip ── */
-#perfSummaryStrip {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-}
-.perf-metric-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-m);
-  padding: 13px 13px 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color .2s;
-}
-.perf-metric-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2.5px;
-  background: var(--border2);
-  border-radius: 2px 2px 0 0;
-}
-.perf-metric-card.perf-green  { border-color: rgba(52,211,153,.2); }
-.perf-metric-card.perf-yellow { border-color: rgba(251,191,36,.2); }
-.perf-metric-card.perf-red    { border-color: rgba(248,113,113,.2); }
-.perf-metric-card.perf-gold   { border-color: rgba(245,158,11,.25); }
-.perf-metric-card.perf-green::after  { background: #34d399; }
-.perf-metric-card.perf-yellow::after { background: #fbbf24; }
-.perf-metric-card.perf-red::after    { background: #f87171; }
-.perf-metric-card.perf-gold::after   { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
-.perf-metric-val {
-  font-family: var(--font-d);
-  font-size: 1.65rem;
-  font-weight: 800;
-  color: var(--tp);
-  line-height: 1;
-  letter-spacing: -.5px;
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-.perf-metric-card.perf-green  .perf-metric-val { color: #34d399; }
-.perf-metric-card.perf-yellow .perf-metric-val { color: #fbbf24; }
-.perf-metric-card.perf-red    .perf-metric-val { color: #f87171; }
-.perf-metric-card.perf-gold   .perf-metric-val { color: #f59e0b; }
-.perf-metric-unit { font-size: .9rem; font-weight: 600; opacity: .7; margin-left: 1px; }
-.perf-metric-lbl { font-size: .7rem; color: var(--tm); font-weight: 500; letter-spacing: .25px; }
-
-/* ── Insight banner ── */
-.perf-insight-banner {
-  background: rgba(59,130,246,.07);
-  border: 1px solid rgba(59,130,246,.18);
-  border-radius: var(--r-m);
-  padding: 11px 13px;
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-}
-.perf-insight-icon { color: var(--accent2); flex-shrink: 0; margin-top: 1px; }
-.perf-insight-text { font-size: .81rem; color: var(--tp); line-height: 1.52; font-weight: 500; }
-.perf-insight-text strong { color: var(--accent2); }
-
-/* ── B: Trend body ── */
-.perf-trend-body { padding: 2px 0 4px; }
-
-/* ── C: Topic rows ── */
-.perf-topic-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto 4px;
-  gap: 6px 8px;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border3);
-}
-.perf-topic-row:last-child { border-bottom: none; padding-bottom: 0; }
-.perf-topic-row:first-child { padding-top: 0; }
-.perf-topic-main { display: flex; flex-direction: column; gap: 2px; }
-.perf-topic-name { font-size: .86rem; font-weight: 600; color: var(--tp); }
-.perf-topic-meta { font-size: .7rem; color: var(--tm); }
-.perf-topic-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.perf-topic-pct { font-family: var(--font-d); font-size: 1.05rem; font-weight: 800; }
-.td-green .perf-topic-pct  { color: #34d399; }
-.td-yellow .perf-topic-pct { color: #fbbf24; }
-.td-red .perf-topic-pct    { color: #f87171; }
-.perf-topic-badge {
-  display: flex; align-items: center; gap: 3px;
-  font-size: .63rem; font-weight: 700; letter-spacing: .5px;
-  padding: 2px 7px; border-radius: var(--r-f);
-  text-transform: uppercase;
-}
-.td-green  .perf-topic-badge { background: rgba(52,211,153,.12);  color: #34d399; }
-.td-yellow .perf-topic-badge { background: rgba(251,191,36,.12);  color: #fbbf24; }
-.td-red    .perf-topic-badge { background: rgba(248,113,113,.12); color: #f87171; }
-.perf-topic-bar-wrap {
-  grid-column: 1 / -1;
-  height: 3px;
-  background: var(--bg-surface);
-  border-radius: 9px;
-  overflow: hidden;
-}
-.perf-topic-bar-fill {
-  height: 100%;
-  border-radius: 9px;
-  transition: width .6s cubic-bezier(.22,.1,.36,1);
-}
-.td-green  .perf-topic-bar-fill { background: #34d399; }
-.td-yellow .perf-topic-bar-fill { background: #fbbf24; }
-.td-red    .perf-topic-bar-fill { background: #f87171; }
-
-/* ── D: Recent activity ── */
-.perf-act-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border3);
-}
-.perf-act-row:last-child { border-bottom: none; padding-bottom: 0; }
-.perf-act-row:first-child { padding-top: 0; }
-.perf-act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.perf-act-dot.correct { background: #34d399; }
-.perf-act-dot.wrong   { background: #f87171; }
-.perf-act-dot.partial { background: #fbbf24; }
-.perf-act-content { flex: 1; min-width: 0; }
-.perf-act-label {
-  font-size: .82rem; font-weight: 600; color: var(--tp);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.perf-act-label em { color: var(--ts); font-style: normal; }
-.perf-act-sub { font-size: .69rem; color: var(--tm); margin-top: 1px; }
-.perf-act-badge {
-  font-size: .75rem; font-weight: 800;
-  width: 22px; height: 22px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.perf-act-badge.correct { background: rgba(52,211,153,.13); color: #34d399; }
-.perf-act-badge.wrong   { background: rgba(248,113,113,.13); color: #f87171; }
-.perf-act-stat { font-family: var(--font-d); font-size: .9rem; font-weight: 700; color: var(--ts); }
-
-/* ── E: Action panel ── */
-.perf-action-panel { display: flex; flex-direction: column; gap: 9px; margin-top: 2px; }
-.perf-act-primary {
-  width: 100%;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: var(--r-m);
-  padding: 15px 20px;
-  font-family: var(--font-b);
-  font-size: .88rem;
-  font-weight: 700;
-  letter-spacing: .35px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background .16s, transform .1s, box-shadow .16s;
-  box-shadow: 0 4px 16px rgba(59,130,246,.35);
-}
-.perf-act-primary:active { transform: scale(.985); background: var(--accent3); }
-.perf-act-secondary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-.perf-act-secondary {
-  background: var(--bg-surface);
-  border: 1px solid var(--border2);
-  color: var(--tp);
-  border-radius: var(--r-m);
-  padding: 12px 12px;
-  font-family: var(--font-b);
-  font-size: .78rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background .14s, border-color .14s;
-  white-space: nowrap;
-}
-.perf-act-secondary:hover { background: var(--bg-hover); }
-.perf-act-secondary:active { transform: scale(.97); }
-
-/* ── Empty state ── */
-.perf-empty-state {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 8px; padding: 26px 16px;
-  color: var(--tm); text-align: center;
-}
-.perf-empty-state p { font-size: .8rem; line-height: 1.52; max-width: 210px; }
-
-/* ── Light theme ── */
-[data-theme="light"] .perf-metric-card.perf-green  { background: rgba(52,211,153,.05); }
-[data-theme="light"] .perf-metric-card.perf-yellow { background: rgba(251,191,36,.05); }
-[data-theme="light"] .perf-metric-card.perf-red    { background: rgba(248,113,113,.05); }
-[data-theme="light"] .perf-metric-card.perf-gold   { background: rgba(245,158,11,.05); }
-[data-theme="light"] .perf-act-primary { box-shadow: 0 4px 16px rgba(59,130,246,.2); }
+  #mathTrainerOverlay.open { display: flex !important; }
+  #mathTrainerRoot {
+    width:100%; flex:1; min-height:0;
+    overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
 </style>
-
-<div id="perfDashOverlay">
-
-  <!-- ── Fixed Header ── -->
-  <div class="perf-dash-hdr">
-    <div class="perf-dash-title-txt">Performance</div>
-    <div class="perf-period-wrap">
-      <button class="perf-period-btn" data-period="7"   onclick="window._perfSetPeriod('7')">7D</button>
-      <button class="perf-period-btn" data-period="30"  onclick="window._perfSetPeriod('30')">30D</button>
-      <button class="perf-period-btn active" data-period="all" onclick="window._perfSetPeriod('all')">All</button>
-    </div>
-    <button class="perf-close-btn" onclick="window.closePerformanceDashboard()" title="Close">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- ── Scrollable body ── -->
-  <div class="perf-dash-body" id="perfDashBody">
-
-    <!-- A: Summary Strip — instant snapshot -->
-    <div id="perfSummaryStrip"></div>
-
-    <!-- Insight banner — auto-populated -->
-    <div id="perfInsightBanner" class="perf-insight-banner" style="display:none">
-      <svg class="perf-insight-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      <div class="perf-insight-text" id="perfInsightText"></div>
-    </div>
-
-    <!-- B: Accuracy Trend -->
-    <div class="perf-section">
-      <div class="perf-section-hdr">
-        <div class="perf-section-title">Accuracy Trend</div>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      </div>
-      <div class="perf-trend-body" id="perfTrendChart"></div>
-    </div>
-
-    <!-- C: Topic Diagnosis -->
-    <div class="perf-section">
-      <div class="perf-section-hdr">
-        <div class="perf-section-title">Topic Breakdown</div>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg>
-      </div>
-      <div id="perfTopicList"></div>
-    </div>
-
-    <!-- D: Recent Activity -->
-    <div class="perf-section">
-      <div class="perf-section-hdr">
-        <div class="perf-section-title">Recent Activity</div>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div id="perfRecentList"></div>
-    </div>
-
-    <!-- E: Action Panel -->
-    <div class="perf-action-panel">
-      <button class="perf-act-primary"
-        onclick="window.closePerformanceDashboard(); setTimeout(()=>{ window.openMath && window.openMath(); }, 370)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Resume Practice
-      </button>
-      <div class="perf-act-secondary-row">
-        <button class="perf-act-secondary"
-          onclick="window.closePerformanceDashboard(); setTimeout(()=>{ window.openMath && window.openMath(); }, 370)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          Focus Weak
-        </button>
-        <button class="perf-act-secondary"
-          onclick="window.closePerformanceDashboard(); setTimeout(()=>{ window.openMath && window.openMath(); }, 370)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Challenge
-        </button>
-      </div>
-    </div>
-
-  </div><!-- /.perf-dash-body -->
-</div><!-- /#perfDashOverlay -->
+  <!-- Back button — same style as MathBot -->
+  <button id="closeMathTrainerBtn" style="
+    position:fixed; top:max(env(safe-area-inset-top,14px),14px); left:16px;
+    z-index:200001;
+    background:rgba(13,17,23,0.88); border:1px solid rgba(255,255,255,.1);
+    color:#8b9ab5; padding:8px 16px 8px 12px;
+    border-radius:24px; font-size:.8rem; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 2px 12px rgba(0,0,0,.5);
+    transition:background .18s ease, color .18s ease, border-color .18s ease;
+    font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:.02em;
+  " onclick="window.closeMathTrainer && window.closeMathTrainer()"
+     onmouseover="this.style.background='rgba(30,40,60,.95)';this.style.color='#f0f4ff';this.style.borderColor='rgba(59,130,246,.35)'"
+     onmouseout="this.style.background='rgba(13,17,23,0.88)';this.style.color='#8b9ab5';this.style.borderColor='rgba(255,255,255,.1)'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Chat
+  </button>
+  <!-- React mount point -->
+  <div id="mathTrainerRoot"></div>
+</div>
 
 <!-- ════════════════════════════════════════════════════════
      MATHBOT XP & PROFILE LEVELING SYSTEM
@@ -34699,6 +33672,7 @@ setTimeout(initFCM, 0);
 
 <!-- MathQuiz, MathTrainer, MathFormula — external Babel-compiled components -->
 <script type="text/babel" src="MathQuiz.jsx" data-presets="react"></script>
+<script type="text/babel" src="math-trainer.jsx" data-presets="react"></script>
 <script type="text/babel" src="MathFormula.jsx" data-presets="react"></script>
 
 
