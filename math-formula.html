@@ -11,10 +11,14 @@
   <!-- Babel standalone — compiles the JSX below in-browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
     body { background: #080818; color: #e2e8f0; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0a0a1a; }
@@ -29,7 +33,133 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
+
+  <!-- ── Aesthetic loader (pure HTML/CSS, shows before React mounts) ── -->
+  <div id="nf-loader">
+    <div class="nf-loader-inner">
+      <div class="nf-symbols">
+        <span style="--i:0">∑</span>
+        <span style="--i:1">∫</span>
+        <span style="--i:2">π</span>
+        <span style="--i:3">√</span>
+        <span style="--i:4">∞</span>
+        <span style="--i:5">δ</span>
+        <span style="--i:6">θ</span>
+        <span style="--i:7">λ</span>
+      </div>
+      <div class="nf-ring">
+        <svg viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="50" r="38" stroke="rgba(167,139,250,0.12)" stroke-width="2"/>
+          <circle cx="50" cy="50" r="38" stroke="url(#g)" stroke-width="2"
+            stroke-dasharray="60 180" stroke-linecap="round"
+            class="nf-arc"/>
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#a78bfa"/>
+              <stop offset="100%" stop-color="#38bdf8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="nf-label">
+        <span class="nf-label-main">MathForge</span>
+        <span class="nf-label-sub">Formula Explorer</span>
+      </div>
+      <div class="nf-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    #nf-loader {
+      position: fixed; inset: 0;
+      background: #080818;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #nf-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .nf-loader-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+      position: relative;
+    }
+    /* Floating math symbols */
+    .nf-symbols {
+      position: absolute;
+      width: 260px; height: 260px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .nf-symbols span {
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; font-weight: 600;
+      color: rgba(167,139,250, 0.18);
+      animation: nf-float 4s ease-in-out infinite;
+      animation-delay: calc(var(--i) * 0.5s);
+      top: calc(50% + 100px * sin(calc(var(--i) * 45deg)));
+      left: calc(50% + 100px * cos(calc(var(--i) * 45deg)));
+      transform: translate(-50%, -50%);
+    }
+    @keyframes nf-float {
+      0%, 100% { opacity: 0.18; transform: translate(-50%,-50%) scale(1); }
+      50%       { opacity: 0.55; transform: translate(-50%,-60%) scale(1.15); }
+    }
+    /* Spinning arc ring */
+    .nf-ring {
+      width: 88px; height: 88px;
+    }
+    .nf-arc {
+      transform-origin: 50px 50px;
+      animation: nf-spin 1.6s cubic-bezier(0.4,0,0.6,1) infinite;
+    }
+    @keyframes nf-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    /* Label */
+    .nf-label {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      position: relative; z-index: 1;
+    }
+    .nf-label-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 900; color: #fff;
+      letter-spacing: -0.02em;
+    }
+    .nf-label-main::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(167,139,250,0.6), transparent);
+    }
+    .nf-label-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(167,139,250,0.6);
+    }
+    /* Loading dots */
+    .nf-dots { display: flex; gap: 6px; }
+    .nf-dots span {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(167,139,250,0.5);
+      animation: nf-pulse 1.2s ease-in-out infinite;
+    }
+    .nf-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .nf-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes nf-pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50%       { opacity: 1;   transform: scale(1.2); background: #a78bfa; }
+    }
+    /* KaTeX display overrides */
+    .katex { font-size: 1em !important; }
+    .katex-display { margin: 0 !important; }
+  </style>
+
+  <div id="root" style="display:none"></div>
 
   <script type="text/babel">
 const { useState, useEffect, useRef } = React;
@@ -1762,7 +1892,7 @@ function FormulaCard({ formula, color, delay, onCalc }) {
             borderRadius: 8, padding: "8px 12px", marginBottom: formula.desc ? 10 : 0,
             wordBreak: "break-all", lineHeight: 1.7
           }}>
-            {formula.formula}
+            <FormulaText text={formula.formula} />
           </div>
           {formula.desc && (
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{formula.desc}</div>
@@ -1789,10 +1919,40 @@ function FormulaCard({ formula, color, delay, onCalc }) {
 }
 
 
-    // Mount directly — no window globals needed
+    // ── KaTeX renderer component ──
+    function FormulaText({ text }) {
+      const ref = React.useRef(null);
+      React.useEffect(() => {
+        if (!ref.current || typeof katex === 'undefined') return;
+        try {
+          katex.render(text, ref.current, {
+            throwOnError: false,
+            displayMode: false,
+            strict: false,
+            trust: true,
+            macros: {
+              '\\d': '\\mathrm{d}',
+            },
+          });
+        } catch(e) {
+          if (ref.current) ref.current.textContent = text;
+        }
+      }, [text]);
+      return <span ref={ref} style={{fontFamily:"'JetBrains Mono',monospace"}}>{text}</span>;
+    }
+
+    // ── Mount + hide loader ──
     const container = document.getElementById('root');
-    const root = ReactDOM.createRoot(container);
-    root.render(<MathFormulaExplorer />);
+    const reactRoot = ReactDOM.createRoot(container);
+    reactRoot.render(<MathFormulaExplorer />);
+    // Show root, fade out loader
+    container.style.display = '';
+    const loader = document.getElementById('nf-loader');
+    if (loader) {
+      // Small delay so first paint of the app is ready
+      setTimeout(() => loader.classList.add('hidden'), 300);
+      setTimeout(() => loader.remove(), 900);
+    }
   </script>
 </body>
 </html>

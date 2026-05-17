@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Neuro Forge — Chat</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.css">
 <!-- ── PWA Manifest (App Shell Architecture) ── -->
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4294,28 +4295,28 @@ body::before {
   transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(80,30,160,.55);
 }
-/* ── Math Formula Test Card ── */
-.hp-fy-card-mathtest {
-  background: linear-gradient(145deg, #0f2027 0%, #1a3a4a 50%, #0d2233 100%);
-  border-color: rgba(56,189,248,.28);
-  box-shadow: 0 6px 24px rgba(14,116,144,.45), inset 0 1px 0 rgba(255,255,255,.10);
+/* ── MathBot Test Card ── */
+.hp-fy-card-mathbot {
+  background: linear-gradient(145deg, #052e16 0%, #064e3b 50%, #042f1e 100%);
+  border-color: rgba(52,211,153,.28);
+  box-shadow: 0 6px 24px rgba(5,46,22,.6), inset 0 1px 0 rgba(255,255,255,.08);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
 }
-.hp-fy-card-mathtest::before {
+.hp-fy-card-mathbot::before {
   content: '';
   position: absolute;
   top: -16px; right: -16px;
   width: 90px; height: 90px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(56,189,248,.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(52,211,153,.16) 0%, transparent 70%);
   pointer-events: none;
 }
-.hp-fy-card-mathtest:hover {
+.hp-fy-card-mathbot:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(14,116,144,.55);
+  box-shadow: 0 12px 32px rgba(5,80,30,.55);
 }
 
 .hp-fy-card-tag {
@@ -5171,84 +5172,162 @@ body::before {
 /* ─────────────────────────────────────────────────────────────
    BOTTOM NAV BAR — home page only
 ───────────────────────────────────────────────────────────── */
+/* ══ PILL BOTTOM NAV ══════════════════════════════════════ */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 62px;
-  background: var(--bg-sidebar);
-  border-top: 1px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
+  bottom: 1.4rem;
+  left: 0; right: 0;
+  width: min(88%, 358px);
+  margin: 0 auto;
+  background: hsl(228, 20%, 9%);
+  box-shadow: 0 4px 28px hsla(228, 95%, 4%, .55),
+              0 0 0 1px rgba(255,255,255,.07);
+  padding: .85rem 1.5rem;
+  border-radius: 4rem;
   z-index: 860;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(14px);
-  transition: opacity .28s var(--ease), transform .28s var(--ease);
-  box-shadow: 0 -4px 20px rgba(0,0,0,.28);
-}
-.bottom-nav::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: none;
-  pointer-events: none;
+  transform: translateY(20px);
+  transition: transform .42s cubic-bezier(0.4,0,0.2,1),
+              opacity .42s cubic-bezier(0.4,0,0.2,1);
 }
 .bottom-nav.visible {
   opacity: 1;
   pointer-events: all;
   transform: translateY(0);
 }
-.bn-item {
-  flex: 1;
+/* Scroll-hide: added by JS when scrolling down */
+.bottom-nav.visible.nf-hide {
+  transform: translateY(150%) scale(0.82);
+  opacity: 0;
+  pointer-events: none;
+}
+/* ── List ── */
+.nf-nav__list {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  padding: 0; margin: 0;
+  position: relative;
+}
+/* ── Tab buttons ── */
+.nf-nav__link {
+  position: relative;
+  color: hsl(225, 8%, 50%);
+  font-size: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 3px;
-  height: 100%;
-  cursor: pointer;
   border: none;
   background: none;
-  font-family: var(--font-b);
-  color: var(--ts);
+  cursor: pointer;
+  padding: 2px 5px;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .35s ease,
+              transform .45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nf-nav__link:hover { color: #fff; }
+.nf-nav__link::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  width: 5px; height: 5px;
+  background: hsl(258, 90%, 68%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px hsla(258, 90%, 68%, 0.65);
+  transform: translateX(-50%) scale(0);
+  transition: transform .45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nf-nav__link.active {
+  color: hsl(258, 90%, 72%);
+  transform: translateY(-5px) scale(1.14);
+}
+.nf-nav__link.active::after { transform: translateX(-50%) scale(1); }
+/* ── + Expand button ── */
+.nf-nav__expand-wrap { position: relative; }
+.nf-nav__expand {
+  border: none;
+  width: 42px; height: 42px;
+  background: hsl(258, 90%, 62%);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 16px hsla(258, 90%, 62%, 0.6);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.nf-nav__expand:hover { box-shadow: 0 6px 22px hsla(258,90%,62%,.75); }
+.nf-nav__expand:active { transform: scale(0.88); }
+.nf-nav__expand-icon {
+  color: #fff;
+  font-size: 1.75rem;
+  transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+.nf-nav__expand-icon.nf-rotate { transform: rotate(135deg); }
+/* ── Sub-menu pill ── */
+.nf-nav__expand-list {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(1.2rem) scale(0.08);
+  transform-origin: center bottom;
+  background: hsl(228, 20%, 9%);
+  box-shadow: 0 4px 28px hsla(228,95%,4%,.6),
+              0 0 0 1px rgba(255,255,255,.07);
+  padding: .45rem 1.25rem;
+  border-radius: 3rem;
+  display: flex;
+  column-gap: 1.5rem;
+  list-style: none;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+  transition: transform .42s cubic-bezier(.5,1.75,.4,.85);
+}
+.nf-nav__expand-list.show-list {
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: all;
+}
+.nf-nav__expand-list li {
+  transform: translateY(-2.5rem);
+  transition: transform .38s ease;
+}
+.nf-nav__expand-list li:nth-child(1) { transition-delay: .12s; }
+.nf-nav__expand-list li:nth-child(2) { transition-delay: .22s; }
+.nf-nav__expand-list li:nth-child(3) { transition-delay: .32s; }
+.nf-nav__expand-list.show-list li   { transform: translateY(0); }
+.nf-nav__expand-link {
+  color: hsl(225, 8%, 52%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .3s;
+  padding: 4px 0;
+  font-family: inherit;
+}
+.nf-nav__expand-link i  { font-size: 1.4rem; }
+.nf-nav__expand-link span {
   font-size: .57rem;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
-  transition: color .2s var(--ease);
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
 }
-.bn-item.active { color: var(--accent2); }
-.bn-item.active::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 0 0 4px 4px;
-  box-shadow: none;
-}
-.bn-ico {
-  font-size: 1.2rem;
-  line-height: 1;
-  transition: transform .22s var(--spring), filter .22s;
-}
-.bn-item.active .bn-ico {
-  filter: none;
-  transform: scale(1.1);
-}
-.bn-item:not(.active):hover .bn-ico { transform: scale(1.1); }
-
-/* Adjust gc-fab above bottom nav when on home */
-.gc-fab.nav-offset { bottom: 82px; }
+.nf-nav__expand-link:hover { color: #fff; }
+/* FAB offset for floating pill nav */
+.gc-fab.nav-offset { bottom: 100px; }
 
 /* ─────────────────────────────────────────────────────────────
    COMMUNITY PAGE
@@ -13554,85 +13633,6 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
         </div>
       </div>
 
-      <!-- ══════════ 0B. FOR YOU ══════════ -->
-      <div class="hp-section">
-        <div class="hp-section-hdr">
-          <span class="hp-section-label">For You</span>
-          <span class="hp-section-link" onclick="window.openMath&&window.openMath()">See all →</span>
-        </div>
-        <div class="hp-for-you-grid">
-
-          <!-- Left column: Quiz + Formula cards stacked -->
-          <div class="hp-fy-col-left">
-
-            <!-- Green: Start Maths Quiz -->
-            <div class="hp-fy-card hp-fy-card-quiz" onclick="window.openMath&&window.openMath()">
-              <div class="hp-fy-card-tag">Quiz</div>
-              <div class="hp-fy-card-title">Start Maths Quiz</div>
-              <div class="hp-fy-card-desc">Test your skills across algebra, geometry &amp; more.</div>
-              <div class="hp-fy-card-footer">
-                <span class="hp-fy-card-duration">Adaptive</span>
-                <div class="hp-fy-play-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Violet: Math Formula Explorer -->
-            <div class="hp-fy-card hp-fy-card-formula" style="opacity:.5;cursor:default;" title="Moved to test card below">
-              <div class="hp-fy-card-tag">Formulas</div>
-              <div class="hp-fy-card-title">Math Formula Explorer</div>
-              <div class="hp-fy-card-desc">Visualise &amp; compute identities step-by-step.</div>
-              <div class="hp-fy-card-footer">
-                <span class="hp-fy-card-duration">Interactive</span>
-                <div class="hp-fy-play-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                </div>
-              </div>
-            </div>
-
-          </div><!-- /hp-fy-col-left -->
-
-          <!-- Right column -->
-          <div class="hp-fy-col-right">
-
-            <!-- View Channels -->
-            <div class="hp-fy-card-channels" onclick="openChannels()">
-              <div class="hp-fy-chan-title">View Channels —</div>
-              <div class="hp-fy-chan-avatars">
-                <div class="hp-fy-chan-av" style="background:#3B82F6;">A</div>
-                <div class="hp-fy-chan-av" style="background:#8B5CF6;">G</div>
-                <div class="hp-fy-chan-av" style="background:#F59E0B;">O</div>
-                <div class="hp-fy-chan-av-count">+4</div>
-              </div>
-              <div class="hp-fy-chan-arrow">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </div>
-            </div>
-
-            <!-- Article stub -->
-            <div class="hp-fy-card-article" onclick="typeof openCommunity!=='undefined'&&openCommunity()">
-              <div class="hp-fy-art-tag">Article</div>
-              <div class="hp-fy-art-title">Tips for better teamwork</div>
-            </div>
-
-          
-            <!-- ── Math Formula Explorer Test Card ── -->
-            <div class="hp-fy-card hp-fy-card-mathtest" style="cursor:pointer;border-radius:18px;padding:20px 18px 16px;" onclick="window.openSubModal('math-formula.html','Math Formula Explorer')">
-              <div class="hp-fy-card-tag" style="color:rgba(56,189,248,.75);">Formulas ✦ Test</div>
-              <div class="hp-fy-card-title" style="font-size:1rem;">Math Formula Explorer</div>
-              <div class="hp-fy-card-desc">Tap to open — step-by-step formula calculator.</div>
-              <div class="hp-fy-card-footer" style="margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
-                <span class="hp-fy-card-duration" style="color:rgba(56,189,248,.7);">Interactive</span>
-                <div class="hp-fy-play-btn" style="background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.35);">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
-              </div>
-            </div>
-</div>
-        </div>
-      </div>
-
       <!-- ══════════ 1. HEADER ══════════ -->
       <div class="hp-header">
         <div class="hp-greeting"><span id="hpGreetingWord">Good morning</span>, <span id="homeHeroName">Scholar</span></div>
@@ -13709,6 +13709,56 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
           </div>
           Ask NF AI
         </button>
+      </div>
+
+      <!-- ══════════ 2b. MATH TOOLS ══════════ -->
+      <div class="hp-section">
+        <div class="hp-section-hdr">
+          <span class="hp-section-label">Math Tools</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+
+          <!-- MathBot card -->
+          <div onclick="window.openSubModal('mathbot.html','MathBot')"
+               style="flex:1;cursor:pointer;border-radius:16px;padding:18px 16px 14px;
+                      background:linear-gradient(145deg,#052e16,#064e3b,#042f1e);
+                      border:1px solid rgba(52,211,153,.28);
+                      box-shadow:0 4px 18px rgba(5,46,22,.55);
+                      display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;
+                      transition:transform .2s ease,box-shadow .2s ease;">
+            <div style="font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(52,211,153,.7);">Quiz ✦ AI</div>
+            <div style="font-size:.92rem;font-weight:700;color:#f1f5f9;line-height:1.2;">MathBot</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45);line-height:1.4;">Adaptive NCERT Class 11 quiz engine.</div>
+            <div style="margin-top:auto;padding-top:10px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:.68rem;color:rgba(52,211,153,.65);">Adaptive</span>
+              <div style="width:26px;height:26px;border-radius:50%;background:rgba(52,211,153,.15);
+                          border:1px solid rgba(52,211,153,.35);display:flex;align-items:center;justify-content:center;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formula Explorer card -->
+          <div onclick="window.openSubModal('math-formula.html','Math Formula Explorer')"
+               style="flex:1;cursor:pointer;border-radius:16px;padding:18px 16px 14px;
+                      background:linear-gradient(145deg,#0f2027,#1a3a4a,#0d2233);
+                      border:1px solid rgba(56,189,248,.28);
+                      box-shadow:0 4px 18px rgba(14,116,144,.45);
+                      display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;
+                      transition:transform .2s ease,box-shadow .2s ease;">
+            <div style="font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(56,189,248,.7);">Formulas ✦ Calc</div>
+            <div style="font-size:.92rem;font-weight:700;color:#f1f5f9;line-height:1.2;">Formula Explorer</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45);line-height:1.4;">Visualise &amp; compute identities step-by-step.</div>
+            <div style="margin-top:auto;padding-top:10px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:.68rem;color:rgba(56,189,248,.65);">Interactive</span>
+              <div style="width:26px;height:26px;border-radius:50%;background:rgba(56,189,248,.15);
+                          border:1px solid rgba(56,189,248,.35);display:flex;align-items:center;justify-content:center;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <!-- ══════════ 3. NEEDS ATTENTION ══════════ -->
@@ -13788,26 +13838,61 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
 
 <!-- ══════════════ BOTTOM NAV BAR ══════════════ -->
 <nav class="bottom-nav" id="bottomNav">
-  <button class="bn-item active" id="bnHome">
-    <span class="bn-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
-    Home
-  </button>
-  <button class="bn-item" id="bnQuiz">
-    <span class="bn-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v5l-4.5 8.5A2 2 0 0 0 7.27 19h9.46a2 2 0 0 0 1.77-2.5L14 8V3"/></svg></span>
-    Explore
-  </button>
-  <button class="bn-item" id="bnCommunity">
-    <span class="bn-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
-    Community
-  </button>
-  <button class="bn-item" id="bnChat">
-    <span class="bn-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg></span>
-    DISCUSS
-  </button>
-  <button class="bn-item" id="bnLeaderboard">
-    <span class="bn-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-    Leaderboard
-  </button>
+  <ul class="nf-nav__list">
+
+    <li>
+      <button class="nf-nav__link active" id="bnHome" title="Home">
+        <i class="ri-home-smile-2-line"></i>
+      </button>
+    </li>
+
+    <li>
+      <button class="nf-nav__link" id="bnQuiz" title="Explore">
+        <i class="ri-compass-3-line"></i>
+      </button>
+    </li>
+
+    <li class="nf-nav__expand-wrap">
+      <button class="nf-nav__expand" id="nfNavExpand" title="More">
+        <i class="ri-add-line nf-nav__expand-icon" id="nfNavExpandIcon"></i>
+      </button>
+      <ul class="nf-nav__expand-list" id="nfNavExpandList">
+        <li>
+          <button class="nf-nav__expand-link" id="nfNavPost">
+            <i class="ri-quill-pen-ai-line"></i>
+            <span>Post</span>
+          </button>
+        </li>
+        <li>
+          <button class="nf-nav__expand-link" id="nfNavCreate">
+            <i class="ri-draft-line"></i>
+            <span>Create</span>
+          </button>
+        </li>
+        <li>
+          <button class="nf-nav__expand-link" id="nfNavExpandClose">
+            <i class="ri-close-line"></i>
+            <span>Close</span>
+          </button>
+        </li>
+      </ul>
+    </li>
+
+    <li>
+      <button class="nf-nav__link" id="bnChat" title="Discuss">
+        <i class="ri-discuss-line"></i>
+      </button>
+    </li>
+
+    <li>
+      <button class="nf-nav__link" id="bnLeaderboard" title="Leaderboard">
+        <i class="ri-trophy-line"></i>
+      </button>
+    </li>
+
+  </ul>
+  <!-- Hidden compat shim — existing JS references bnCommunity with optional chaining -->
+  <button id="bnCommunity" style="display:none;position:absolute;pointer-events:none;" aria-hidden="true"></button>
 </nav>
 
 <!-- ══════════════ EXPLORE PAGE (Wave Lab) ══════════════ -->
@@ -24708,6 +24793,7 @@ function _wireCommControls() {
   /* ── wire FAB ── */
   const fab = ge('testFab');
   if (fab) fab.addEventListener('click', openChapterPicker);
+  window.openChapterPicker = openChapterPicker; // exposed for pill nav
 
   /* ── wire chapter picker events ── */
   ge('chPickClose')?.addEventListener('click', closeChapterPicker);
@@ -32278,7 +32364,137 @@ window._errHtml = function(name, msg) {
 <!-- ═══════════════════════════════════════════════════════════════════
      NEUROFORGE FCM — Frontend Patch
      ═══════════════════════════════════════════════════════════════════
-     Paste this entire block just before </body> in chat.html.
+     Paste this entire block just before 
+<script>
+/* ═══════════════════════════════════════════════════
+   PILL NAV — expand menu + scroll hide/show
+   All tab switching is handled by existing safeClick
+   bindings (bnHome, bnQuiz, bnChat, bnLeaderboard).
+   This block only handles:
+     1. The + expand sub-menu
+     2. Scroll-based hide / reveal
+     3. Active state sync for the new .active class
+═══════════════════════════════════════════════════ */
+(function() {
+  const _$ = id => document.getElementById(id);
+
+  /* ── 1. Expand menu ─────────────────────────────── */
+  const expandBtn   = _$('nfNavExpand');
+  const expandList  = _$('nfNavExpandList');
+  const expandIcon  = _$('nfNavExpandIcon');
+  const expandClose = _$('nfNavExpandClose');
+  const postBtn     = _$('nfNavPost');
+  const createBtn   = _$('nfNavCreate');
+
+  function openExpandMenu() {
+    expandList?.classList.add('show-list');
+    expandIcon?.classList.add('nf-rotate');
+  }
+  function closeExpandMenu() {
+    expandList?.classList.remove('show-list');
+    expandIcon?.classList.remove('nf-rotate');
+  }
+
+  expandBtn?.addEventListener('click', () => {
+    expandList?.classList.contains('show-list') ? closeExpandMenu() : openExpandMenu();
+  });
+  expandClose?.addEventListener('click', closeExpandMenu);
+
+  /* Post → open community post modal directly */
+  postBtn?.addEventListener('click', () => {
+    closeExpandMenu();
+    const inp = _$('commPostInp');
+    const ov  = _$('commPostOv');
+    if (!ov) return;
+    if (inp) inp.value = '';
+    // Reset category to General
+    document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(o => {
+      o.classList.toggle('selected', o.dataset.cat === 'general');
+    });
+    ov.classList.add('show');
+    setTimeout(() => inp?.focus(), 140);
+  });
+
+  /* Create → open chapter picker (test creation) */
+  createBtn?.addEventListener('click', () => {
+    closeExpandMenu();
+    // Use exposed window function or fall back to clicking testFab
+    if (typeof window.openChapterPicker === 'function') {
+      window.openChapterPicker();
+    } else {
+      _$('testFab')?.click();
+    }
+  });
+
+  /* Close expand menu when tapping anywhere outside */
+  document.addEventListener('click', (e) => {
+    if (!expandBtn?.contains(e.target) && !expandList?.contains(e.target)) {
+      closeExpandMenu();
+    }
+  });
+
+  /* ── 2. Scroll hide / reveal ────────────────────── */
+  const nav = _$('bottomNav');
+  let lastY = window.scrollY;
+  let isNavigating = false;
+  let navTimer;
+
+  // When a tab button is clicked, freeze the hide logic briefly
+  document.querySelectorAll('.nf-nav__link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      isNavigating = true;
+      clearTimeout(navTimer);
+      navTimer = setTimeout(() => { isNavigating = false; }, 900);
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    const delta = Math.abs(y - lastY);
+
+    // Close expand if scrolling
+    if (delta > 8) closeExpandMenu();
+
+    if (!isNavigating && nav?.classList.contains('visible')) {
+      if (y > lastY && y > 60) {
+        nav.classList.add('nf-hide');
+      } else if (y < lastY) {
+        nav.classList.remove('nf-hide');
+      }
+    }
+    lastY = y;
+  }, { passive: true });
+
+  /* ── 3. Active state bridge ─────────────────────── */
+  // The existing openHome/openExplore etc. add .active to bn-item elements.
+  // The new buttons use .nf-nav__link with class .active.
+  // We patch the active syncing so the glowing dot + lift still works.
+  const NFNavIds = ['bnHome','bnQuiz','bnChat','bnLeaderboard'];
+
+  function syncNFActive() {
+    NFNavIds.forEach(id => {
+      const el = _$(id);
+      if (!el) return;
+      // The existing code adds/removes 'active' on bn-item — now same el
+      // Nothing extra needed since the element IS the .nf-nav__link button.
+    });
+  }
+
+  // Mirror: whenever existing code adds 'active' to bnHome etc.,
+  // also add it to the nf-nav__link (they're the same elements now).
+  // We observe the nav for class mutations to stay in sync.
+  if (nav && window.MutationObserver) {
+    const obs = new MutationObserver(() => syncNFActive());
+    NFNavIds.forEach(id => {
+      const el = _$(id);
+      if (el) obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+
+})();
+</script>
+
+</body> in chat.html.
 
      ALSO do these two small edits in chat.html FIRST:
 
@@ -35011,6 +35227,15 @@ setTimeout(initFCM, 0);
       var frame = el('subModalFrame');
       if (frame) frame.src = '';
     }, 400);
+    // Refresh homepage stats from localStorage after closing any sub-modal.
+    // Needed because MathBot (and other tools) write XP/streak data while
+    // running inside the iframe — the homepage display must reflect that.
+    setTimeout(function () {
+      try {
+        if (typeof _populateHomeHero       === 'function') _populateHomeHero();
+        if (typeof _populateChapterAccuracy === 'function') _populateChapterAccuracy();
+      } catch(_) {}
+    }, 450); // slight delay so iframe teardown finishes first
   };
 
   // Wire back button (DOM is already parsed — script is at bottom of body)
