@@ -21685,11 +21685,12 @@ function updateFabVisibility() {
   const isExploreOpen = $('explorePage')?.classList.contains('open');
   const isSubModalOpen = $('subModalPage')?.classList.contains('open');
 
-  // ── Bottom nav: show on homepage OR chat list (not inside a conversation, not in sub-modal) ──
+  // ── Bottom nav: show on homepage, chat list, OR community page ──
+  const isCommunityOpen = $('communityPage')?.classList.contains('open');
   if (nav) {
     if (isSubModalOpen) {
       nav.classList.remove('visible'); // card sub-page: hide nav
-    } else if (isHomeVisible || isHome) {
+    } else if (isHomeVisible || isHome || isCommunityOpen) {
       nav.classList.add('visible');
     } else {
       nav.classList.remove('visible');
@@ -32370,152 +32371,125 @@ window._errHtml = function(name, msg) {
 /* ═══════════════════════════════════════════════════
    PILL NAV — expand menu + scroll hide/show
 ═══════════════════════════════════════════════════ */
-(function() {
-  const _$ = id => document.getElementById(id);
+(function () {
+  function _$(id) { return document.getElementById(id); }
 
-  const nav         = _$('bottomNav');
-  const expandBtn   = _$('nfNavExpand');
-  const expandList  = _$('nfNavExpandList');
-  const expandIcon  = _$('nfNavExpandIcon');
-  const expandClose = _$('nfNavExpandClose');
-  const postBtn     = _$('nfNavPost');    // "Upload"
-  const createBtn   = _$('nfNavCreate');  // "Create"
+  var bottomNav   = _$('bottomNav');
+  var expandBtn   = _$('nfNavExpand');
+  var expandList  = _$('nfNavExpandList');
+  var expandIcon  = _$('nfNavExpandIcon');
+  var expandClose = _$('nfNavExpandClose');
+  var uploadBtn   = _$('nfNavPost');    // Upload
+  var createBtn   = _$('nfNavCreate'); // Create
 
-  function openExpandMenu() {
-    expandList?.classList.add('show-list');
-    expandIcon?.classList.add('nf-rotate');
+  /* ── helpers ── */
+  function showMenu() {
+    expandList.classList.add('show-list');
+    expandIcon.classList.add('nf-rotate');
+    // Guarantee nav stays visible while sub-icons are open
+    bottomNav.classList.add('visible');
+    bottomNav.classList.remove('nf-hide');
   }
-  
-  function closeExpandMenu() {
-    expandList?.classList.remove('show-list');
-    expandIcon?.classList.remove('nf-rotate');
+  function hideMenu() {
+    expandList.classList.remove('show-list');
+    expandIcon.classList.remove('nf-rotate');
   }
 
-  /* 1. + Button: Open Community AND Show Sub-Icons */
-  expandBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevents the outside-click listener from immediately closing it
+  /* ── 1. + button ── */
+  expandBtn.addEventListener('click', function (e) {
+    e.stopPropagation(); // block document outside-click from firing same tick
 
-    const isShowing = expandList?.classList.contains('show-list');
-
-    if (!isShowing) {
-      // Open community page FIRST
-      if (typeof window.openCommunity === 'function') {
-        window.openCommunity();
-      }
-      // THEN show sub icons
-      openExpandMenu();
+    if (expandList.classList.contains('show-list')) {
+      hideMenu();
     } else {
-      // Hide sub icons if already open
-      closeExpandMenu();
+      // Open community page first, then show sub-icons
+      if (typeof window.openCommunity === 'function') window.openCommunity();
+      // Small delay so openCommunity DOM changes settle before we paint sub-icons
+      setTimeout(showMenu, 20);
     }
   });
 
-  /* 2. Sub-Icon: Cancel */
-  expandClose?.addEventListener('click', (e) => {
-    e.preventDefault();
+  /* ── 2. Cancel ── */
+  expandClose.addEventListener('click', function (e) {
     e.stopPropagation();
-    closeExpandMenu(); // Nothing else, just hide the icons
+    hideMenu();
   });
 
-  /* 3. Sub-Icon: Upload (Community Post Modal) */
-  postBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
+  /* ── 3. Upload ── */
+  uploadBtn.addEventListener('click', function (e) {
     e.stopPropagation();
-    closeExpandMenu();
-    
-    const inp = _$('commPostInp');
-    const ov  = _$('commPostOv');
+    hideMenu();
+    var ov  = _$('commPostOv');
+    var inp = _$('commPostInp');
     if (!ov) return;
-    
     if (inp) inp.value = '';
-    // Reset category to General
-    document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(o => {
+    document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(function (o) {
       o.classList.toggle('selected', o.dataset.cat === 'general');
     });
-    
     ov.classList.add('show');
-    setTimeout(() => inp?.focus(), 140);
+    setTimeout(function () { if (inp) inp.focus(); }, 140);
   });
 
-  /* 4. Sub-Icon: Create (Chapter Picker / Test) */
-  createBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
+  /* ── 4. Create ── */
+  createBtn.addEventListener('click', function (e) {
     e.stopPropagation();
-    closeExpandMenu();
-    
-    // Open chapter selection modal immediately
+    hideMenu();
     if (typeof window.openChapterPicker === 'function') {
       window.openChapterPicker();
     } else {
-      _$('testFab')?.click();
+      var fab = _$('testFab'); if (fab) fab.click();
     }
   });
 
-  /* Close expand menu when tapping anywhere outside */
-  document.addEventListener('click', (e) => {
-    if (!expandBtn?.contains(e.target) && !expandList?.contains(e.target)) {
-      closeExpandMenu();
-    }
-  });
+  /* ── Outside tap closes sub-icons ── */
+  document.addEventListener('click', function () { hideMenu(); });
 
-  /* ── Scroll hide / reveal logic (Container-Specific) ── */
-  let isNavigating = false;
-  let navTimer;
+  /* ── Scroll: hide nav on scroll-down, show on scroll-up ── */
+  var lastY = 0;
+  var isNavigating = false;
+  var navTimer;
 
-  // Freeze hide-on-scroll briefly when a tab button is clicked so it doesn't glitch during page transitions
-  document.querySelectorAll('.nf-nav__link').forEach(btn => {
-    btn.addEventListener('click', () => {
+  // Freeze hide logic briefly after a tab button click (avoids glitch on page switch)
+  document.querySelectorAll('.nf-nav__link').forEach(function (btn) {
+    btn.addEventListener('click', function () {
       isNavigating = true;
       clearTimeout(navTimer);
-      navTimer = setTimeout(() => { isNavigating = false; }, 1000);
+      navTimer = setTimeout(function () { isNavigating = false; }, 1000);
     });
   });
 
-  // Track scroll state PER CONTAINER to prevent jumping when switching pages
-  const scrollStates = new Map();
+  function onScroll(currentY) {
+    var delta = Math.abs(currentY - lastY);
+    if (delta < 4) return; // ignore tiny jitter
 
-  function attachScroll(container) {
-    if (!container) return;
-    scrollStates.set(container, container.scrollTop || 0);
-    
-    container.addEventListener('scroll', () => {
-      const currentY = container.scrollTop;
-      const lastY = scrollStates.get(container) || 0;
-      const delta = Math.abs(currentY - lastY);
+    // Close sub-icons when user scrolls
+    if (delta > 10 && expandList.classList.contains('show-list')) hideMenu();
 
-      // Close expand list if user starts scrolling
-      if (delta > 10 && expandList?.classList.contains('show-list')) {
-        closeExpandMenu();
+    if (!isNavigating && bottomNav.classList.contains('visible')) {
+      if (currentY > lastY && currentY > 50) {
+        bottomNav.classList.add('nf-hide');    // scroll down  → hide
+      } else if (currentY < lastY) {
+        bottomNav.classList.remove('nf-hide'); // scroll up    → show
       }
-
-      // Hide or show the bottom navigation bar based on scroll direction
-      if (!isNavigating && nav?.classList.contains('visible')) {
-        if (currentY > lastY && currentY > 50) {
-          nav.classList.add('nf-hide'); // Scroll Down -> Disappears
-        } else if (currentY < lastY) {
-          nav.classList.remove('nf-hide'); // Scroll Up -> Appears
-        }
-      }
-      
-      scrollStates.set(container, currentY);
-    }, { passive: true });
+    }
+    lastY = currentY;
   }
 
-  // Attach independent scroll listeners to all major scrollable areas in the app
-  const scrollers = [
-    _$('homeBody'),
-    _$('commFeed'),
-    _$('chanList'),
-    _$('discBody'),
-    _$('msgs'),
-    _$('discussRecentList'),
-    ...document.querySelectorAll('.test-feed-scroll')
-  ];
+  // Attach to every major inner scroller in the app
+  var scrollerIds = ['homeBody', 'commFeed', 'chanList', 'discBody', 'msgs', 'discussRecentList'];
+  scrollerIds.forEach(function (id) {
+    var el = _$(id);
+    if (!el) return;
+    el.addEventListener('scroll', function () { onScroll(el.scrollTop); }, { passive: true });
+  });
+  // Also catch any .test-feed-scroll elements
+  document.querySelectorAll('.test-feed-scroll').forEach(function (el) {
+    el.addEventListener('scroll', function () { onScroll(el.scrollTop); }, { passive: true });
+  });
+  // Window scroll fallback
+  window.addEventListener('scroll', function () { onScroll(window.scrollY); }, { passive: true });
 
-  scrollers.forEach(el => attachScroll(el));
-
-})();
+}());
 </script>
 
 </body> in chat.html.
