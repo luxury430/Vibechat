@@ -5284,7 +5284,7 @@ body::before {
   justify-content: center;
   column-gap: 2rem;
   list-style: none;
-  z-index: -1;
+  z-index: 10;
   overflow: hidden;
   pointer-events: none;
   transform: translateY(5rem) scale(.1);
@@ -32366,158 +32366,178 @@ window._errHtml = function(name, msg) {
      Paste this entire block just before 
 <script>
 /* ═══════════════════════════════════════════════════
-   PILL NAV — expand menu + scroll hide/show
-   All tab switching is handled by existing safeClick
-   bindings (bnHome, bnQuiz, bnChat, bnLeaderboard).
-   This block only handles:
-     1. The + expand sub-menu
-     2. Scroll-based hide / reveal
-     3. Active state sync for the new .active class
+   PILL NAV — expand menu + scroll hide/show  (v3)
 ═══════════════════════════════════════════════════ */
-(function() {
-  const _$ = id => document.getElementById(id);
+(function () {
+  var _$ = function (id) { return document.getElementById(id); };
 
-  /* ── 1. Expand menu ─────────────────────────────── */
-  const expandBtn   = _$('nfNavExpand');
-  const expandList  = _$('nfNavExpandList');
-  const expandIcon  = _$('nfNavExpandIcon');
-  const expandClose = _$('nfNavExpandClose');
-  const postBtn     = _$('nfNavPost');
-  const createBtn   = _$('nfNavCreate');
+  var nav         = _$('bottomNav');
+  var expandBtn   = _$('nfNavExpand');
+  var expandList  = _$('nfNavExpandList');
+  var expandIcon  = _$('nfNavExpandIcon');
+  var expandClose = _$('nfNavExpandClose');
+  var postBtn     = _$('nfNavPost');
+  var createBtn   = _$('nfNavCreate');
 
-  function openExpandMenu() {
-    expandList?.classList.add('show-list');
-    expandIcon?.classList.add('nf-rotate');
+  /* ────────────────────────────────────────────────
+     1.  EXPAND MENU
+     Key fix: stopPropagation on the expand button so
+     the document-level "close on outside click"
+     listener never fires on the SAME tap that opens.
+  ──────────────────────────────────────────────── */
+  function openExpand() {
+    if (!expandList || !expandIcon) return;
+    expandList.classList.add('show-list');
+    expandIcon.classList.add('nf-rotate');
   }
-  function closeExpandMenu() {
-    expandList?.classList.remove('show-list');
-    expandIcon?.classList.remove('nf-rotate');
+  function closeExpand() {
+    if (!expandList || !expandIcon) return;
+    expandList.classList.remove('show-list');
+    expandIcon.classList.remove('nf-rotate');
   }
 
-  expandBtn?.addEventListener('click', () => {
-    expandList?.classList.contains('show-list') ? closeExpandMenu() : openExpandMenu();
-  });
-  expandClose?.addEventListener('click', closeExpandMenu);
-
-  /* Post → open community post modal directly */
-  postBtn?.addEventListener('click', () => {
-    closeExpandMenu();
-    const inp = _$('commPostInp');
-    const ov  = _$('commPostOv');
-    if (!ov) return;
-    if (inp) inp.value = '';
-    // Reset category to General
-    document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(o => {
-      o.classList.toggle('selected', o.dataset.cat === 'general');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', function (e) {
+      e.stopPropagation();                          // ← stops doc listener firing
+      expandList && expandList.classList.contains('show-list')
+        ? closeExpand()
+        : openExpand();
     });
-    ov.classList.add('show');
-    setTimeout(() => inp?.focus(), 140);
-  });
+  }
 
-  /* Create → open chapter picker (test creation) */
-  createBtn?.addEventListener('click', () => {
-    closeExpandMenu();
-    // Use exposed window function or fall back to clicking testFab
-    if (typeof window.openChapterPicker === 'function') {
-      window.openChapterPicker();
-    } else {
-      _$('testFab')?.click();
-    }
-  });
-
-  /* Close expand menu when tapping anywhere outside */
-  document.addEventListener('click', (e) => {
-    if (!expandBtn?.contains(e.target) && !expandList?.contains(e.target)) {
-      closeExpandMenu();
-    }
-  });
-
-  /* ── 2. Scroll hide / reveal ────────────────────── */
-  const nav = _$('bottomNav');
-  let lastY = 0;
-  let isNavigating = false;
-  let navTimer;
-
-  // When a tab button is clicked, freeze the hide logic briefly
-  document.querySelectorAll('.nf-nav__link').forEach(btn => {
-    btn.addEventListener('click', () => {
-      isNavigating = true;
-      clearTimeout(navTimer);
-      navTimer = setTimeout(() => { isNavigating = false; }, 1000);
+  if (expandClose) {
+    expandClose.addEventListener('click', function (e) {
+      e.stopPropagation();
+      closeExpand();
     });
-  });
+  }
 
-  // Listen on homeBody (the real scrollable container); also window for safety
-  function _handleScroll(currentY) {
-    const delta = Math.abs(currentY - lastY);
+  /* Items inside the expand list also stop propagation
+     so the doc listener doesn't re-fire after they act. */
+  if (expandList) {
+    expandList.addEventListener('click', function (e) {
+      e.stopPropagation();
+    });
+  }
 
-    // Close expand if scrolling
-    if (delta > 10) closeExpandMenu();
+  /* Post button */
+  if (postBtn) {
+    postBtn.addEventListener('click', function () {
+      closeExpand();
+      var inp = _$('commPostInp');
+      var ov  = _$('commPostOv');
+      if (!ov) return;
+      if (inp) inp.value = '';
+      document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(function (o) {
+        o.classList.toggle('selected', o.dataset.cat === 'general');
+      });
+      ov.classList.add('show');
+      setTimeout(function () { if (inp) inp.focus(); }, 140);
+    });
+  }
 
-    if (!isNavigating && nav?.classList.contains('visible')) {
-      if (currentY > lastY && currentY > 50) {
-        nav.classList.add('nf-hide');
-      } else if (currentY < lastY) {
-        nav.classList.remove('nf-hide');
+  /* Create button */
+  if (createBtn) {
+    createBtn.addEventListener('click', function () {
+      closeExpand();
+      if (typeof window.openChapterPicker === 'function') {
+        window.openChapterPicker();
+      } else {
+        var fab = _$('testFab');
+        if (fab) fab.click();
       }
-    }
-    lastY = currentY;
+    });
   }
 
-  const homeBody = _$('homeBody');
-  if (homeBody) {
-    homeBody.addEventListener('scroll', () => {
-      _handleScroll(homeBody.scrollTop);
-    }, { passive: true });
-  }
-
-  // Additional scrollable page containers
-  ['lbBody', 'discussList'].forEach(id => {
-    const el = _$(id);
-    if (el) {
-      el.addEventListener('scroll', () => {
-        _handleScroll(el.scrollTop);
-      }, { passive: true });
-    }
+  /* Close on ANY tap outside the nav (document listener is now safe because
+     the expand button stops propagation before this fires). */
+  document.addEventListener('click', function () {
+    closeExpand();
   });
 
-  // Also cover disc-tab-panels via delegation
-  document.querySelectorAll('.disc-tab-panel').forEach(panel => {
-    panel.addEventListener('scroll', () => {
-      _handleScroll(panel.scrollTop);
+  /* ────────────────────────────────────────────────
+     2.  SCROLL HIDE / SHOW
+     body has overflow:hidden so window.scrollY = 0.
+     Fix A: attach scroll listeners to every known
+             scrollable container with an ID.
+     Fix B: use touchstart/touchmove for universal
+             direction detection (works on ALL pages).
+  ──────────────────────────────────────────────── */
+  var isNavigating = false;
+  var navTimer;
+
+  /* Freeze hide logic for 1 s after a tab tap */
+  document.querySelectorAll('.nf-nav__link').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      isNavigating = true;
+      closeExpand();
+      clearTimeout(navTimer);
+      navTimer = setTimeout(function () { isNavigating = false; }, 1000);
+    });
+  });
+
+  function hideNav()  { if (nav) nav.classList.add('nf-hide'); }
+  function showNav()  { if (nav) nav.classList.remove('nf-hide'); }
+  function navVisible() { return nav && nav.classList.contains('visible'); }
+
+  /* ── Fix A: scroll events on every known container ── */
+  var scrollIds = [
+    'homeBody', 'commFeed', 'lbBody', 'discussList',
+    'disc-tab-explore', 'disc-tab-near', 'disc-tab-privacy'
+  ];
+  var _lastScrollTop = {};
+
+  scrollIds.forEach(function (id) {
+    var el = _$(id);
+    if (!el) return;
+    _lastScrollTop[id] = 0;
+    el.addEventListener('scroll', function () {
+      if (isNavigating || !navVisible()) return;
+      var y = el.scrollTop;
+      if (y > _lastScrollTop[id] && y > 50) {
+        hideNav();
+        closeExpand();
+      } else if (y < _lastScrollTop[id]) {
+        showNav();
+      }
+      _lastScrollTop[id] = y;
     }, { passive: true });
   });
 
-  // Fallback for any page using window scroll
-  window.addEventListener('scroll', () => {
-    _handleScroll(window.scrollY);
+  /* ── Fix B: touch direction — catches ALL containers universally ── */
+  var _touchStartY = 0;
+  var _touchLastY  = 0;
+  var _touchScrolled = false;
+
+  document.addEventListener('touchstart', function (e) {
+    _touchStartY = e.touches[0].clientY;
+    _touchLastY  = _touchStartY;
+    _touchScrolled = false;
   }, { passive: true });
 
-  /* ── 3. Active state bridge ─────────────────────── */
-  // The existing openHome/openExplore etc. add .active to bn-item elements.
-  // The new buttons use .nf-nav__link with class .active.
-  // We patch the active syncing so the glowing dot + lift still works.
-  const NFNavIds = ['bnHome','bnQuiz','bnChat','bnLeaderboard'];
+  document.addEventListener('touchmove', function (e) {
+    if (isNavigating || !navVisible()) return;
+    var y = e.touches[0].clientY;
+    var delta = _touchLastY - y;   // positive = finger moving up = scrolling down
+    _touchLastY = y;
 
-  function syncNFActive() {
-    NFNavIds.forEach(id => {
-      const el = _$(id);
-      if (!el) return;
-      // The existing code adds/removes 'active' on bn-item — now same el
-      // Nothing extra needed since the element IS the .nf-nav__link button.
-    });
-  }
+    if (Math.abs(delta) < 4) return;   // ignore micro-jitter
+    _touchScrolled = true;
 
-  // Mirror: whenever existing code adds 'active' to bnHome etc.,
-  // also add it to the nf-nav__link (they're the same elements now).
-  // We observe the nav for class mutations to stay in sync.
-  if (nav && window.MutationObserver) {
-    const obs = new MutationObserver(() => syncNFActive());
-    NFNavIds.forEach(id => {
-      const el = _$(id);
-      if (el) obs.observe(el, { attributes: true, attributeFilter: ['class'] });
-    });
-  }
+    if (delta > 0) {
+      // Scrolling DOWN — hide nav only after a small committed scroll
+      var totalDrag = _touchStartY - y;
+      if (totalDrag > 30) { hideNav(); closeExpand(); }
+    } else {
+      // Scrolling UP — always show nav immediately
+      showNav();
+    }
+  }, { passive: true });
+
+  /* window.scroll fallback (desktop / hybrid) */
+  window.addEventListener('scroll', function () {
+    /* intentionally empty — window scroll won't fire when body is overflow:hidden */
+  }, { passive: true });
 
 })();
 </script>
