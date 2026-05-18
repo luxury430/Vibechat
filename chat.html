@@ -5286,7 +5286,7 @@ body::before {
   display: flex;
   column-gap: 2rem;
   list-style: none;
-  z-index: -1;
+  z-index: 10;          /* always above nav bg; hidden by scale/translate when closed */
   overflow: hidden;
   pointer-events: none;
   transform: translateY(5rem) scale(.1);
@@ -32445,7 +32445,6 @@ window._errHtml = function(name, msg) {
   document.addEventListener('click', function () { hideMenu(); });
 
   /* ── Scroll: hide nav on scroll-down, show on scroll-up ── */
-  var lastY = 0;
   var isNavigating = false;
   var navTimer;
 
@@ -32458,36 +32457,47 @@ window._errHtml = function(name, msg) {
     });
   });
 
-  function onScroll(currentY) {
-    var delta = Math.abs(currentY - lastY);
-    if (delta < 4) return; // ignore tiny jitter
+  // Each container gets its own lastY so switching pages doesn't cause wrong deltas
+  function makeScrollHandler() {
+    var lastY = 0;
+    var initialised = false;
+    return function (currentY) {
+      // On first event from this container, just seed lastY without triggering hide/show
+      if (!initialised) { lastY = currentY; initialised = true; return; }
 
-    // Close sub-icons when user scrolls
-    if (delta > 10 && expandList.classList.contains('show-list')) hideMenu();
+      var delta = Math.abs(currentY - lastY);
+      if (delta < 4) { return; } // ignore tiny jitter
 
-    if (!isNavigating && bottomNav.classList.contains('visible')) {
-      if (currentY > lastY && currentY > 50) {
-        bottomNav.classList.add('nf-hide');    // scroll down  → hide
-      } else if (currentY < lastY) {
-        bottomNav.classList.remove('nf-hide'); // scroll up    → show
+      // Close sub-icons when user scrolls
+      if (delta > 10 && expandList.classList.contains('show-list')) hideMenu();
+
+      if (!isNavigating && bottomNav.classList.contains('visible')) {
+        if (currentY > lastY && currentY > 50) {
+          bottomNav.classList.add('nf-hide');    // scroll down  → hide
+        } else if (currentY < lastY) {
+          bottomNav.classList.remove('nf-hide'); // scroll up    → show
+        }
       }
-    }
-    lastY = currentY;
+      lastY = currentY;
+    };
   }
 
-  // Attach to every major inner scroller in the app
+  // Attach to every major inner scroller in the app — each gets its own state
   var scrollerIds = ['homeBody', 'commFeed', 'chanList', 'discBody', 'msgs', 'discussRecentList'];
   scrollerIds.forEach(function (id) {
     var el = _$(id);
     if (!el) return;
-    el.addEventListener('scroll', function () { onScroll(el.scrollTop); }, { passive: true });
+    var handler = makeScrollHandler();
+    el.addEventListener('scroll', function () { handler(el.scrollTop); }, { passive: true });
   });
   // Also catch any .test-feed-scroll elements
   document.querySelectorAll('.test-feed-scroll').forEach(function (el) {
-    el.addEventListener('scroll', function () { onScroll(el.scrollTop); }, { passive: true });
+    var handler = makeScrollHandler();
+    el.addEventListener('scroll', function () { handler(el.scrollTop); }, { passive: true });
   });
-  // Window scroll fallback
-  window.addEventListener('scroll', function () { onScroll(window.scrollY); }, { passive: true });
+  // Window scroll fallback (its own state too)
+  var windowScrollHandler = makeScrollHandler();
+  window.addEventListener('scroll', function () { windowScrollHandler(window.scrollY); }, { passive: true });
 
 }());
 </script>
