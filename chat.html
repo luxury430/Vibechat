@@ -5274,25 +5274,26 @@ body::before {
 .nf-nav__expand-icon.nf-rotate { transform: rotate(135deg); }
 /* ── Sub-menu pill ── */
 .nf-nav__expand-list {
-  position: absolute;
-  top: -4.5rem;
+  /* Fixed so it escapes nav stacking context entirely */
+  position: fixed;
+  bottom: 7.5rem;         /* nav bottom 1.5rem + nav height ~5.25rem + gap .75rem */
   left: 0; right: 0;
+  margin-inline: auto;
   background: hsl(225, 12%, 12%);
   box-shadow: 0 2px 16px hsla(228, 95%, 4%, .1);
   width: max-content;
-  margin-inline: auto;
   padding: .5rem 1.5rem;
   border-radius: 4rem;
   display: flex;
   column-gap: 2rem;
   list-style: none;
-  z-index: 10;
+  z-index: 9000;
   pointer-events: none;
-  transform: translateY(5rem) scale(.1);
+  transform: translateY(4.5rem) scale(.1);  /* closed: tiny dot sitting inside nav */
   transition: transform .5s cubic-bezier(.5, 1.8, .4, .8);
 }
 .nf-nav__expand-list.show-list {
-  transform: translateY(0) scale(1);
+  transform: translateY(0) scale(1);        /* open: full pill above nav */
   pointer-events: all;
 }
 .nf-nav__expand-list li {
@@ -22538,7 +22539,6 @@ function openCommunity() {
   }
 
   startListeningPosts();
-  updateFabVisibility();
 }
 
 function closeCommunity() {
@@ -32370,64 +32370,58 @@ window._errHtml = function(name, msg) {
 <script>
 /* ═══════════════════════════════════════════════════════════════
    PILL NAV — expand menu + scroll hide/show
-   Mirrors the reference nav logic exactly, adapted for chat.html
-   inner-scroll containers (homeBody, commFeed, etc.)
 ═══════════════════════════════════════════════════════════════ */
 (function () {
 
-  /* ── element refs ── */
-  var nav         = document.getElementById('bottomNav');
-  var expandBtn   = document.getElementById('nfNavExpand');
-  var expandList  = document.getElementById('nfNavExpandList');
-  var expandIcon  = document.getElementById('nfNavExpandIcon');
-  var closeBtn    = document.getElementById('nfNavExpandClose');
-  var uploadBtn   = document.getElementById('nfNavPost');
-  var createBtn   = document.getElementById('nfNavCreate');
+  var nav        = document.getElementById('bottomNav');
+  var expandBtn  = document.getElementById('nfNavExpand');
+  var expandList = document.getElementById('nfNavExpandList');
+  var expandIcon = document.getElementById('nfNavExpandIcon');
+  var closeBtn   = document.getElementById('nfNavExpandClose');
+  var uploadBtn  = document.getElementById('nfNavPost');
+  var createBtn  = document.getElementById('nfNavCreate');
 
-  /* guard – nothing works if elements missing */
   if (!nav || !expandBtn || !expandList) return;
 
-  /* ────────────────────────────────────────────
-     EXPAND / COLLAPSE helpers
-  ──────────────────────────────────────────── */
+  /* ── open / close sub-icons ── */
   function openMenu() {
+    nav.classList.add('visible');
+    nav.classList.remove('nf-hide');
     expandList.classList.add('show-list');
-    expandIcon.classList.add('nf-rotate');
-    nav.classList.remove('nf-hide'); /* keep nav visible while sub-icons show */
+    if (expandIcon) expandIcon.classList.add('nf-rotate');
   }
-
   function closeMenu() {
     expandList.classList.remove('show-list');
-    expandIcon.classList.remove('nf-rotate');
+    if (expandIcon) expandIcon.classList.remove('nf-rotate');
   }
 
-  /* ────────────────────────────────────────────
-     + BUTTON  →  go to community page + open sub-icons
-  ──────────────────────────────────────────── */
+  /* ── + button: navigate to community, then show sub-icons ── */
   expandBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     if (expandList.classList.contains('show-list')) {
       closeMenu();
     } else {
-      if (typeof window.openCommunity === 'function') window.openCommunity();
-      setTimeout(openMenu, 30); /* small pause for openCommunity to settle */
+      /* bnCommunity is a hidden shim already wired to openCommunity via safeClick.
+         Clicking it is more reliable than checking window.openCommunity            */
+      var bnComm = document.getElementById('bnCommunity');
+      if (bnComm) {
+        bnComm.click();
+      } else if (typeof window.openCommunity === 'function') {
+        window.openCommunity();
+      }
+      setTimeout(openMenu, 50);
     }
   });
 
-  /* ────────────────────────────────────────────
-     CANCEL button  →  just close sub-icons
-  ──────────────────────────────────────────── */
+  /* ── Cancel ── */
   if (closeBtn) {
     closeBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       closeMenu();
     });
   }
 
-  /* ────────────────────────────────────────────
-     UPLOAD button  →  open community-post modal
-  ──────────────────────────────────────────── */
+  /* ── Upload → community post modal ── */
   if (uploadBtn) {
     uploadBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -32435,7 +32429,6 @@ window._errHtml = function(name, msg) {
       var ov  = document.getElementById('commPostOv');
       var inp = document.getElementById('commPostInp');
       if (!ov) return;
-      /* reset state */
       if (inp) inp.value = '';
       document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(function (o) {
         o.classList.toggle('selected', o.dataset.cat === 'general');
@@ -32445,9 +32438,7 @@ window._errHtml = function(name, msg) {
     });
   }
 
-  /* ────────────────────────────────────────────
-     CREATE button  →  open chapter-picker modal
-  ──────────────────────────────────────────── */
+  /* ── Create → chapter-picker modal ── */
   if (createBtn) {
     createBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -32455,70 +32446,59 @@ window._errHtml = function(name, msg) {
       if (typeof window.openChapterPicker === 'function') {
         window.openChapterPicker();
       } else {
-        /* fallback: click the floating test-fab directly */
         var fab = document.getElementById('testFab');
         if (fab) fab.click();
       }
     });
   }
 
-  /* ────────────────────────────────────────────
-     OUTSIDE CLICK  →  close sub-icons
-  ──────────────────────────────────────────── */
+  /* ── Tap outside → close sub-icons ── */
   document.addEventListener('click', function () { closeMenu(); });
 
-  /* ────────────────────────────────────────────
-     SCROLL  →  hide nav on scroll-down,
-                show nav on scroll-up
-     Mirrors the reference's window.scrollY logic
-     but applied to every inner-scroll container
-     that chat.html uses, each with its own lastY.
-  ──────────────────────────────────────────── */
-  var isNavigating = false;
-  var navLockTimer;
+  /* ════════════════════════════════════════════════
+     SCROLL  —  hide nav on scroll-down,
+                show on scroll-up.
+     body { overflow:hidden } so window.scrollY is
+     always 0.  We listen directly on every inner
+     scroll container instead.
+  ════════════════════════════════════════════════ */
 
-  /* freeze scroll-hide briefly when a tab button is pressed */
+  /* freeze hide-on-scroll briefly after a tab tap (avoids
+     false-trigger from programmatic scroll resets)         */
+  var locked = false, lockTimer;
   document.querySelectorAll('.nf-nav__link').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      isNavigating = true;
-      clearTimeout(navLockTimer);
-      navLockTimer = setTimeout(function () { isNavigating = false; }, 1000);
+      locked = true;
+      clearTimeout(lockTimer);
+      lockTimer = setTimeout(function () { locked = false; }, 1000);
     });
   });
 
-  /*
-   * makeHandler() – factory identical to the reference's handler,
-   * but each call returns a closure with its own private lastScrollY.
-   * This prevents cross-container delta errors when switching pages.
-   */
+  /* each container gets its own handler + its own lastY     */
   function makeHandler() {
-    var lastScrollY = -1; /* -1 = not yet seeded */
-    return function (currentScrollY) {
+    var lastY = null;           /* null = not seeded yet */
+    return function onScroll(y) {
+      if (lastY === null) { lastY = y; return; }   /* seed silently */
+      var diff = y - lastY;
+      if (Math.abs(diff) < 5) return;              /* ignore jitter */
 
-      /* seed on first event from this container – no hide/show yet */
-      if (lastScrollY < 0) { lastScrollY = currentScrollY; return; }
-
-      /* close sub-icons on any meaningful scroll */
-      if (Math.abs(currentScrollY - lastScrollY) > 10 &&
-          expandList.classList.contains('show-list')) {
+      if (Math.abs(diff) > 10 && expandList.classList.contains('show-list')) {
         closeMenu();
       }
 
-      /* apply hide / show logic (mirrors reference exactly) */
-      if (!isNavigating) {
-        if (currentScrollY > lastScrollY && currentScrollY > 50) {
-          nav.classList.add('nf-hide');     /* scroll DOWN → hide */
-        } else if (currentScrollY < lastScrollY) {
-          nav.classList.remove('nf-hide'); /* scroll UP   → show */
+      if (!locked) {
+        if (diff > 0 && y > 50) {
+          nav.classList.add('nf-hide');      /* scroll DOWN → hide */
+        } else if (diff < 0) {
+          nav.classList.remove('nf-hide');   /* scroll UP   → show */
         }
       }
-
-      lastScrollY = currentScrollY;
+      lastY = y;
     };
   }
 
-  /* attach to every inner-scroll container */
-  ['homeBody', 'commFeed', 'chanList', 'discBody', 'msgs', 'discussRecentList']
+  /* attach to every named inner scroller */
+  ['homeBody','commFeed','chanList','discBody','msgs','discussRecentList']
     .forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
@@ -32526,15 +32506,15 @@ window._errHtml = function(name, msg) {
       el.addEventListener('scroll', function () { h(el.scrollTop); }, { passive: true });
     });
 
-  /* also catch dynamically-classed scroll areas */
-  document.querySelectorAll('.test-feed-scroll, .disc-body').forEach(function (el) {
+  /* also any .test-feed-scroll panels */
+  document.querySelectorAll('.test-feed-scroll').forEach(function (el) {
     var h = makeHandler();
     el.addEventListener('scroll', function () { h(el.scrollTop); }, { passive: true });
   });
 
-  /* window fallback (for any page that does scroll the window) */
-  var winHandler = makeHandler();
-  window.addEventListener('scroll', function () { winHandler(window.scrollY); }, { passive: true });
+  /* window fallback for pages that don't use inner scroll */
+  var wh = makeHandler();
+  window.addEventListener('scroll', function () { wh(window.scrollY); }, { passive: true });
 
 }());
 </script>
