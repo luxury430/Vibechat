@@ -5170,9 +5170,10 @@ body::before {
 [data-theme="light"] .hp-wellness { border-color: rgba(52,211,153,.28); }
 
 /* ─────────────────────────────────────────────────────────────
-   BOTTOM NAV BAR — reference design (pill, scroll-hide)
+   BOTTOM NAV BAR — home page only
 ───────────────────────────────────────────────────────────── */
 /* ══ PILL BOTTOM NAV ══════════════════════════════════════ */
+/* ── Bottom nav pill ── */
 .bottom-nav {
   position: fixed;
   bottom: 1.5rem;
@@ -5180,27 +5181,29 @@ body::before {
   width: min(88%, 358px);
   margin: 0 auto;
   background: hsl(225, 12%, 12%);
-  box-shadow: 0 2px 16px hsla(228, 95%, 4%, .1);
+  box-shadow: 0 2px 16px hsla(228, 95%, 4%, .45),
+              0 0 0 1px rgba(255,255,255,.06);
   padding: 1.25rem 1.75rem;
   border-radius: 4rem;
   z-index: 860;
   opacity: 0;
   pointer-events: none;
   transform: translateY(20px);
-  transition: transform .5s cubic-bezier(0.4,0,0.2,1),
-              opacity .5s cubic-bezier(0.4,0,0.2,1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity  0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .bottom-nav.visible {
   opacity: 1;
   pointer-events: all;
   transform: translateY(0);
 }
-/* Scroll-hide: applied by JS on scroll-down */
+/* Scroll-hide — matches reference animation exactly */
 .bottom-nav.visible.nf-hide {
   transform: translateY(150%) scale(0.8);
   opacity: 0;
   pointer-events: none;
 }
+
 /* ── List ── */
 .nf-nav__list {
   display: flex;
@@ -5208,9 +5211,10 @@ body::before {
   align-items: center;
   list-style: none;
   padding: 0; margin: 0;
-  position: relative;
+  position: relative;      /* anchor for absolutely-positioned expand pill */
 }
-/* ── Tab buttons ── */
+
+/* ── Tab icon buttons ── */
 .nf-nav__link {
   position: relative;
   color: hsl(225, 8%, 65%);
@@ -5224,30 +5228,32 @@ body::before {
   padding: 2px 5px;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: color .4s ease,
-              transform .5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: color 0.4s ease,
+              transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .nf-nav__link:hover { color: #fff; }
-/* Glowing dot under active icon */
+
+/* Glowing indicator dot */
 .nf-nav__link::after {
   content: '';
   position: absolute;
   bottom: -12px;
   left: 50%;
   width: 6px; height: 6px;
-  background: hsl(225, 95%, 56%);
+  background-color: hsl(225, 95%, 56%);
   border-radius: 50%;
   box-shadow: 0 0 10px hsla(225, 95%, 56%, 0.6);
   transform: translateX(-50%) scale(0);
-  transition: transform .5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .nf-nav__link.active {
-  color: hsl(225, 95%, 56%);
+  color: hsl(225, 95%, 62%);
   transform: translateY(-6px) scale(1.15);
 }
 .nf-nav__link.active::after { transform: translateX(-50%) scale(1); }
+
 /* ── + Expand button ── */
-.nf-nav__expand-wrap { position: relative; }
+.nf-nav__expand-wrap { /* static — so expand-list positions relative to .nf-nav__list */ }
 .nf-nav__expand {
   border: none;
   width: 44px; height: 44px;
@@ -5260,50 +5266,55 @@ body::before {
   box-shadow: 0 4px 12px hsla(225, 95%, 56%, 0.6);
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform .3s ease, box-shadow .3s ease;
+  transition: transform 0.3s ease;
 }
-.nf-nav__expand:hover { box-shadow: 0 6px 20px hsla(225,95%,56%,.75); }
 .nf-nav__expand:active { transform: scale(0.9); }
 .nf-nav__expand-icon {
-  display: inline-block;
   color: #fff;
   font-size: 1.75rem;
-  transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   pointer-events: none;
 }
 .nf-nav__expand-icon.nf-rotate { transform: rotate(135deg); }
-/* ── Sub-menu pill ── */
+
+/* ── Sub-menu pill (floats above nav, centred in the list) ── */
 .nf-nav__expand-list {
-  /* Fixed so it escapes nav stacking context entirely */
-  position: fixed;
-  bottom: 7.5rem;         /* nav bottom 1.5rem + nav height ~5.25rem + gap .75rem */
+  position: absolute;
+  top: -4.5rem;          /* above the nav list */
   left: 0; right: 0;
-  margin-inline: auto;
-  background: hsl(225, 12%, 12%);
-  box-shadow: 0 2px 16px hsla(228, 95%, 4%, .1);
   width: max-content;
+  margin: 0 auto;
+  background: hsl(225, 12%, 12%);
+  box-shadow: 0 2px 16px hsla(228, 95%, 4%, .4),
+              0 0 0 1px rgba(255,255,255,.06);
   padding: .5rem 1.5rem;
   border-radius: 4rem;
   display: flex;
   column-gap: 2rem;
   list-style: none;
-  z-index: 9000;
+  z-index: 6;
+  overflow: hidden;
   pointer-events: none;
-  transform: translateY(4.5rem) scale(.1);  /* closed: tiny dot sitting inside nav */
-  transition: transform .5s cubic-bezier(.5, 1.8, .4, .8);
+  /* hidden → bouncy spring in */
+  transform: translateY(5rem) scale(0.1);
+  transition: transform 0.5s cubic-bezier(0.5, 1.8, 0.4, 0.8);
 }
-.nf-nav__expand-list.show-list {
-  transform: translateY(0) scale(1);        /* open: full pill above nav */
-  pointer-events: all;
-}
+/* Individual items slide up with stagger */
 .nf-nav__expand-list li {
   transform: translateY(-3rem);
-  transition: transform .4s ease;
+  transition: transform 0.4s ease;
 }
-.nf-nav__expand-list li:nth-child(1) { transition-delay: .2s; }
-.nf-nav__expand-list li:nth-child(2) { transition-delay: .3s; }
-.nf-nav__expand-list li:nth-child(3) { transition-delay: .4s; }
-.nf-nav__expand-list.show-list li { transform: translateY(0); }
+.nf-nav__expand-list li:nth-child(1) { transition-delay: 0.20s; }
+.nf-nav__expand-list li:nth-child(2) { transition-delay: 0.30s; }
+.nf-nav__expand-list li:nth-child(3) { transition-delay: 0.40s; }
+/* Shown state */
+.nf-nav__expand-list.show-list,
+.nf-nav__expand-list.show-list li {
+  transform: translateY(0);
+}
+.nf-nav__expand-list.show-list { pointer-events: all; }
+
+/* ── Sub-menu icon links ── */
 .nf-nav__expand-link {
   color: hsl(225, 8%, 65%);
   display: flex;
@@ -5315,19 +5326,21 @@ body::before {
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: color .4s;
+  transition: color 0.4s;
   padding: 4px 0;
   font-family: inherit;
 }
-.nf-nav__expand-link i  { font-size: 1.5rem; }
+.nf-nav__expand-link i { font-size: 1.5rem; pointer-events: none; }
 .nf-nav__expand-link span {
-  font-size: .625rem;
+  font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: .06em;
-  text-transform: capitalize;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 .nf-nav__expand-link:hover { color: #fff; }
-/* FAB offset for floating pill nav */
+
+/* FAB offset so it clears the pill nav */
 .gc-fab.nav-offset { bottom: 100px; }
 
 /* ─────────────────────────────────────────────────────────────
@@ -13853,27 +13866,29 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
       </button>
     </li>
 
+    <!-- + button: navigate to Community AND toggle sub-menu -->
     <li class="nf-nav__expand-wrap">
-      <button class="nf-nav__expand" id="nfNavExpand" title="More">
+      <button class="nf-nav__expand" id="nfNavExpand" title="Community">
         <i class="ri-add-line nf-nav__expand-icon" id="nfNavExpandIcon"></i>
       </button>
+      <!-- Sub-menu — positions relative to .nf-nav__list (no position on parent li) -->
       <ul class="nf-nav__expand-list" id="nfNavExpandList">
         <li>
-          <button class="nf-nav__expand-link" id="nfNavCreate">
-            <i class="ri-draft-line"></i>
-            <span>Create</span>
+          <button class="nf-nav__expand-link" id="nfNavPost">
+            <i class="ri-send-plane-line"></i>
+            <span>Post</span>
           </button>
         </li>
         <li>
-          <button class="nf-nav__expand-link" id="nfNavPost">
-            <i class="ri-upload-cloud-line"></i>
-            <span>Upload</span>
+          <button class="nf-nav__expand-link" id="nfNavCreate">
+            <i class="ri-pencil-line"></i>
+            <span>Create</span>
           </button>
         </li>
         <li>
           <button class="nf-nav__expand-link" id="nfNavExpandClose">
             <i class="ri-close-line"></i>
-            <span>Cancel</span>
+            <span>Close</span>
           </button>
         </li>
       </ul>
@@ -21685,12 +21700,11 @@ function updateFabVisibility() {
   const isExploreOpen = $('explorePage')?.classList.contains('open');
   const isSubModalOpen = $('subModalPage')?.classList.contains('open');
 
-  // ── Bottom nav: show on homepage, chat list, OR community page ──
-  const isCommunityOpen = $('communityPage')?.classList.contains('open');
+  // ── Bottom nav: show on homepage OR chat list (not inside a conversation, not in sub-modal) ──
   if (nav) {
     if (isSubModalOpen) {
       nav.classList.remove('visible'); // card sub-page: hide nav
-    } else if (isHomeVisible || isHome || isCommunityOpen) {
+    } else if (isHomeVisible || isHome) {
       nav.classList.add('visible');
     } else {
       nav.classList.remove('visible');
@@ -32368,155 +32382,130 @@ window._errHtml = function(name, msg) {
      ═══════════════════════════════════════════════════════════════════
      Paste this entire block just before 
 <script>
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    PILL NAV — expand menu + scroll hide/show
-═══════════════════════════════════════════════════════════════ */
-(function () {
+   All tab switching is handled by existing safeClick
+   bindings (bnHome, bnQuiz, bnChat, bnLeaderboard).
+   This block handles:
+     1. The + expand sub-menu (also navigates to Community)
+     2. Scroll-based hide / reveal with reference animation
+     3. Active state sync for .active class
+═══════════════════════════════════════════════════ */
+(function() {
+  const _$ = id => document.getElementById(id);
 
-  var nav        = document.getElementById('bottomNav');
-  var expandBtn  = document.getElementById('nfNavExpand');
-  var expandList = document.getElementById('nfNavExpandList');
-  var expandIcon = document.getElementById('nfNavExpandIcon');
-  var closeBtn   = document.getElementById('nfNavExpandClose');
-  var uploadBtn  = document.getElementById('nfNavPost');
-  var createBtn  = document.getElementById('nfNavCreate');
+  /* ── 1. Expand menu ─────────────────────────────── */
+  const expandBtn   = _$('nfNavExpand');
+  const expandList  = _$('nfNavExpandList');
+  const expandIcon  = _$('nfNavExpandIcon');
+  const expandClose = _$('nfNavExpandClose');
+  const postBtn     = _$('nfNavPost');
+  const createBtn   = _$('nfNavCreate');
 
-  if (!nav || !expandBtn || !expandList) return;
-
-  /* ── open / close sub-icons ── */
-  function openMenu() {
-    nav.classList.add('visible');
-    nav.classList.remove('nf-hide');
-    expandList.classList.add('show-list');
-    if (expandIcon) expandIcon.classList.add('nf-rotate');
+  function openExpandMenu() {
+    expandList?.classList.add('show-list');
+    expandIcon?.classList.add('nf-rotate');
   }
-  function closeMenu() {
-    expandList.classList.remove('show-list');
-    if (expandIcon) expandIcon.classList.remove('nf-rotate');
+  function closeExpandMenu() {
+    expandList?.classList.remove('show-list');
+    expandIcon?.classList.remove('nf-rotate');
   }
 
-  /* ── + button: navigate to community, then show sub-icons ── */
-  expandBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    if (expandList.classList.contains('show-list')) {
-      closeMenu();
+  /* + button → open Community AND show sub-menu */
+  expandBtn?.addEventListener('click', () => {
+    if (expandList?.classList.contains('show-list')) {
+      closeExpandMenu();
     } else {
-      /* bnCommunity is a hidden shim already wired to openCommunity via safeClick.
-         Clicking it is more reliable than checking window.openCommunity            */
-      var bnComm = document.getElementById('bnCommunity');
-      if (bnComm) {
-        bnComm.click();
-      } else if (typeof window.openCommunity === 'function') {
-        window.openCommunity();
-      }
-      setTimeout(openMenu, 50);
+      openExpandMenu();
+      // Navigate to community immediately
+      if (typeof openCommunity === 'function') openCommunity();
     }
   });
 
-  /* ── Cancel ── */
-  if (closeBtn) {
-    closeBtn.addEventListener('click', function (e) {
-      e.preventDefault(); e.stopPropagation();
-      closeMenu();
+  /* Cancel / Close sub-menu */
+  expandClose?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeExpandMenu();
+  });
+
+  /* Post → open community post modal */
+  postBtn?.addEventListener('click', () => {
+    closeExpandMenu();
+    const inp = _$('commPostInp');
+    const ov  = _$('commPostOv');
+    if (!ov) return;
+    if (inp) inp.value = '';
+    // Reset category to General
+    document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(o => {
+      o.classList.toggle('selected', o.dataset.cat === 'general');
     });
-  }
+    ov.classList.add('show');
+    setTimeout(() => inp?.focus(), 140);
+  });
 
-  /* ── Upload → community post modal ── */
-  if (uploadBtn) {
-    uploadBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      closeMenu();
-      var ov  = document.getElementById('commPostOv');
-      var inp = document.getElementById('commPostInp');
-      if (!ov) return;
-      if (inp) inp.value = '';
-      document.querySelectorAll('#commPostCatRow .comm-post-cat-opt').forEach(function (o) {
-        o.classList.toggle('selected', o.dataset.cat === 'general');
-      });
-      ov.classList.add('show');
-      setTimeout(function () { if (inp) inp.focus(); }, 140);
-    });
-  }
+  /* Create → open chapter picker (test creation) */
+  createBtn?.addEventListener('click', () => {
+    closeExpandMenu();
+    if (typeof window.openChapterPicker === 'function') {
+      window.openChapterPicker();
+    } else {
+      _$('testFab')?.click();
+    }
+  });
 
-  /* ── Create → chapter-picker modal ── */
-  if (createBtn) {
-    createBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      closeMenu();
-      if (typeof window.openChapterPicker === 'function') {
-        window.openChapterPicker();
-      } else {
-        var fab = document.getElementById('testFab');
-        if (fab) fab.click();
-      }
-    });
-  }
+  /* Close expand menu when tapping anywhere outside */
+  document.addEventListener('click', (e) => {
+    if (!expandBtn?.contains(e.target) && !expandList?.contains(e.target)) {
+      closeExpandMenu();
+    }
+  });
 
-  /* ── Tap outside → close sub-icons ── */
-  document.addEventListener('click', function () { closeMenu(); });
+  /* ── 2. Scroll hide / reveal ────────────────────── */
+  const nav = _$('bottomNav');
+  let lastY = window.scrollY;
+  let isNavigating = false;
+  let navTimer;
 
-  /* ════════════════════════════════════════════════
-     SCROLL  —  hide nav on scroll-down,
-                show on scroll-up.
-     body { overflow:hidden } so window.scrollY is
-     always 0.  We listen directly on every inner
-     scroll container instead.
-  ════════════════════════════════════════════════ */
-
-  /* freeze hide-on-scroll briefly after a tab tap (avoids
-     false-trigger from programmatic scroll resets)         */
-  var locked = false, lockTimer;
-  document.querySelectorAll('.nf-nav__link').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      locked = true;
-      clearTimeout(lockTimer);
-      lockTimer = setTimeout(function () { locked = false; }, 1000);
+  // Freeze hide logic briefly when a tab is clicked
+  document.querySelectorAll('.nf-nav__link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      isNavigating = true;
+      clearTimeout(navTimer);
+      navTimer = setTimeout(() => { isNavigating = false; }, 1000);
     });
   });
 
-  /* each container gets its own handler + its own lastY     */
-  function makeHandler() {
-    var lastY = null;           /* null = not seeded yet */
-    return function onScroll(y) {
-      if (lastY === null) { lastY = y; return; }   /* seed silently */
-      var diff = y - lastY;
-      if (Math.abs(diff) < 5) return;              /* ignore jitter */
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    const delta = Math.abs(y - lastY);
 
-      if (Math.abs(diff) > 10 && expandList.classList.contains('show-list')) {
-        closeMenu();
-      }
+    // Close expand sub-menu on scroll
+    if (delta > 10 && expandList?.classList.contains('show-list')) {
+      closeExpandMenu();
+    }
 
-      if (!locked) {
-        if (diff > 0 && y > 50) {
-          nav.classList.add('nf-hide');      /* scroll DOWN → hide */
-        } else if (diff < 0) {
-          nav.classList.remove('nf-hide');   /* scroll UP   → show */
-        }
+    if (!isNavigating && nav?.classList.contains('visible')) {
+      if (y > lastY && y > 50) {
+        nav.classList.add('nf-hide');        // scroll down  → hide (translateY150%+scale0.8)
+      } else if (y < lastY) {
+        nav.classList.remove('nf-hide');     // scroll up    → reveal
       }
-      lastY = y;
-    };
+    }
+    lastY = y;
+  }, { passive: true });
+
+  /* ── 3. Active state bridge ─────────────────────── */
+  const NFNavIds = ['bnHome','bnQuiz','bnChat','bnLeaderboard'];
+
+  if (nav && window.MutationObserver) {
+    const obs = new MutationObserver(() => {});
+    NFNavIds.forEach(id => {
+      const el = _$(id);
+      if (el) obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
   }
 
-  /* attach to every named inner scroller */
-  ['homeBody','commFeed','chanList','discBody','msgs','discussRecentList']
-    .forEach(function (id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      var h = makeHandler();
-      el.addEventListener('scroll', function () { h(el.scrollTop); }, { passive: true });
-    });
-
-  /* also any .test-feed-scroll panels */
-  document.querySelectorAll('.test-feed-scroll').forEach(function (el) {
-    var h = makeHandler();
-    el.addEventListener('scroll', function () { h(el.scrollTop); }, { passive: true });
-  });
-
-  /* window fallback for pages that don't use inner scroll */
-  var wh = makeHandler();
-  window.addEventListener('scroll', function () { wh(window.scrollY); }, { passive: true });
-
-}());
+})()
 </script>
 
 </body> in chat.html.
