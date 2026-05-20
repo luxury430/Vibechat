@@ -5183,7 +5183,7 @@ body::before {
   background: hsl(225, 12%, 12%);
   box-shadow: 0 2px 16px hsla(228, 95%, 4%, .45),
               0 0 0 1px rgba(255,255,255,.06);
-  padding: 1.25rem 1.75rem;
+  padding: 0.72rem 1.6rem;
   border-radius: 4rem;
   z-index: 860;
   opacity: 0;
@@ -5218,14 +5218,14 @@ body::before {
 .nf-nav__link {
   position: relative;
   color: hsl(225, 8%, 65%);
-  font-size: 1.5rem;
+  font-size: 1.28rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   border: none;
   background: none;
   cursor: pointer;
-  padding: 2px 5px;
+  padding: 1px 4px;
   outline: none;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.4s ease,
@@ -5257,7 +5257,7 @@ body::before {
 .nf-nav__expand-wrap { position: relative; }
 .nf-nav__expand {
   border: none;
-  width: 44px; height: 44px;
+  width: 36px; height: 36px;
   background: hsl(225, 95%, 56%);
   border-radius: 50%;
   cursor: pointer;
@@ -5272,7 +5272,7 @@ body::before {
 .nf-nav__expand:active { transform: scale(0.9); }
 .nf-nav__expand-icon {
   color: #fff;
-  font-size: 1.75rem;
+  font-size: 1.45rem;
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   pointer-events: none;
 }
@@ -5405,12 +5405,16 @@ body::before {
   transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
   overflow: hidden;
   will-change: transform, opacity;
-  padding-bottom: 62px; /* clear the bottom nav */
+  padding-bottom: 90px; /* clear the floating bottom nav on mobile */
 }
 .explore-page.open {
   transform: scale(1) translateY(0);
   opacity: 1;
   pointer-events: all;
+}
+/* On desktop the bottom nav is hidden so no padding needed */
+@media (min-width: 769px) {
+  .explore-page { padding-bottom: 0; }
 }
 /* ── Explore header ── */
 .explore-head {
@@ -5429,6 +5433,37 @@ body::before {
   bottom: 0; left: 0; right: 0;
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(255,255,255,.07), transparent);
+}
+/* ── Back button — matches comm-back-btn style ── */
+.explore-back-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg-input);
+  color: var(--ts);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .18s var(--ease), border-color .18s var(--ease),
+              color .18s var(--ease), transform .18s cubic-bezier(.34,1.48,.64,1);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.explore-back-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent2);
+  transform: scale(1.08);
+  box-shadow: 0 4px 18px rgba(0,0,0,.6);
+}
+.explore-back-btn:active { transform: scale(0.90); }
+[data-theme="light"] .explore-back-btn {
+  border-color: rgba(15,23,42,.12);
+  background: rgba(15,23,42,.04);
+}
+[data-theme="light"] .explore-back-btn:hover {
+  background: rgba(59,130,246,.08);
+  border-color: rgba(59,130,246,.3);
+  color: var(--accent);
 }
 .explore-head-icon {
   width: 32px; height: 32px;
@@ -15013,6 +15048,9 @@ h1, h2, h3 {
 
   <!-- ── Header ── -->
   <div class="explore-head">
+    <button class="explore-back-btn" id="exploreBackBtn" title="Back to Home" onclick="window.closeExplore && window.closeExplore()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
     <div class="explore-head-icon">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v5l-4.5 8.5A2 2 0 0 0 7.27 19h9.46a2 2 0 0 0 1.77-2.5L14 8V3"/></svg>
     </div>
@@ -18266,23 +18304,25 @@ function _lastDateDayInBox(box) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   48-HOUR NORMAL MESSAGE AUTO-EXPIRY HELPERS
+   24-HOUR NORMAL MESSAGE AUTO-EXPIRY HELPERS
    Normal text messages (no card / image / sticker) are deleted
-   from Firestore automatically after 48 hours.
+   from Firestore automatically after 24 hours.
+   Discuss cards (mathCard) expire per their own expiresAt field.
    Date separators that end up with no messages beneath them are
    also removed so the chat never shows a lonely date label.
+   Empty chats are fully pruned from the contacts list.
 ───────────────────────────────────────────────────────────── */
 
-/** Returns true if a message is a plain text message older than 48 h */
+/** Returns true if a message is a plain text message older than 24 h */
 function _isExpiredNormalMsg(m) {
   if (!m) return false;
   // Only plain text messages expire — cards, images, stickers are permanent
   const isNormalText = m.msgType === 'text' && !m.mathCard && !m.img && !m.sticker;
   if (!isNormalText) return false;
-  const FORTY_EIGHT_H = 48 * 60 * 60 * 1000;
+  const TWENTY_FOUR_H = 24 * 60 * 60 * 1000;
   // Support both expiresAt field and fallback time-based check
   if (m.expiresAt) return Date.now() > m.expiresAt;
-  return m.time && (Date.now() - m.time) > FORTY_EIGHT_H;
+  return m.time && (Date.now() - m.time) > TWENTY_FOUR_H;
 }
 
 /**
@@ -18307,7 +18347,9 @@ function _pruneOrphanDateSeps(box) {
 
 /**
  * Query Firestore for expired normal text messages in a chat and
- * batch-delete them. Runs silently — errors are non-fatal.
+ * batch-delete them. Then check if the chat is now empty — if so,
+ * delete the chat preview doc so it vanishes from the contacts list.
+ * Runs silently — errors are non-fatal.
  */
 async function _autoCleanupNormalMsgs(chatId, isGroup) {
   if (!chatId || !currentUser) return;
@@ -18317,7 +18359,7 @@ async function _autoCleanupNormalMsgs(chatId, isGroup) {
       ? ['groups', chatId, 'messages']
       : ['messages', chatId, 'msgs'];
 
-    // Primary query: messages that carry the expiresAt field
+    // Primary query: messages that carry the expiresAt field and are past it
     const qExpiry = query(
       collection(db, ...parts),
       where('msgType', '==', 'text'),
@@ -18325,21 +18367,176 @@ async function _autoCleanupNormalMsgs(chatId, isGroup) {
     );
     const snapExpiry = await getDocs(qExpiry);
 
-    if (snapExpiry.empty) return;
+    if (!snapExpiry.empty) {
+      const batch = writeBatch(db);
+      snapExpiry.forEach(d => batch.delete(d.ref));
+      await batch.commit();
 
-    const batch = writeBatch(db);
-    snapExpiry.forEach(d => batch.delete(d.ref));
-    await batch.commit();
+      // Evict from local caches so they never re-appear in UI
+      snapExpiry.forEach(d => {
+        _msgCache && _msgCache.delete(d.id);
+        VirtualMsgPool && VirtualMsgPool.remove(d.id);
+      });
+    }
 
-    // Evict deleted messages from local caches so they never re-appear
-    snapExpiry.forEach(d => {
-      _msgCache.delete(d.id);
-      VirtualMsgPool.remove(d.id);
-    });
+    // After cleanup: check if the conversation now has ANY messages left.
+    // If zero messages remain, remove the chat preview doc so the contact
+    // disappears from the sidebar permanently.
+    await _pruneEmptyChatContact(chatId, isGroup, parts);
+
   } catch(e) {
     console.warn('[AutoCleanup] normal msg expiry error (non-fatal):', e.message);
   }
 }
+
+/**
+ * Delete expired discuss cards (mathCard messages) from a chat.
+ * Discuss cards carry their own expiresAt set when the card was created.
+ * After deletion, prune the contact if the chat is now empty.
+ */
+async function _autoCleanupDiscussCards(chatId, isGroup) {
+  if (!chatId || !currentUser) return;
+  try {
+    const now   = Date.now();
+    const parts = isGroup
+      ? ['groups', chatId, 'messages']
+      : ['messages', chatId, 'msgs'];
+
+    // Find discuss card messages (mathCard field present) whose expiresAt has passed
+    const qCards = query(
+      collection(db, ...parts),
+      where('expiresAt', '<', now)
+    );
+    const snapCards = await getDocs(qCards);
+
+    // Filter to only those that actually have a mathCard payload
+    const expiredCards = snapCards.docs.filter(d => {
+      const data = d.data();
+      return data.mathCard || data.msgType === 'mathCard';
+    });
+
+    if (expiredCards.length === 0) return;
+
+    const batch = writeBatch(db);
+    expiredCards.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+
+    // Evict from local caches
+    expiredCards.forEach(d => {
+      _msgCache && _msgCache.delete(d.id);
+      VirtualMsgPool && VirtualMsgPool.remove(d.id);
+    });
+
+    console.log(`[AutoCleanup] Deleted ${expiredCards.length} expired discuss card(s) from chat ${chatId}`);
+
+    // Prune the contact if chat is now empty
+    await _pruneEmptyChatContact(chatId, isGroup, parts);
+
+  } catch(e) {
+    console.warn('[AutoCleanup] discuss card expiry error (non-fatal):', e.message);
+  }
+}
+
+/**
+ * Check if a chat has zero messages left after cleanup.
+ * If empty: delete the chat/group preview doc from Firestore so the
+ * contact permanently disappears from the contacts sidebar.
+ * Also clears local contactsMap and re-renders the contacts list.
+ */
+async function _pruneEmptyChatContact(chatId, isGroup, msgCollectionParts) {
+  try {
+    // Count remaining messages (limit:1 — cheapest possible read)
+    const remaining = await getDocs(
+      query(collection(db, ...msgCollectionParts), limit(1))
+    );
+
+    if (!remaining.empty) return; // Still has messages — nothing to prune
+
+    // Chat is empty — delete the preview/metadata doc permanently
+    const previewRef = isGroup
+      ? doc(db, 'groups', chatId)
+      : doc(db, 'chats', chatId);
+
+    await deleteDoc(previewRef);
+
+    // Immediately evict from local state so the UI updates without a reload
+    if (typeof contactsMap !== 'undefined' && contactsMap) {
+      // For DMs the contact key is the other user's UID (derived from chatId)
+      if (!isGroup) {
+        const otherUid = chatId.split('_').find(uid => uid !== currentUser.uid);
+        if (otherUid) contactsMap.delete(otherUid);
+      } else {
+        contactsMap.delete(chatId);
+      }
+    }
+
+    // If the deleted chat is currently open, close it back to the contacts list
+    if (typeof curChatId !== 'undefined' && curChatId === chatId) {
+      closeChat && closeChat();
+    }
+
+    // Re-render contacts so the item vanishes immediately
+    if (typeof renderContacts === 'function') renderContacts();
+
+    console.log(`[AutoCleanup] Chat ${chatId} is empty — removed from contacts permanently.`);
+  } catch(e) {
+    console.warn('[AutoCleanup] contact prune error (non-fatal):', e.message);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL AUTO-EXPIRY ENGINE
+   Runs on boot and every 30 minutes.
+   Scans ALL chats the current user is part of and:
+     1. Deletes expired normal text messages (>24 h)
+     2. Deletes expired discuss/math cards (past their expiresAt)
+     3. Prunes contacts whose chats are now completely empty
+   This ensures expiry happens even if the user never opens the chat.
+───────────────────────────────────────────────────────────── */
+async function _runGlobalExpiryEngine() {
+  if (!currentUser || !db) return;
+  try {
+    const now = Date.now();
+
+    // ── 1. Scan all DM chats this user belongs to ──
+    const dmSnap = await getDocs(
+      query(collection(db, 'chats'), where('users', 'array-contains', currentUser.uid))
+    );
+
+    for (const chatDoc of dmSnap.docs) {
+      const chatId = chatDoc.id;
+      // Run both cleanup passes; errors in one don't block the other
+      await _autoCleanupNormalMsgs(chatId, false).catch(() => {});
+      await _autoCleanupDiscussCards(chatId, false).catch(() => {});
+    }
+
+    // ── 2. Scan all group chats this user belongs to ──
+    const grpSnap = await getDocs(
+      query(collection(db, 'groups'), where('members', 'array-contains', currentUser.uid))
+    );
+
+    for (const grpDoc of grpSnap.docs) {
+      const chatId = grpDoc.id;
+      await _autoCleanupNormalMsgs(chatId, true).catch(() => {});
+      await _autoCleanupDiscussCards(chatId, true).catch(() => {});
+    }
+
+    console.log(`[ExpiryEngine] Global scan complete at ${new Date(now).toLocaleTimeString()}`);
+  } catch(e) {
+    console.warn('[ExpiryEngine] global scan error (non-fatal):', e.message);
+  }
+}
+
+// Boot: run once shortly after auth is confirmed, then every 30 min
+function _scheduleExpiryEngine() {
+  // First run: 8 seconds after boot (gives Firebase auth time to settle)
+  setTimeout(() => {
+    _runGlobalExpiryEngine();
+    // Repeat every 30 minutes for long-running sessions
+    setInterval(_runGlobalExpiryEngine, 30 * 60 * 1000);
+  }, 8000);
+}
+
 
 /* ─────────────────────────────────────────────────────────────
    AUTH & USER MANAGEMENT
@@ -20372,9 +20569,9 @@ async function sendMsg() {
     fwd: false,
     seen: false,
     clientMsgId,   // stored server-side for reconciliation on reconnect
-    // ── 48-hour auto-expiry for plain text messages ──
+    // ── 24-hour auto-expiry for plain text messages ──
     msgType:   'text',
-    expiresAt: _sendTime + 48 * 60 * 60 * 1000,
+    expiresAt: _sendTime + 24 * 60 * 60 * 1000,
   };
 
   // ── OPTIMISTIC UI: render instantly — UI never waits for network ──
@@ -20733,6 +20930,19 @@ async function _submitDiscuss() {
         mathCard:  _dc,
         text:      '📐 ' + _dcTypeLabel + ': ' + _dcTopic,
         clientMsgId: window._genClientMsgId ? window._genClientMsgId() : ('mc_' + Date.now()),
+        // ── Discuss cards expire per their type's TTL ──
+        expiresAt: Date.now() + (function() {
+          const ttls = {
+            question:  48 * 60 * 60 * 1000,  // 48 h
+            equation:  72 * 60 * 60 * 1000,  // 72 h
+            concept:   72 * 60 * 60 * 1000,  // 72 h
+            test:      24 * 60 * 60 * 1000,  // 24 h
+            challenge: 48 * 60 * 60 * 1000,  // 48 h
+            hint:      24 * 60 * 60 * 1000,  // 24 h
+            explain:   72 * 60 * 60 * 1000,  // 72 h
+          };
+          return ttls[_dc.type] || 48 * 60 * 60 * 1000; // default 48 h
+        })(),
       };
       msgData.clientMsgId = msgData.clientMsgId || ('mc_' + Date.now());
 
@@ -20883,7 +21093,9 @@ function listenMessages() {
       _pruneOrphanDateSeps(box);          // remove date labels left empty by expiry filter
       _attachScrollPagination(box, chatId, isGroup, otherUser, session);
       // Run server-side cleanup of expired normal messages (non-blocking)
-      _autoCleanupNormalMsgs(chatId, isGroup).catch(() => {});
+      // Run expiry cleanup for both normal msgs (24h) and discuss cards on chat open
+    _autoCleanupNormalMsgs(chatId, isGroup).catch(() => {});
+    _autoCleanupDiscussCards(chatId, isGroup).catch(() => {});
 
       box.style.scrollBehavior = 'auto';
       box.scrollTop = box.scrollHeight;
@@ -22797,12 +23009,12 @@ function updateFabVisibility() {
   const isExploreOpen = $('explorePage')?.classList.contains('open');
   const isSubModalOpen = $('subModalPage')?.classList.contains('open');
 
-  // ── Bottom nav: show on homepage OR chat list OR community page (not inside a conversation, not in sub-modal) ──
+  // ── Bottom nav: show on homepage OR chat list OR community page OR explore page (not inside a conversation, not in sub-modal) ──
   if (nav) {
     const isCommunityOpen = $('communityPage')?.classList.contains('open');
     if (isSubModalOpen) {
       nav.classList.remove('visible'); // card sub-page: hide nav
-    } else if (isHomeVisible || isHome || isCommunityOpen) {
+    } else if (isHomeVisible || isHome || isCommunityOpen || isExploreOpen) {
       nav.classList.add('visible');
     } else {
       nav.classList.remove('visible');
@@ -31062,107 +31274,1042 @@ window.goToChatTab         = goToChatTab;
 window._toggleHpChannelFollow = _toggleHpChannelFollow;
 
 
-(function() {
-  if (!('serviceWorker' in navigator)) return;
+/* ════════════════════════════════════════════════════════════════
+   ⑦ NEUROFORGE NATIVE PWA ENGINE
+   Full Progressive Web App layer — offline shell, haptics,
+   gestures, install prompt, network awareness, badge API,
+   share API, wake lock, keyboard avoidance, safe-area polish.
+════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
 
-  const SW_SRC = `
-    'use strict';
-    const CACHE   = 'nf-shell-v1';
-    const SHELL   = [
-      self.location.pathname,
-      'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap'
-    ];
+  /* ──────────────────────────────────────────────────────────────
+     A. FULL-FEATURED SERVICE WORKER (Blob, no separate file needed)
+     Strategy matrix:
+       • App Shell (HTML)      → Cache-first, bg revalidate (SWR)
+       • Google Fonts CSS      → Cache-first, 7-day TTL
+       • Font binary (.woff2)  → Cache-first, 30-day TTL
+       • Firebase / Firestore  → Network-only (real-time data)
+       • Remix Icons CDN       → Cache-first, 7-day TTL
+       • Everything else       → Network, fallback to cache
+     Background Sync: queues outgoing messages when offline,
+     replays them the moment connectivity is restored.
+  ────────────────────────────────────────────────────────────── */
+  const SW_CODE = `
+'use strict';
 
-    // Install: pre-cache the app shell
-    self.addEventListener('install', e => {
-      e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { mode: 'no-cors' }))))
-          .then(() => self.skipWaiting())
-          .catch(() => self.skipWaiting()) // never block install on cache failure
-      );
-    });
+const SHELL_CACHE   = 'nf-shell-v3';
+const STATIC_CACHE  = 'nf-static-v3';
+const FONT_CACHE    = 'nf-fonts-v3';
+const ALL_CACHES    = [SHELL_CACHE, STATIC_CACHE, FONT_CACHE];
 
-    // Activate: delete old caches
-    self.addEventListener('activate', e => {
-      e.waitUntil(
-        caches.keys().then(keys =>
-          Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-        ).then(() => self.clients.claim())
-      );
-    });
+const STATIC_ASSETS = [
+  self.location.pathname,
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.css'
+];
 
-    // Fetch: Shell-first strategy
-    //   1. For navigation (HTML): serve cache instantly, revalidate network in bg
-    //   2. For Firebase / Firestore: always network-first (live data critical)
-    //   3. For fonts / static: cache-first
-    self.addEventListener('fetch', e => {
-      const url = new URL(e.request.url);
+/* ── INSTALL ── */
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(SHELL_CACHE)
+      .then(c => c.addAll(STATIC_ASSETS.map(u => new Request(u, { mode: 'no-cors', cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
+  );
+});
 
-      // Never intercept Firebase — real-time data must hit the network
-      if (url.hostname.includes('firestore.googleapis.com') ||
-          url.hostname.includes('firebase') ||
-          url.hostname.includes('googleapis.com') && url.pathname.includes('/firestore')) {
-        return; // pass through
-      }
+/* ── ACTIVATE ── */
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => !ALL_CACHES.includes(k)).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
+  );
+});
 
-      // Stale-while-revalidate for the app shell HTML
-      if (e.request.mode === 'navigate') {
-        e.respondWith(
-          caches.open(CACHE).then(cache =>
-            cache.match(e.request).then(cached => {
-              const network = fetch(e.request).then(resp => {
-                if (resp.ok) cache.put(e.request, resp.clone());
-                return resp;
-              }).catch(() => cached); // offline: serve cached shell
-              return cached || network;
-            })
-          )
-        );
-        return;
-      }
+/* ── HELPERS ── */
+const isFirebase = url =>
+  url.hostname.includes('firestore.googleapis.com') ||
+  url.hostname.includes('googleapis.com') ||
+  url.hostname.includes('firebase') ||
+  url.hostname.includes('fcm.googleapis.com') ||
+  url.pathname.startsWith('/__/');
 
-      // Cache-first for fonts and other static assets
-      if (url.hostname.includes('fonts.')) {
-        e.respondWith(
-          caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
-            if (resp.ok) {
-              caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
-            }
+const isFont = url =>
+  url.hostname.includes('fonts.gstatic.com') ||
+  url.pathname.endsWith('.woff2') || url.pathname.endsWith('.woff') || url.pathname.endsWith('.ttf');
+
+const isFontCSS = url =>
+  url.hostname.includes('fonts.googleapis.com') ||
+  (url.hostname.includes('cdnjs.cloudflare.com') && url.pathname.includes('remixicon'));
+
+/* ── FETCH STRATEGY ROUTER ── */
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+
+  /* 1. Firebase: always network-only — live data must stay fresh */
+  if (isFirebase(url)) return;
+
+  /* 2. Font binaries: cache-first, network fallback, 30-day freshness */
+  if (isFont(url)) {
+    e.respondWith(
+      caches.open(FONT_CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(resp => {
+            if (resp && resp.ok) cache.put(e.request, resp.clone());
             return resp;
-          }))
-        );
+          });
+        })
+      )
+    );
+    return;
+  }
+
+  /* 3. Font CSS & CDN icons: stale-while-revalidate */
+  if (isFontCSS(url)) {
+    e.respondWith(
+      caches.open(STATIC_CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          const networkFetch = fetch(e.request).then(resp => {
+            if (resp && resp.ok) cache.put(e.request, resp.clone());
+            return resp;
+          }).catch(() => cached);
+          return cached || networkFetch;
+        })
+      )
+    );
+    return;
+  }
+
+  /* 4. App Shell HTML navigation: cache-first, background revalidate */
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.open(SHELL_CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          const networkFetch = fetch(e.request, { cache: 'no-cache' }).then(resp => {
+            if (resp && resp.ok) cache.put(e.request, resp.clone());
+            return resp;
+          }).catch(() => cached || new Response('Offline — NeuroForge', { headers: { 'Content-Type': 'text/html' } }));
+          return cached || networkFetch;
+        })
+      )
+    );
+    return;
+  }
+
+  /* 5. Everything else: network first, cache fallback */
+  e.respondWith(
+    fetch(e.request).catch(() =>
+      caches.match(e.request)
+    )
+  );
+});
+
+/* ── BACKGROUND SYNC — replay queued messages ── */
+self.addEventListener('sync', e => {
+  if (e.tag === 'nf-msg-sync') {
+    e.waitUntil((async () => {
+      try {
+        const db    = await openMsgQueue();
+        const items = await getAllMsgs(db);
+        for (const item of items) {
+          try {
+            await fetch('/api/messages', {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify(item.payload)
+            });
+            await deleteMsgFromQueue(db, item.id);
+          } catch (_) { /* will retry on next sync */ }
+        }
+      } catch (_) {}
+    })());
+  }
+});
+
+/* ── IndexedDB message queue helpers ── */
+function openMsgQueue() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('nf_msg_queue', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('msgs', { keyPath: 'id', autoIncrement: true });
+    req.onsuccess  = e => res(e.target.result);
+    req.onerror    = e => rej(e.target.error);
+  });
+}
+function getAllMsgs(db) {
+  return new Promise((res, rej) => {
+    const tx  = db.transaction('msgs', 'readonly');
+    const req = tx.objectStore('msgs').getAll();
+    req.onsuccess = e => res(e.target.result);
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+function deleteMsgFromQueue(db, id) {
+  return new Promise((res, rej) => {
+    const tx  = db.transaction('msgs', 'readwrite');
+    const req = tx.objectStore('msgs').delete(id);
+    req.onsuccess = () => res();
+    req.onerror   = e  => rej(e.target.error);
+  });
+}
+
+/* ── PUSH NOTIFICATIONS ── */
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || 'NeuroForge';
+  const opts  = {
+    body:    data.body  || 'You have a new message',
+    icon:    data.icon  || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22><rect width=%2296%22 height=%2296%22 rx=%2222%22 fill=%22%233B82F6%22/><text x=%2248%22 y=%2264%22 font-size=%2252%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22system-ui%22>N</text></svg>',
+    badge:   data.badge || '',
+    vibrate: [120, 60, 120],
+    data:    { url: data.url || '/' },
+    actions: [
+      { action: 'reply',  title: 'Reply' },
+      { action: 'dismiss',title: 'Dismiss' }
+    ]
+  };
+  e.waitUntil(self.registration.showNotification(title, opts));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  if (e.action === 'dismiss') return;
+  const url = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url === url && 'focus' in c) return c.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});
+
+/* ── MESSAGE → clients (SW→page comms) ── */
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data && e.data.type === 'CACHE_URLS') {
+    caches.open(STATIC_CACHE).then(c =>
+      c.addAll((e.data.urls || []).map(u => new Request(u, { mode: 'no-cors' })))
+    );
+  }
+});
+`;
+
+  /* ── Register the blob SW ── */
+  if ('serviceWorker' in navigator) {
+    try {
+      const blob  = new Blob([SW_CODE], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl, { scope: '/' })
+        .then(reg => {
+          console.log('[NF-SW] Service Worker active. Scope:', reg.scope);
+          /* Update check on every visit */
+          reg.addEventListener('updatefound', () => {
+            const w = reg.installing;
+            if (!w) return;
+            w.addEventListener('statechange', () => {
+              if (w.state === 'installed' && navigator.serviceWorker.controller) {
+                _showUpdateBanner();
+              }
+            });
+          });
+          /* Wire skip-waiting from update banner */
+          window._nfSwReg = reg;
+        })
+        .catch(err => console.warn('[NF-SW] Blob SW skipped (needs HTTPS in prod):', err.message));
+
+      /* New SW took control → reload for freshest shell */
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+      });
+    } catch (err) {
+      console.warn('[NF-SW] Could not bootstrap SW:', err.message);
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     B. WEB APP MANIFEST — Rich icons, shortcuts, categories
+  ────────────────────────────────────────────────────────────── */
+  (function _injectManifest () {
+    /* Generate crisp SVG icons at multiple sizes */
+    function svgIcon (size) {
+      const r = Math.round(size * 0.22);
+      const fs = Math.round(size * 0.52);
+      const enc = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
+        <defs>
+          <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="%232563EB"/>
+            <stop offset="100%" stop-color="%237C3AED"/>
+          </linearGradient>
+        </defs>
+        <rect width="${size}" height="${size}" rx="${r}" fill="url(%23g)"/>
+        <text x="${size/2}" y="${size*0.58}" font-size="${fs}" text-anchor="middle"
+              dominant-baseline="middle" fill="white" font-family="system-ui,sans-serif"
+              font-weight="800">N</text>
+      </svg>`;
+      return 'data:image/svg+xml,' + enc;
+    }
+
+    const manifest = {
+      name:             'NeuroForge',
+      short_name:       'NF',
+      description:      'AI-powered learning & community platform',
+      start_url:        window.location.pathname + '?source=pwa',
+      scope:            window.location.pathname,
+      display:          'standalone',
+      display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+      background_color: '#000000',
+      theme_color:      '#000000',
+      orientation:      'portrait-primary',
+      lang:             'en',
+      dir:              'ltr',
+      categories:       ['education', 'productivity', 'social'],
+      prefer_related_applications: false,
+      icons: [
+        { src: svgIcon(72),  sizes: '72x72',   type: 'image/svg+xml', purpose: 'any' },
+        { src: svgIcon(96),  sizes: '96x96',   type: 'image/svg+xml', purpose: 'any' },
+        { src: svgIcon(128), sizes: '128x128', type: 'image/svg+xml', purpose: 'any' },
+        { src: svgIcon(144), sizes: '144x144', type: 'image/svg+xml', purpose: 'any maskable' },
+        { src: svgIcon(192), sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+        { src: svgIcon(512), sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' },
+      ],
+      shortcuts: [
+        {
+          name:       'Open Chat',
+          short_name: 'Chat',
+          description:'Go straight to your messages',
+          url:        window.location.pathname + '?tab=chat&source=shortcut',
+          icons:      [{ src: svgIcon(96), sizes: '96x96', type: 'image/svg+xml' }]
+        },
+        {
+          name:       'AI Tutor',
+          short_name: 'AI',
+          description:'Launch NF AI assistant',
+          url:        window.location.pathname + '?tab=ai&source=shortcut',
+          icons:      [{ src: svgIcon(96), sizes: '96x96', type: 'image/svg+xml' }]
+        },
+        {
+          name:       'Community',
+          short_name: 'Community',
+          description:'Browse the community feed',
+          url:        window.location.pathname + '?tab=community&source=shortcut',
+          icons:      [{ src: svgIcon(96), sizes: '96x96', type: 'image/svg+xml' }]
+        }
+      ],
+      screenshots: [],
+      related_applications: [],
+      share_target: {
+        action:  window.location.pathname,
+        method:  'GET',
+        params:  { title: 'title', text: 'text', url: 'url' }
+      }
+    };
+
+    try {
+      const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      const mUrl  = URL.createObjectURL(mBlob);
+      const link  = document.getElementById('nfPwaManifest');
+      if (link) link.href = mUrl;
+    } catch (_) {}
+
+    /* Handle share target: if opened via shortcut params, auto-navigate */
+    const sp = new URLSearchParams(window.location.search);
+    const tab = sp.get('tab');
+    if (tab === 'ai')        setTimeout(() => { try { openNFAI?.(); } catch(_){} }, 800);
+    if (tab === 'community') setTimeout(() => { try { openCommunity?.(); } catch(_){} }, 800);
+    /* Share target: pre-fill input with shared text */
+    const sharedText = sp.get('text') || sp.get('url');
+    if (sharedText) {
+      setTimeout(() => {
+        const inp = document.getElementById('msgInp');
+        if (inp) { inp.value = sharedText; inp.focus(); }
+      }, 1200);
+    }
+  })();
+
+  /* ──────────────────────────────────────────────────────────────
+     C. HAPTIC FEEDBACK ENGINE
+     Wraps Vibration API with named patterns matching native iOS/Android.
+     Falls back silently on devices without vibration support.
+  ────────────────────────────────────────────────────────────── */
+  const NF_HAPTIC = window.NF_HAPTIC = {
+    _ok: 'vibrate' in navigator,
+    /* iOS-style selection tick */
+    selection:  () => NF_HAPTIC._ok && navigator.vibrate(8),
+    /* Light button press */
+    light:      () => NF_HAPTIC._ok && navigator.vibrate(12),
+    /* Medium card tap */
+    medium:     () => NF_HAPTIC._ok && navigator.vibrate(24),
+    /* Heavy / confirm */
+    heavy:      () => NF_HAPTIC._ok && navigator.vibrate(48),
+    /* Error / warning double pulse */
+    error:      () => NF_HAPTIC._ok && navigator.vibrate([32, 40, 32]),
+    /* Success ripple */
+    success:    () => NF_HAPTIC._ok && navigator.vibrate([12, 24, 48]),
+    /* Notification double tap */
+    notify:     () => NF_HAPTIC._ok && navigator.vibrate([20, 60, 20]),
+    /* Long-press confirm */
+    longPress:  () => NF_HAPTIC._ok && navigator.vibrate([0, 20, 60])
+  };
+
+  /* Wire haptics to interactive elements globally */
+  document.addEventListener('pointerdown', e => {
+    const t = e.target.closest('button, .ci, .comm-post, .hp-act-btn, .hp-chan-card, .home-metric-square, .chat-filter-pill, .comm-cat-chip, .nf-nav__link, .send-btn, .inp-btn, .head-act, .nf-nav__expand, .rail-btn, .math-card-opt, .home-chan-card, .ta-card.unlocked, .comm-act-btn, .home-comm-post-card, .home-lb-row');
+    if (t) NF_HAPTIC.light();
+  }, { passive: true });
+
+  /* Extra haptic for send button */
+  document.addEventListener('click', e => {
+    if (e.target.closest('.send-btn, .chan-send-btn, .nfai-send')) NF_HAPTIC.medium();
+    if (e.target.closest('.nf-nav__link.active, .chat-filter-pill.active, .comm-act-btn.liked')) NF_HAPTIC.selection();
+    if (e.target.closest('.fwd-submit, .cg-create-btn, .logout-confirm-btn')) NF_HAPTIC.success();
+  }, { passive: true });
+
+  /* ──────────────────────────────────────────────────────────────
+     D. INSTALL PROMPT — Custom native-feel A2HS banner
+     Intercepts beforeinstallprompt, stores it, shows a branded
+     banner after 30 s of use (so it's not annoying on first load).
+  ────────────────────────────────────────────────────────────── */
+  let _deferredInstall = null;
+  let _installBanner   = null;
+
+  /* Inject banner HTML + CSS once */
+  function _buildInstallBanner () {
+    if (_installBanner) return;
+    const css = `
+      #nf-install-banner {
+        position: fixed; bottom: calc(env(safe-area-inset-bottom,0px) + 90px); left: 50%;
+        transform: translateX(-50%) translateY(24px);
+        width: calc(100% - 32px); max-width: 390px;
+        background: rgba(14,14,18,0.94);
+        backdrop-filter: blur(32px) saturate(200%);
+        -webkit-backdrop-filter: blur(32px) saturate(200%);
+        border: 1px solid rgba(255,255,255,.11);
+        border-radius: 20px;
+        padding: 14px 16px;
+        display: flex; align-items: center; gap: 14px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset,
+                    0 8px 40px rgba(0,0,0,.72),
+                    0 2px 8px rgba(0,0,0,.4);
+        z-index: 99999;
+        opacity: 0; pointer-events: none;
+        transition: opacity .32s cubic-bezier(.22,1,.36,1),
+                    transform .32s cubic-bezier(.34,1.48,.64,1);
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        -webkit-font-smoothing: subpixel-antialiased;
+      }
+      #nf-install-banner.show {
+        opacity: 1; pointer-events: all;
+        transform: translateX(-50%) translateY(0);
+      }
+      #nf-install-icon {
+        width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+        background: linear-gradient(135deg,#2563EB,#7C3AED);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; font-weight: 800; color: #fff;
+        box-shadow: 0 4px 14px rgba(37,99,235,.45);
+        font-family: 'Outfit', system-ui;
+        letter-spacing: -1px;
+      }
+      #nf-install-text { flex: 1; min-width: 0; }
+      #nf-install-title { font-size: .87rem; font-weight: 700; color: #FAFAFA; letter-spacing: -.15px; }
+      #nf-install-sub   { font-size: .72rem; color: #A1A1AA; margin-top: 2px; }
+      #nf-install-btn {
+        flex-shrink: 0; padding: 9px 18px; border-radius: 99px;
+        background: #FAFAFA; color: #0A0A0A;
+        font-family: 'Plus Jakarta Sans', system-ui;
+        font-size: .78rem; font-weight: 700; border: none; cursor: pointer;
+        transition: background .16s, transform .16s cubic-bezier(.34,1.48,.64,1);
+        letter-spacing: .02em;
+      }
+      #nf-install-btn:hover  { background: #fff; transform: scale(1.05); }
+      #nf-install-btn:active { transform: scale(.94); }
+      #nf-install-dismiss {
+        position: absolute; top: 8px; right: 10px;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: rgba(255,255,255,.08); border: none;
+        color: #71717A; font-size: .7rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background .15s;
+      }
+      #nf-install-dismiss:hover { background: rgba(255,255,255,.16); color: #FAFAFA; }
+      [data-theme="light"] #nf-install-banner {
+        background: rgba(255,255,255,.92);
+        border-color: rgba(15,23,42,.1);
+        box-shadow: 0 8px 40px rgba(15,23,42,.18), 0 2px 8px rgba(15,23,42,.08);
+      }
+      [data-theme="light"] #nf-install-title { color: #0F172A; }
+      [data-theme="light"] #nf-install-sub   { color: #64748B; }
+      [data-theme="light"] #nf-install-dismiss { background: rgba(15,23,42,.08); color: #64748B; }
+      [data-theme="light"] #nf-install-btn { background: #0F172A; color: #fff; }
+    `;
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+
+    const banner = document.createElement('div');
+    banner.id = 'nf-install-banner';
+    banner.innerHTML = `
+      <div id="nf-install-icon">N</div>
+      <div id="nf-install-text">
+        <div id="nf-install-title">Install NeuroForge</div>
+        <div id="nf-install-sub">Add to home screen for the full native experience</div>
+      </div>
+      <button id="nf-install-btn">Install</button>
+      <button id="nf-install-dismiss" aria-label="Dismiss">✕</button>
+    `;
+    document.body.appendChild(banner);
+    _installBanner = banner;
+
+    document.getElementById('nf-install-btn').addEventListener('click', () => {
+      NF_HAPTIC.medium();
+      _installBanner.classList.remove('show');
+      if (_deferredInstall) {
+        _deferredInstall.prompt();
+        _deferredInstall.userChoice.then(r => {
+          if (r.outcome === 'accepted') {
+            NF_HAPTIC.success();
+            _showToast('NeuroForge installed! 🎉', 'success');
+          }
+          _deferredInstall = null;
+        });
       }
     });
+
+    document.getElementById('nf-install-dismiss').addEventListener('click', () => {
+      NF_HAPTIC.light();
+      _installBanner.classList.remove('show');
+      try { localStorage.setItem('nf_install_dismissed', Date.now()); } catch(_){}
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _deferredInstall = e;
+    /* Don't nag if dismissed in the last 7 days */
+    try {
+      const d = parseInt(localStorage.getItem('nf_install_dismissed') || '0');
+      if (Date.now() - d < 7 * 24 * 60 * 60 * 1000) return;
+    } catch(_) {}
+    setTimeout(() => {
+      _buildInstallBanner();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          _installBanner && _installBanner.classList.add('show');
+        });
+      });
+    }, 30000); /* Show after 30s of engagement */
+  });
+
+  window.addEventListener('appinstalled', () => {
+    NF_HAPTIC.success();
+    _showToast('NeuroForge installed successfully!', 'success');
+    _deferredInstall = null;
+    if (_installBanner) _installBanner.classList.remove('show');
+  });
+
+  /* ──────────────────────────────────────────────────────────────
+     E. UPDATE BANNER — "New version available"
+  ────────────────────────────────────────────────────────────── */
+  function _showUpdateBanner () {
+    const css = `
+      #nf-update-banner {
+        position: fixed; top: calc(env(safe-area-inset-top,0px) + 8px); left: 50%;
+        transform: translateX(-50%) translateY(-80px);
+        width: calc(100% - 32px); max-width: 390px;
+        background: #2563EB; border-radius: 14px; padding: 12px 16px;
+        display: flex; align-items: center; gap: 12px;
+        box-shadow: 0 8px 32px rgba(37,99,235,.45), 0 2px 8px rgba(0,0,0,.3);
+        z-index: 99998; color: #fff;
+        font-family: 'Plus Jakarta Sans', system-ui; font-size: .82rem;
+        transition: transform .4s cubic-bezier(.34,1.48,.64,1);
+      }
+      #nf-update-banner.show { transform: translateX(-50%) translateY(0); }
+      #nf-update-banner span { flex: 1; font-weight: 600; }
+      #nf-update-btn {
+        padding: 7px 14px; border-radius: 99px; border: none;
+        background: rgba(255,255,255,.22); color: #fff;
+        font-family: inherit; font-size: .75rem; font-weight: 700; cursor: pointer;
+        transition: background .15s;
+        white-space: nowrap;
+      }
+      #nf-update-btn:hover { background: rgba(255,255,255,.35); }
+    `;
+    const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+    const b = document.createElement('div');
+    b.id = 'nf-update-banner';
+    b.innerHTML = `<span>⚡ New version available</span><button id="nf-update-btn">Reload</button>`;
+    document.body.appendChild(b);
+    requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('show')));
+    document.getElementById('nf-update-btn').addEventListener('click', () => {
+      NF_HAPTIC.medium();
+      if (window._nfSwReg && window._nfSwReg.waiting) {
+        window._nfSwReg.waiting.postMessage('SKIP_WAITING');
+      }
+      window.location.reload();
+    });
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     F. NETWORK AWARENESS — Online/Offline status bar
+     Slides in from top when connection drops, slides out when restored.
+  ────────────────────────────────────────────────────────────── */
+  (function _networkAwareness () {
+    const css = `
+      #nf-network-bar {
+        position: fixed; top: calc(env(safe-area-inset-top, 0px)); left: 0; right: 0;
+        height: 0; overflow: hidden;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        font-family: 'Plus Jakarta Sans', system-ui; font-size: .75rem; font-weight: 700;
+        letter-spacing: .04em; text-transform: uppercase; color: #fff;
+        z-index: 99997; transition: height .28s cubic-bezier(.22,1,.36,1);
+        pointer-events: none;
+      }
+      #nf-network-bar.offline { background: #EF4444; height: 36px; }
+      #nf-network-bar.back-online { background: #10B981; height: 36px; }
+      #nf-network-bar-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+        animation: netDotPulse 1.2s ease-in-out infinite;
+      }
+      @keyframes netDotPulse {
+        0%,100%{ opacity:1; transform:scale(1); }
+        50%     { opacity:.5; transform:scale(.7); }
+      }
+    `;
+    const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+    const bar = document.createElement('div');
+    bar.id = 'nf-network-bar';
+    bar.innerHTML = '<div id="nf-network-bar-dot"></div><span id="nf-network-bar-txt">No internet connection</span>';
+    document.body.appendChild(bar);
+
+    let onlineTimer = null;
+
+    function setOffline () {
+      NF_HAPTIC.error();
+      bar.className = 'offline';
+      document.getElementById('nf-network-bar-txt').textContent = 'No internet connection';
+    }
+
+    function setOnline () {
+      clearTimeout(onlineTimer);
+      NF_HAPTIC.success();
+      bar.className = 'back-online';
+      document.getElementById('nf-network-bar-txt').textContent = 'Back online';
+      onlineTimer = setTimeout(() => { bar.className = ''; }, 2800);
+    }
+
+    window.addEventListener('offline', setOffline);
+    window.addEventListener('online',  setOnline);
+    if (!navigator.onLine) setOffline();
+  })();
+
+  /* ──────────────────────────────────────────────────────────────
+     G. NATIVE SWIPE-BACK GESTURE
+     Detects a left-edge swipe (within 28px of screen left edge) and
+     triggers the back action for the visible overlay/sheet/page.
+     Mirrors the iOS Navigation Controller swipe gesture exactly.
+  ────────────────────────────────────────────────────────────── */
+  (function _swipeBack () {
+    let startX = 0, startY = 0, startTime = 0, tracking = false;
+
+    document.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      startTime = Date.now();
+      tracking = startX < 28; /* Only activate from left edge */
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = Math.abs(t.clientY - startY);
+      const dt = Date.now() - startTime;
+      /* Swipe: >60px right, mostly horizontal, under 400ms */
+      if (dx > 60 && dy < 80 && dt < 400) {
+        NF_HAPTIC.light();
+        _triggerBack();
+      }
+    }, { passive: true });
+
+    function _triggerBack () {
+      /* Check open layers from topmost to bottom */
+      if (document.getElementById('subModalPage')?.classList.contains('open'))
+        { window.closeSubModal?.(); return; }
+      if (document.getElementById('nfAiOv')?.classList.contains('open'))
+        { document.getElementById('nfAiClose')?.click(); return; }
+      if (document.getElementById('discussOv')?.classList.contains('open'))
+        { window.closeDiscuss?.(); return; }
+      if (document.getElementById('settingsPanel')?.classList.contains('open'))
+        { window.closeSettings?.(); return; }
+      if (document.getElementById('membersOv')?.classList.contains('open'))
+        { document.getElementById('membersClose')?.click(); return; }
+      if (document.getElementById('communityPage')?.classList.contains('open'))
+        { window.closeCommunity?.(); return; }
+      if (document.getElementById('explorePage')?.classList.contains('open'))
+        { window.closeExplore?.(); return; }
+      if (document.getElementById('chatView')?.classList.contains('open'))
+        { window.closeChat?.(); return; }
+    }
+  })();
+
+  /* ──────────────────────────────────────────────────────────────
+     H. WEB SHARE API — Native OS share sheet
+     Patches share buttons throughout the app to trigger the
+     system share sheet instead of a custom modal.
+  ────────────────────────────────────────────────────────────── */
+  window.NF_SHARE = async function (opts = {}) {
+    const shareData = {
+      title: opts.title || 'NeuroForge',
+      text:  opts.text  || 'Check this out on NeuroForge',
+      url:   opts.url   || window.location.href
+    };
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        NF_HAPTIC.medium();
+        await navigator.share(shareData);
+      } else {
+        /* Fallback: copy to clipboard */
+        await navigator.clipboard.writeText(shareData.url || shareData.text);
+        _showToast('Link copied to clipboard', 'info');
+        NF_HAPTIC.success();
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        await navigator.clipboard.writeText(shareData.url || shareData.text).catch(() => {});
+        _showToast('Link copied to clipboard', 'info');
+      }
+    }
+  };
+
+  /* ──────────────────────────────────────────────────────────────
+     I. SCREEN WAKE LOCK — Keep screen on during active AI sessions
+  ────────────────────────────────────────────────────────────── */
+  let _wakeLock = null;
+  async function _acquireWakeLock () {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      _wakeLock = await navigator.wakeLock.request('screen');
+      console.log('[NF] Wake lock acquired');
+    } catch (_) {}
+  }
+  async function _releaseWakeLock () {
+    if (_wakeLock) { await _wakeLock.release().catch(() => {}); _wakeLock = null; }
+  }
+
+  /* Re-acquire after visibility change (iOS releases lock on hide) */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && _wakeLock === null) {
+      const aiOv = document.getElementById('nfAiOv');
+      if (aiOv?.classList.contains('open')) _acquireWakeLock();
+    }
+  });
+
+  /* Tie to NF AI open/close */
+  const _origOpenNFAI  = window.openNFAI;
+  const _origCloseNFAI = window.closeNFAI;
+  if (typeof _origOpenNFAI  === 'function') window.openNFAI  = function(...a){ _acquireWakeLock(); return _origOpenNFAI.apply(this,a); };
+  if (typeof _origCloseNFAI === 'function') window.closeNFAI = function(...a){ _releaseWakeLock(); return _origCloseNFAI.apply(this,a); };
+
+  /* ──────────────────────────────────────────────────────────────
+     J. APP BADGE API — Show unread count on installed app icon
+  ────────────────────────────────────────────────────────────── */
+  window.NF_setBadge = function (count) {
+    if (!('setAppBadge' in navigator)) return;
+    if (count > 0) {
+      navigator.setAppBadge(count).catch(() => {});
+    } else {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  };
+
+  /* ──────────────────────────────────────────────────────────────
+     K. KEYBOARD AVOIDANCE (VirtualKeyboard API + fallback)
+     On mobile, when the software keyboard slides up the bottom
+     input bar needs to ride with it — not get buried underneath.
+  ────────────────────────────────────────────────────────────── */
+  (function _keyboardAwareness () {
+    /* Modern: VirtualKeyboard API (Chrome 94+) */
+    if ('virtualKeyboard' in navigator) {
+      navigator.virtualKeyboard.overlaysContent = true;
+      navigator.virtualKeyboard.addEventListener('geometrychange', e => {
+        const h = e.target.boundingRect.height;
+        document.documentElement.style.setProperty('--kb-height', h + 'px');
+      });
+      return;
+    }
+
+    /* Fallback: detect viewport height shrink */
+    const initialH = window.innerHeight;
+    let kbOpen = false;
+
+    window.addEventListener('resize', () => {
+      const diff = initialH - window.visualViewport.height;
+      const h = diff > 80 ? diff : 0;
+      document.documentElement.style.setProperty('--kb-height', h + 'px');
+      const wasOpen = kbOpen;
+      kbOpen = h > 80;
+      if (kbOpen && !wasOpen) document.documentElement.classList.add('kb-open');
+      if (!kbOpen && wasOpen) document.documentElement.classList.remove('kb-open');
+    }, { passive: true });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const diff = window.innerHeight - window.visualViewport.height;
+        const h = diff > 80 ? diff : 0;
+        document.documentElement.style.setProperty('--kb-height', h + 'px');
+        kbOpen = h > 80;
+        document.documentElement.classList.toggle('kb-open', kbOpen);
+      }, { passive: true });
+    }
+  })();
+
+  /* ──────────────────────────────────────────────────────────────
+     L. LONG-PRESS DETECTION — Context menus on mobile
+     Fires after 480ms hold, cancelled on move/release.
+     Used by message bubbles for the context action bar.
+  ────────────────────────────────────────────────────────────── */
+  (function _longPress () {
+    let timer = null, target = null;
+
+    document.addEventListener('touchstart', e => {
+      const el = e.target.closest('.mb');
+      if (!el) return;
+      target = el;
+      timer  = setTimeout(() => {
+        NF_HAPTIC.longPress();
+        /* Dispatch custom event — existing message context code listens for it */
+        el.dispatchEvent(new CustomEvent('nf:longpress', { bubbles: true, detail: { touch: e.touches[0] } }));
+      }, 480);
+    }, { passive: true });
+
+    document.addEventListener('touchmove',   () => { clearTimeout(timer); timer = null; }, { passive: true });
+    document.addEventListener('touchend',    () => { clearTimeout(timer); timer = null; }, { passive: true });
+    document.addEventListener('touchcancel', () => { clearTimeout(timer); timer = null; }, { passive: true });
+  })();
+
+  /* ──────────────────────────────────────────────────────────────
+     M. SPLASH SCREEN — Instant paint on cold start
+     The real content takes a frame or two to layout. This solid-
+     color overlay prevents the flash of unstyled white background.
+  ────────────────────────────────────────────────────────────── */
+  (function _splashGuard () {
+    if (document.readyState === 'loading') {
+      const splash = document.createElement('div');
+      Object.assign(splash.style, {
+        position: 'fixed', inset: '0', background: '#000',
+        zIndex: '999999', pointerEvents: 'none',
+        transition: 'opacity .32s ease'
+      });
+      document.body.appendChild(splash);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          splash.style.opacity = '0';
+          setTimeout(() => splash.remove(), 400);
+        });
+      });
+    }
+  })();
+
+  /* ──────────────────────────────────────────────────────────────
+     N. NATIVE CSS LAYER — Safe-area polish, rubber-band kill,
+        text-size-adjust, touch-action, selection colours.
+  ────────────────────────────────────────────────────────────── */
+  const nativeCss = `
+    /* ── Viewport units that account for browser chrome ── */
+    :root {
+      --kb-height: 0px;
+      --sat: env(safe-area-inset-top, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+    }
+
+    /* ── Prevent iOS text size bump on rotate ── */
+    html {
+      -webkit-text-size-adjust: 100%;
+              text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: pan-y;
+    }
+
+    /* ── Kill rubber-band on the root only (allow child scroll) ── */
+    body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Selection color matches accent ── */
+    ::selection { background: rgba(59,130,246,.35); color: inherit; }
+
+    /* ── Cursor: all interactive as pointer ── */
+    button, [role="button"], .ci, .comm-post, .hp-act-btn,
+    .home-metric-square, .home-chan-card, .hp-chan-card,
+    .chat-filter-pill, .comm-cat-chip, .comm-act-btn,
+    .home-comm-post-card, .home-lb-row, .ta-card.unlocked { cursor: pointer; }
+
+    /* ── Bottom nav rides above keyboard ── */
+    .bottom-nav {
+      bottom: calc(1.5rem + var(--kb-height)) !important;
+      transition-property: transform, opacity, bottom !important;
+    }
+
+    /* ── Input area lifts above keyboard ── */
+    .inp-area {
+      padding-bottom: calc(var(--sab) + var(--kb-height) + 6px) !important;
+      transition: padding-bottom .22s cubic-bezier(.22,1,.36,1) !important;
+    }
+
+    /* ── Safe-area: header top padding on notched devices ── */
+    .s-head,
+    .comm-head,
+    .explore-head,
+    .sub-modal-head,
+    .home-topbar,
+    .settings-topbar,
+    .members-hdr {
+      padding-top: calc(14px + var(--sat)) !important;
+    }
+
+    /* ── Keyboard open: shrink sidebar header so contacts stay accessible ── */
+    html.kb-open .s-head  { padding-top: 10px !important; }
+    html.kb-open .contacts { padding-bottom: calc(var(--kb-height) + 8px) !important; }
+
+    /* ── Installed PWA: window-controls-overlay support ──
+       When running in WCO display mode the title bar is transparent
+       and our content can flow into it. Push main content below. */
+    @media (display-mode: window-controls-overlay) {
+      .home-topbar, .s-head, .comm-head, .explore-head {
+        padding-top: calc(env(titlebar-area-height, 0px) + 12px) !important;
+        padding-left:  calc(env(titlebar-area-x, 0px) + 16px) !important;
+      }
+    }
+
+    /* ── Standalone PWA (iOS/Android): remove mobile browser chrome gaps ── */
+    @media (display-mode: standalone) {
+      body { overscroll-behavior-y: none; }
+      .bottom-nav { bottom: calc(1.5rem + var(--sab)) !important; }
+    }
+
+    /* ── Gesture hint — swipeable sheets show a top handle ── */
+    .nfai-sheet::before,
+    .discuss-sheet::before {
+      content: '';
+      display: block;
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,.18);
+      border-radius: 99px;
+      margin: 0 auto 10px;
+      flex-shrink: 0;
+    }
+
+    /* ── Remove 300ms tap delay everywhere ── */
+    * { touch-action: manipulation; }
+    /* Restore natural scroll for scrollable panels */
+    .contacts, .msgs, .comm-feed, .home-body, .ta-body, .nfai-msgs,
+    .discuss-msgs, .test-feed-scroll, .chan-msgs {
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Pull-to-refresh elastic zone visual feedback ── */
+    .ptr-container.ptr-active .ptr-spinner { box-shadow: 0 0 0 6px rgba(59,130,246,.08); }
+
+    /* ── Focus rings: remove browser default, use our accent ring ── */
+    :focus-visible {
+      outline: 2px solid rgba(59,130,246,.70);
+      outline-offset: 2px;
+    }
+    button:focus:not(:focus-visible),
+    input:focus:not(:focus-visible),
+    textarea:focus:not(:focus-visible) { outline: none; }
+
+    /* ── No-bounce scrollers: contain horizontal drift ── */
+    .home-channels-scroll,
+    .hp-official-channels,
+    .chat-filter-bar,
+    .comm-filter-bar,
+    .comm-sort-bar,
+    .chan-filter-row {
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+    }
   `;
 
-  try {
-    const blob  = new Blob([SW_SRC], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
-      .then(reg => {
-        console.log('[SW] Registered — App Shell caching active. Scope:', reg.scope);
-        // Generate inline PWA manifest dynamically so no separate manifest.json is needed
-        const manifest = {
-          name:             'NeuroForge',
-          short_name:       'NF',
-          start_url:        window.location.pathname,
-          display:          'standalone',
-          background_color: '#05050e',
-          theme_color:      '#3B82F6',
-          orientation:      'portrait-primary',
-          icons: [
-            { src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="%238b5cf6"/><text x="50%25" y="55%25" font-size="100" text-anchor="middle" dominant-baseline="middle" fill="white">NF</text></svg>', sizes: '192x192', type: 'image/svg+xml' }
-          ]
-        };
-        const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-        const mUrl  = URL.createObjectURL(mBlob);
-        const link  = document.getElementById('nfPwaManifest');
-        if (link) link.href = mUrl;
-      })
-      .catch(e => console.warn('[SW] Registration skipped (Blob SW requires HTTPS):', e.message));
-  } catch(e) {
-    console.warn('[SW] Could not create blob worker:', e.message);
+  const styleEl = document.createElement('style');
+  styleEl.id = 'nf-native-css';
+  styleEl.textContent = nativeCss;
+  document.head.appendChild(styleEl);
+
+  /* ──────────────────────────────────────────────────────────────
+     O. BACKGROUND SYNC QUEUE — Queue messages when offline
+  ────────────────────────────────────────────────────────────── */
+  window.NF_queueMessage = async function (payload) {
+    try {
+      const db = await _openMsgQueueIDB();
+      const tx = db.transaction('msgs', 'readwrite');
+      tx.objectStore('msgs').add({ payload, ts: Date.now() });
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        if ('sync' in reg) await reg.sync.register('nf-msg-sync');
+      }
+    } catch (_) {}
+  };
+
+  function _openMsgQueueIDB () {
+    return new Promise((res, rej) => {
+      const req = indexedDB.open('nf_msg_queue', 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore('msgs', { keyPath: 'id', autoIncrement: true });
+      req.onsuccess  = e => res(e.target.result);
+      req.onerror    = e => rej(e.target.error);
+    });
   }
+
+  /* ──────────────────────────────────────────────────────────────
+     P. TOAST HELPER (used internally by PWA engine)
+  ────────────────────────────────────────────────────────────── */
+  function _showToast (msg, type) {
+    try {
+      /* Re-use app's existing toast if available */
+      if (typeof showToast === 'function') { showToast(msg); return; }
+      /* Fallback minimal toast */
+      const t = document.createElement('div');
+      const colors = { success: '#10B981', error: '#EF4444', info: '#3B82F6' };
+      Object.assign(t.style, {
+        position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom,0px) + 100px)',
+        left: '50%', transform: 'translateX(-50%) translateY(16px)',
+        background: colors[type] || colors.info,
+        color: '#fff', padding: '10px 20px', borderRadius: '99px',
+        fontFamily: "'Plus Jakarta Sans', system-ui", fontSize: '.82rem', fontWeight: '700',
+        zIndex: '99999', opacity: '0', transition: 'all .3s cubic-bezier(.34,1.48,.64,1)',
+        pointerEvents: 'none', whiteSpace: 'nowrap',
+        boxShadow: '0 8px 32px rgba(0,0,0,.4)'
+      });
+      t.textContent = msg;
+      document.body.appendChild(t);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+        });
+      });
+      setTimeout(() => {
+        t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-8px)';
+        setTimeout(() => t.remove(), 350);
+      }, 2600);
+    } catch (_) {}
+  }
+
+  console.log('[NF PWA] Native engine ready ✦');
+
+})(); /* END NF NATIVE PWA ENGINE */
 
 /* ═══════════════════════════════════════════════════════════════
    STUDY DATA RIBBON — Today / EXP / Rank (MathBot real data)
@@ -31603,12 +32750,15 @@ function _bootImpactFeaturesOnce(){
   if(msgsEl) new MutationObserver(()=>_injectTranslateBtns()).observe(msgsEl,{childList:true,subtree:true});
 }
 // Fires when Firebase confirms logged-in user — guaranteed to have auth, db, usersCache in scope
-onAuthStateChanged(auth, user => { if(user) setTimeout(_bootImpactFeaturesOnce, 400); });
+onAuthStateChanged(auth, user => {
+  if (user) {
+    setTimeout(_bootImpactFeaturesOnce, 400);
+    // Start global expiry engine — cleans up discuss cards + 24h normal msgs
+    if (typeof _scheduleExpiryEngine === 'function') _scheduleExpiryEngine();
+  }
+});
 // Hard fallback
 setTimeout(_bootImpactFeaturesOnce, 6000);
-
-
-})();
 </script>
 
 <!-- ══════════════ ACHIEVEMENT AVATAR UNLOCK POPUP ══════════════ -->
