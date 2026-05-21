@@ -1499,6 +1499,1375 @@ const TOPICS = [
     ]
   },
 
+  // ── NEW: Differentiation ──────────────────────────────────────
+  {
+    id: "differentiation", name: "Differentiation", classes: "Classes 11–12",
+    icon: "d/dx", emoji: "📈", color: "#F97316", dim: "#5a1a00",
+    formulas: [
+      {
+        id: "powerrule", name: "Power Rule",
+        formula: "\\frac{d}{dx}(x^n) = n \\cdot x^{n-1}",
+        desc: "Differentiate any power of x — the most fundamental derivative rule",
+        inputs: [{ id: "n", label: "Exponent n" }, { id: "x", label: "x (evaluate at)" }],
+        compute: ({ n, x }) => {
+          [n, x] = [+n, +x];
+          const coeff = n;
+          const newExp = n - 1;
+          const val = n * Math.pow(x, n - 1);
+          return {
+            steps: [
+              `f(x) = x^${n}`,
+              `Apply power rule: d/dx(x^n) = n·x^(n−1)`,
+              `f'(x) = ${coeff}·x^(${n}−1) = ${coeff}·x^${newExp}`,
+              `At x = ${x}:`,
+              `f'(${x}) = ${coeff} × ${x}^${newExp} = ${coeff} × ${Math.pow(x, newExp).toFixed(6)}`,
+              `f'(${x}) = ${val.toFixed(8)}`
+            ],
+            answer: `d/dx(x^${n}) = ${coeff}x^${newExp},   at x=${x}: f'=${val.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "productrule", name: "Product Rule",
+        formula: "\\frac{d}{dx}[u \\cdot v] = u'v + uv'",
+        desc: "Differentiate the product of two functions u(x) and v(x)",
+        inputs: [
+          { id: "um", label: "u = x^m, power m" }, { id: "vn", label: "v = x^n, power n" },
+          { id: "x", label: "x (evaluate at)" }
+        ],
+        compute: ({ um, vn, x }) => {
+          [um, vn, x] = [+um, +vn, +x];
+          const u = Math.pow(x, um), v = Math.pow(x, vn);
+          const du = um * Math.pow(x, um - 1), dv = vn * Math.pow(x, vn - 1);
+          const result = du * v + u * dv;
+          return {
+            steps: [
+              `u = x^${um},   v = x^${vn}`,
+              `u' = ${um}x^${um-1},   v' = ${vn}x^${vn-1}`,
+              `Product rule: (uv)' = u'v + uv'`,
+              `= ${um}x^${um-1} · x^${vn} + x^${um} · ${vn}x^${vn-1}`,
+              `= ${um}x^${um+vn-1} + ${vn}x^${um+vn-1}`,
+              `= (${um}+${vn})x^${um+vn-1} = ${um+vn}x^${um+vn-1}`,
+              `At x = ${x}: ${um+vn} × ${x}^${um+vn-1} = ${result.toFixed(8)}`
+            ],
+            answer: `d/dx(x^${um}·x^${vn}) = ${um+vn}x^${um+vn-1},   at x=${x}: ${result.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "chainrule", name: "Chain Rule",
+        formula: "\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)",
+        desc: "Differentiate a composite function — 'outer derivative times inner derivative'",
+        inputs: [
+          { id: "n", label: "f(u) = u^n, power n" },
+          { id: "m", label: "g(x) = x^m, inner power m" },
+          { id: "x", label: "x (evaluate at)" }
+        ],
+        compute: ({ n, m, x }) => {
+          [n, m, x] = [+n, +m, +x];
+          const gx = Math.pow(x, m);
+          const outerD = n * Math.pow(gx, n - 1);
+          const innerD = m * Math.pow(x, m - 1);
+          const result = outerD * innerD;
+          return {
+            steps: [
+              `Composite: f(g(x)) = (x^${m})^${n} = x^${m*n}`,
+              `Outer: f(u) = u^${n}   →   f'(u) = ${n}u^${n-1}`,
+              `Inner: g(x) = x^${m}   →   g'(x) = ${m}x^${m-1}`,
+              `Chain rule: d/dx = f'(g(x)) × g'(x)`,
+              `= ${n}(x^${m})^${n-1} × ${m}x^${m-1}`,
+              `= ${n*m}·x^${m*(n-1)} × x^${m-1}`,
+              `= ${n*m}·x^${m*n-1}`,
+              `At x=${x}: ${n*m} × ${x}^${m*n-1} = ${(n*m*Math.pow(x,m*n-1)).toFixed(8)}`
+            ],
+            answer: `d/dx((x^${m})^${n}) = ${n*m}x^${m*n-1},   at x=${x}: ${result.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "quotientrule", name: "Quotient Rule",
+        formula: "\\frac{d}{dx}\\left(\\frac{u}{v}\\right) = \\frac{u'v - uv'}{v^2}",
+        desc: "Differentiate a ratio of two functions — remember 'lo·dhi minus hi·dlo over lo²'",
+        inputs: [
+          { id: "um", label: "u = x^m, power m" },
+          { id: "vn", label: "v = x^n, power n" },
+          { id: "x", label: "x (evaluate at, ≠ 0)" }
+        ],
+        compute: ({ um, vn, x }) => {
+          [um, vn, x] = [+um, +vn, +x];
+          if (x === 0) return { steps: ["x cannot be 0 (denominator would be 0)"], answer: "Invalid" };
+          const u = Math.pow(x, um), v = Math.pow(x, vn);
+          const du = um * Math.pow(x, um - 1), dv = vn * Math.pow(x, vn - 1);
+          const num = du * v - u * dv;
+          const den = v * v;
+          const result = num / den;
+          const newPow = um - vn - 1;
+          const coeff = um - vn;
+          return {
+            steps: [
+              `u = x^${um},  v = x^${vn}`,
+              `u' = ${um}x^${um-1},  v' = ${vn}x^${vn-1}`,
+              `Quotient rule: (u/v)' = (u'v − uv') / v²`,
+              `Numerator = ${um}x^${um-1}·x^${vn} − x^${um}·${vn}x^${vn-1}`,
+              `= ${um}x^${um+vn-1} − ${vn}x^${um+vn-1}`,
+              `= (${um}−${vn})x^${um+vn-1} = ${coeff}x^${um+vn-1}`,
+              `Denominator = v² = x^${2*vn}`,
+              `Result = ${coeff}x^${um+vn-1} / x^${2*vn} = ${coeff}x^${newPow}`,
+              `At x=${x}: ${result.toFixed(8)}`
+            ],
+            answer: `d/dx(x^${um}/x^${vn}) = ${coeff}x^${newPow},   at x=${x}: ${result.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "trigderiv", name: "Derivatives of sin, cos, tan",
+        formula: "\\frac{d}{dx}\\sin x = \\cos x, \\quad \\frac{d}{dx}\\cos x = -\\sin x, \\quad \\frac{d}{dx}\\tan x = \\sec^2 x",
+        desc: "The three fundamental trigonometric derivatives — tested heavily in JEE",
+        inputs: [{ id: "fn", label: "Function: 1=sin, 2=cos, 3=tan" }, { id: "x", label: "x (degrees)" }],
+        compute: ({ fn, x }) => {
+          [fn, x] = [+fn, +x];
+          const r = x * Math.PI / 180;
+          const fns = {
+            1: { name: "sin", deriv: "cos", val: Math.sin(r), dval: Math.cos(r) },
+            2: { name: "cos", deriv: "−sin", val: Math.cos(r), dval: -Math.sin(r) },
+            3: { name: "tan", deriv: "sec²", val: Math.tan(r), dval: 1 / (Math.cos(r) ** 2) }
+          };
+          if (!fns[fn]) return { steps: ["Enter 1, 2, or 3"], answer: "Invalid" };
+          const { name, deriv, val, dval } = fns[fn];
+          return {
+            steps: [
+              `f(x) = ${name}(x)`,
+              `d/dx[${name}(x)] = ${deriv}(x)`,
+              `At x = ${x}°  (= ${r.toFixed(4)} rad):`,
+              `${name}(${x}°) = ${val.toFixed(6)}`,
+              `f'(${x}°) = ${deriv}(${x}°) = ${dval.toFixed(8)}`
+            ],
+            answer: `d/dx[${name}(x)] = ${deriv}(x),   at x=${x}°: ${dval.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "2ndderiv", name: "Second Derivative & Concavity",
+        formula: "f''(x) = \\frac{d^2f}{dx^2} — \\text{concave up if } f''>0",
+        desc: "Second derivative tells you about concavity and is used to find maxima/minima",
+        inputs: [{ id: "n", label: "f(x) = x^n, power n" }, { id: "x", label: "x (evaluate at)" }],
+        compute: ({ n, x }) => {
+          [n, x] = [+n, +x];
+          const f = Math.pow(x, n);
+          const f1 = n * Math.pow(x, n - 1);
+          const f2 = n * (n - 1) * Math.pow(x, n - 2);
+          return {
+            steps: [
+              `f(x) = x^${n}`,
+              `f'(x) = ${n}x^${n-1}   (first derivative)`,
+              `f''(x) = ${n}·(${n-1})·x^${n-2} = ${n*(n-1)}x^${n-2}   (second derivative)`,
+              `At x = ${x}:`,
+              `f(${x}) = ${f.toFixed(4)}`,
+              `f'(${x}) = ${f1.toFixed(4)}`,
+              `f''(${x}) = ${f2.toFixed(4)}`,
+              f2 > 0 ? `f''(${x}) > 0 → Concave UP (local minimum if f'=0 here)` :
+              f2 < 0 ? `f''(${x}) < 0 → Concave DOWN (local maximum if f'=0 here)` :
+                       `f''(${x}) = 0 → Possible inflection point`
+            ],
+            answer: `f''(x) = ${n*(n-1)}x^${n-2},   at x=${x}: ${f2.toFixed(4)}`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Integration ──────────────────────────────────────────
+  {
+    id: "integration", name: "Integration", classes: "Classes 11–12",
+    icon: "∫", emoji: "🌊", color: "#06B6D4", dim: "#022a33",
+    formulas: [
+      {
+        id: "intpower", name: "Power Rule of Integration",
+        formula: "\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\ne -1)",
+        desc: "Integrate any power of x — reverse of the power rule for derivatives",
+        inputs: [{ id: "n", label: "Power n (≠ −1)" }, { id: "x", label: "x (evaluate definite at upper limit)" }, { id: "a", label: "Lower limit a" }],
+        compute: ({ n, x, a }) => {
+          [n, x, a] = [+n, +x, +a];
+          if (n === -1) return { steps: ["For n = −1, use ∫(1/x)dx = ln|x| + C"], answer: "Use ln|x| + C" };
+          const np1 = n + 1;
+          const Fx = Math.pow(x, np1) / np1;
+          const Fa = Math.pow(a, np1) / np1;
+          return {
+            steps: [
+              `∫x^${n} dx = x^(${n}+1) / (${n}+1) + C`,
+              `= x^${np1} / ${np1} + C`,
+              `Definite integral from ${a} to ${x}:`,
+              `[x^${np1}/${np1}] from ${a} to ${x}`,
+              `= (${x}^${np1}/${np1}) − (${a}^${np1}/${np1})`,
+              `= ${Fx.toFixed(6)} − ${Fa.toFixed(6)}`,
+              `= ${(Fx - Fa).toFixed(8)}`
+            ],
+            answer: `∫x^${n}dx = x^${np1}/${np1} + C,   definite [${a}→${x}] = ${(Fx-Fa).toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "inttrig", name: "Integration of sin x and cos x",
+        formula: "\\int \\sin x\\, dx = -\\cos x + C, \\quad \\int \\cos x\\, dx = \\sin x + C",
+        desc: "Standard trigonometric integrals — opposites of their derivatives",
+        inputs: [{ id: "fn", label: "1=∫sin, 2=∫cos" }, { id: "a", label: "Lower limit (degrees)" }, { id: "b", label: "Upper limit (degrees)" }],
+        compute: ({ fn, a, b }) => {
+          [fn, a, b] = [+fn, +a, +b];
+          const ar = a * Math.PI / 180, br = b * Math.PI / 180;
+          if (fn === 1) {
+            const res = (-Math.cos(br)) - (-Math.cos(ar));
+            return {
+              steps: [
+                `∫sin(x)dx = −cos(x) + C`,
+                `Definite integral from ${a}° to ${b}°:`,
+                `[−cos(x)] from ${a}° to ${b}°`,
+                `= −cos(${b}°) − (−cos(${a}°))`,
+                `= −${Math.cos(br).toFixed(6)} + ${Math.cos(ar).toFixed(6)}`,
+                `= ${res.toFixed(8)}`
+              ],
+              answer: `∫sin(x)dx [${a}°→${b}°] = ${res.toFixed(4)}`
+            };
+          }
+          const res = Math.sin(br) - Math.sin(ar);
+          return {
+            steps: [
+              `∫cos(x)dx = sin(x) + C`,
+              `Definite integral from ${a}° to ${b}°:`,
+              `[sin(x)] from ${a}° to ${b}°`,
+              `= sin(${b}°) − sin(${a}°)`,
+              `= ${Math.sin(br).toFixed(6)} − ${Math.sin(ar).toFixed(6)}`,
+              `= ${res.toFixed(8)}`
+            ],
+            answer: `∫cos(x)dx [${a}°→${b}°] = ${res.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "intbyparts", name: "Integration by Parts",
+        formula: "\\int u\\, dv = uv - \\int v\\, du",
+        desc: "ILATE rule: I=Inverse trig, L=Log, A=Algebraic, T=Trig, E=Exponential — pick u first",
+        inputs: [
+          { id: "n", label: "u = x^n (algebraic part), power n" },
+          { id: "type", label: "dv: 1=e^x, 2=sin(x), 3=cos(x)" },
+          { id: "x", label: "x (evaluate antiderivative at)" }
+        ],
+        compute: ({ n, type, x }) => {
+          [n, type, x] = [+n, +type, +x];
+          const xn = Math.pow(x, n), xn1 = n > 0 ? Math.pow(x, n - 1) : 0;
+          if (type === 1) {
+            const val = Math.exp(x) * (xn - n * xn1);
+            return {
+              steps: [
+                `∫x^${n}·eˣ dx — Using Integration by Parts`,
+                `u = x^${n}   →   du = ${n}x^${n-1}dx`,
+                `dv = eˣdx   →   v = eˣ`,
+                `∫x^${n}eˣdx = x^${n}·eˣ − ∫${n}x^${n-1}·eˣdx`,
+                `Repeat IBP for the remaining integral...`,
+                `Final: eˣ(x^${n} − ${n}x^${n-1} + ...) + C`,
+                `Approximate at x=${x}: eˣ(x^${n}−${n}x^${n-1}) ≈ ${val.toFixed(6)}`
+              ],
+              answer: `≈ eˣ(x^${n} − ${n}x^${n-1}) + C,  at x=${x}: ${val.toFixed(4)}`
+            };
+          }
+          if (type === 2) {
+            const val = xn * (-Math.cos(x)) + n * xn1 * Math.sin(x);
+            return {
+              steps: [
+                `∫x^${n}·sin(x)dx — Integration by Parts`,
+                `u = x^${n},  dv = sin(x)dx`,
+                `du = ${n}x^${n-1}dx,  v = −cos(x)`,
+                `= x^${n}·(−cos x) − ∫(−cos x)·${n}x^${n-1}dx`,
+                `= −x^${n}cos(x) + ${n}∫x^${n-1}cos(x)dx`,
+                `At x=${x} (first term only): ${val.toFixed(6)}`
+              ],
+              answer: `∫x^${n}sin(x)dx ≈ −x^${n}cos(x)+${n}x^${n-1}sin(x)+C,  at x=${x}: ${val.toFixed(4)}`
+            };
+          }
+          const val = xn * Math.sin(x) - n * xn1 * (-Math.cos(x));
+          return {
+            steps: [
+              `∫x^${n}·cos(x)dx — Integration by Parts`,
+              `u = x^${n},  dv = cos(x)dx`,
+              `du = ${n}x^${n-1}dx,  v = sin(x)`,
+              `= x^${n}sin(x) − ${n}∫x^${n-1}sin(x)dx`,
+              `At x=${x}: ${val.toFixed(6)}`
+            ],
+            answer: `∫x^${n}cos(x)dx ≈ x^${n}sin(x)+${n}x^${n-1}cos(x)+C,  at x=${x}: ${val.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "intexp", name: "∫eˣ and ∫aˣ",
+        formula: "\\int e^x\\, dx = e^x + C, \\quad \\int a^x\\, dx = \\frac{a^x}{\\ln a} + C",
+        desc: "Exponential integrals — eˣ is unique as its own integral",
+        inputs: [{ id: "base", label: "Base a (use 2.718 for e)" }, { id: "a", label: "Lower limit" }, { id: "b", label: "Upper limit" }],
+        compute: ({ base, a, b }) => {
+          [base, a, b] = [+base, +a, +b];
+          if (base <= 0 || base === 1) return { steps: ["Base must be > 0 and ≠ 1"], answer: "Invalid" };
+          const lna = Math.log(base);
+          const Fb = Math.pow(base, b) / lna, Fa = Math.pow(base, a) / lna;
+          const res = Fb - Fa;
+          return {
+            steps: [
+              `∫a^x dx = a^x / ln(a) + C`,
+              `a = ${base},  ln(${base}) = ${lna.toFixed(6)}`,
+              `Antiderivative: F(x) = ${base}^x / ${lna.toFixed(4)}`,
+              `F(${b}) = ${base}^${b} / ${lna.toFixed(4)} = ${Math.pow(base,b).toFixed(4)} / ${lna.toFixed(4)} = ${Fb.toFixed(6)}`,
+              `F(${a}) = ${Fa.toFixed(6)}`,
+              `Definite integral [${a}→${b}] = F(${b}) − F(${a}) = ${res.toFixed(8)}`
+            ],
+            answer: `∫${base}^x dx [${a}→${b}] = ${res.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "intln", name: "∫(1/x) dx = ln|x| + C",
+        formula: "\\int \\frac{1}{x}\\, dx = \\ln|x| + C",
+        desc: "The missing case of the power rule (n = −1) — gives the natural log",
+        inputs: [{ id: "a", label: "Lower limit a (> 0)" }, { id: "b", label: "Upper limit b (> 0)" }],
+        compute: ({ a, b }) => {
+          [a, b] = [+a, +b];
+          if (a <= 0 || b <= 0) return { steps: ["Both limits must be > 0"], answer: "Invalid" };
+          const res = Math.log(b) - Math.log(a);
+          return {
+            steps: [
+              `∫(1/x)dx = ln|x| + C`,
+              `Definite integral from ${a} to ${b}:`,
+              `[ln|x|] from ${a} to ${b}`,
+              `= ln(${b}) − ln(${a})`,
+              `= ${Math.log(b).toFixed(6)} − ${Math.log(a).toFixed(6)}`,
+              `= ${res.toFixed(8)}`,
+              `Note: ln(b/a) = ln(${b/a}) = ${Math.log(b/a).toFixed(6)}  ✓ (same result)`
+            ],
+            answer: `∫(1/x)dx [${a}→${b}] = ln(${b}/${a}) = ${res.toFixed(4)}`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Sequences & Series ───────────────────────────────────
+  {
+    id: "sequences", name: "Sequences & Series", classes: "Classes 11–12",
+    icon: "AP·GP", emoji: "🔢", color: "#84CC16", dim: "#1a3300",
+    formulas: [
+      {
+        id: "apnth", name: "AP — nth Term",
+        formula: "a_n = a + (n-1)d",
+        desc: "nth term of an Arithmetic Progression with first term a and common difference d",
+        inputs: [{ id: "a", label: "First term a" }, { id: "d", label: "Common difference d" }, { id: "n", label: "n (term number)" }],
+        compute: ({ a, d, n }) => {
+          [a, d, n] = [+a, +d, +n];
+          if (n < 1 || !Number.isInteger(n)) return { steps: ["n must be a positive integer"], answer: "Invalid" };
+          const an = a + (n - 1) * d;
+          const seq = Array.from({ length: Math.min(n, 6) }, (_, i) => a + i * d).join(", ");
+          return {
+            steps: [
+              `AP: a = ${a}, d = ${d}`,
+              `First few terms: ${seq}${n > 6 ? ", ..." : ""}`,
+              `nth term formula: aₙ = a + (n−1)d`,
+              `a₍${n}₎ = ${a} + (${n}−1) × ${d}`,
+              `= ${a} + ${(n-1)*d}`,
+              `= ${an}`
+            ],
+            answer: `a₍${n}₎ = ${an}`
+          };
+        }
+      },
+      {
+        id: "apsumn", name: "AP — Sum of n Terms",
+        formula: "S_n = \\frac{n}{2}[2a + (n-1)d] = \\frac{n}{2}(a + l)",
+        desc: "Sum of first n terms of an AP — also equals n/2 × (first + last)",
+        inputs: [{ id: "a", label: "First term a" }, { id: "d", label: "Common difference d" }, { id: "n", label: "n (number of terms)" }],
+        compute: ({ a, d, n }) => {
+          [a, d, n] = [+a, +d, +n];
+          if (n < 1) return { steps: ["n must be ≥ 1"], answer: "Invalid" };
+          const l = a + (n - 1) * d;
+          const Sn = (n / 2) * (2 * a + (n - 1) * d);
+          return {
+            steps: [
+              `AP: a = ${a}, d = ${d}, n = ${n}`,
+              `Last term l = a + (n−1)d = ${a} + ${(n-1)*d} = ${l}`,
+              `Sₙ = n/2 × [2a + (n−1)d]`,
+              `= ${n}/2 × [2(${a}) + (${n}−1)(${d})]`,
+              `= ${n}/2 × [${2*a} + ${(n-1)*d}]`,
+              `= ${n}/2 × ${2*a + (n-1)*d}`,
+              `= ${Sn}`,
+              `Verify: n/2 × (a + l) = ${n}/2 × (${a}+${l}) = ${(n/2)*(a+l)}  ✓`
+            ],
+            answer: `Sₙ = ${Sn}`
+          };
+        }
+      },
+      {
+        id: "gpnth", name: "GP — nth Term",
+        formula: "a_n = a \\cdot r^{n-1}",
+        desc: "nth term of a Geometric Progression with first term a and common ratio r",
+        inputs: [{ id: "a", label: "First term a" }, { id: "r", label: "Common ratio r" }, { id: "n", label: "n (term number)" }],
+        compute: ({ a, r, n }) => {
+          [a, r, n] = [+a, +r, +n];
+          if (r === 0) return { steps: ["r cannot be 0"], answer: "Invalid" };
+          const an = a * Math.pow(r, n - 1);
+          const seq = Array.from({ length: Math.min(n, 6) }, (_, i) => (a * Math.pow(r, i)).toFixed(3)).join(", ");
+          return {
+            steps: [
+              `GP: a = ${a}, r = ${r}`,
+              `First few terms: ${seq}${n > 6 ? ", ..." : ""}`,
+              `nth term: aₙ = a × r^(n−1)`,
+              `a₍${n}₎ = ${a} × ${r}^(${n}−1)`,
+              `= ${a} × ${r}^${n-1}`,
+              `= ${a} × ${Math.pow(r, n-1).toFixed(6)}`,
+              `= ${an.toFixed(8)}`
+            ],
+            answer: `a₍${n}₎ = ${an.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "gpsumn", name: "GP — Sum of n Terms",
+        formula: "S_n = \\frac{a(r^n - 1)}{r - 1} \\quad (r \\ne 1)",
+        desc: "Sum of first n terms of a GP",
+        inputs: [{ id: "a", label: "First term a" }, { id: "r", label: "Common ratio r (≠ 1)" }, { id: "n", label: "n (number of terms)" }],
+        compute: ({ a, r, n }) => {
+          [a, r, n] = [+a, +r, +n];
+          if (r === 1) {
+            return { steps: [`When r = 1, GP is a, a, a, ...`, `Sₙ = n × a = ${n} × ${a} = ${n * a}`], answer: `Sₙ = ${n * a}` };
+          }
+          const Sn = a * (Math.pow(r, n) - 1) / (r - 1);
+          return {
+            steps: [
+              `GP: a = ${a}, r = ${r}, n = ${n}`,
+              `Sₙ = a(rⁿ − 1)/(r − 1)`,
+              `= ${a} × (${r}^${n} − 1) / (${r} − 1)`,
+              `= ${a} × (${Math.pow(r,n).toFixed(6)} − 1) / ${r - 1}`,
+              `= ${a} × ${(Math.pow(r,n)-1).toFixed(6)} / ${r - 1}`,
+              `= ${Sn.toFixed(8)}`
+            ],
+            answer: `Sₙ = ${Sn.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "gpinf", name: "GP — Sum to Infinity",
+        formula: "S_\\infty = \\frac{a}{1 - r} \\quad (|r| < 1)",
+        desc: "Infinite GP converges when |r| < 1 — extremely useful in series problems",
+        inputs: [{ id: "a", label: "First term a" }, { id: "r", label: "Common ratio r  (|r| < 1)" }],
+        compute: ({ a, r }) => {
+          [a, r] = [+a, +r];
+          if (Math.abs(r) >= 1) return { steps: [`|r| = ${Math.abs(r)} ≥ 1 — Series DIVERGES (no finite sum)`, `|r| must be strictly less than 1`], answer: "Diverges" };
+          const Sinf = a / (1 - r);
+          return {
+            steps: [
+              `GP: a = ${a}, r = ${r}`,
+              `|r| = ${Math.abs(r)} < 1 → Series CONVERGES ✓`,
+              `S∞ = a / (1 − r)`,
+              `= ${a} / (1 − ${r})`,
+              `= ${a} / ${1 - r}`,
+              `= ${Sinf.toFixed(8)}`,
+              `Verification: Sum of first 20 terms = ${(a*(1-Math.pow(r,20))/(1-r)).toFixed(6)}  (approaching ${Sinf.toFixed(4)})`
+            ],
+            answer: `S∞ = ${Sinf.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "amgm", name: "AM ≥ GM Inequality",
+        formula: "\\frac{a+b}{2} \\geq \\sqrt{ab} \\quad (a,b > 0)",
+        desc: "Arithmetic Mean is always ≥ Geometric Mean for positive numbers — equality iff a = b",
+        inputs: [{ id: "a", label: "a (> 0)" }, { id: "b", label: "b (> 0)" }],
+        compute: ({ a, b }) => {
+          [a, b] = [+a, +b];
+          if (a <= 0 || b <= 0) return { steps: ["Both a and b must be > 0"], answer: "Invalid" };
+          const AM = (a + b) / 2, GM = Math.sqrt(a * b);
+          return {
+            steps: [
+              `a = ${a}, b = ${b}`,
+              `AM = (a+b)/2 = (${a}+${b})/2 = ${AM}`,
+              `GM = √(ab) = √(${a}×${b}) = √${a*b} = ${GM.toFixed(8)}`,
+              `AM − GM = ${(AM - GM).toFixed(8)}  (always ≥ 0)`,
+              AM === GM ? `AM = GM  →  a = b  ✓` : `AM > GM  →  a ≠ b  ✓`,
+              `Proof: (a−b)² ≥ 0  →  a²−2ab+b² ≥ 0  →  (a+b)² ≥ 4ab  →  AM ≥ GM ✓`
+            ],
+            answer: `AM = ${AM.toFixed(4)},  GM = ${GM.toFixed(4)},  AM ≥ GM ✓`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Straight Lines ───────────────────────────────────────
+  {
+    id: "straightlines", name: "Straight Lines", classes: "Classes 10–11",
+    icon: "y=mx", emoji: "📏", color: "#FB923C", dim: "#5a1a00",
+    formulas: [
+      {
+        id: "slope2pt", name: "Slope Between Two Points",
+        formula: "m = \\frac{y_2 - y_1}{x_2 - x_1}",
+        desc: "Gradient/slope of a line passing through two given points",
+        inputs: [{ id: "x1", label: "x₁" }, { id: "y1", label: "y₁" }, { id: "x2", label: "x₂" }, { id: "y2", label: "y₂" }],
+        compute: ({ x1, y1, x2, y2 }) => {
+          [x1, y1, x2, y2] = [+x1, +y1, +x2, +y2];
+          if (x1 === x2) return { steps: ["x₁ = x₂ → Vertical line — slope is UNDEFINED"], answer: "Undefined (vertical line)" };
+          const m = (y2 - y1) / (x2 - x1);
+          const angle = Math.atan(m) * 180 / Math.PI;
+          return {
+            steps: [
+              `Points: A(${x1}, ${y1})  and  B(${x2}, ${y2})`,
+              `m = (y₂ − y₁)/(x₂ − x₁)`,
+              `= (${y2} − ${y1}) / (${x2} − ${x1})`,
+              `= ${y2 - y1} / ${x2 - x1}`,
+              `= ${m.toFixed(8)}`,
+              `Inclination angle θ = arctan(m) = arctan(${m.toFixed(4)}) = ${angle.toFixed(4)}°`,
+              m > 0 ? "m > 0 → Line rises left to right" : m < 0 ? "m < 0 → Line falls left to right" : "m = 0 → Horizontal line"
+            ],
+            answer: `Slope m = ${m.toFixed(4)},  Angle = ${angle.toFixed(2)}°`
+          };
+        }
+      },
+      {
+        id: "slopeintercept", name: "Slope-Intercept Form",
+        formula: "y = mx + c",
+        desc: "Equation of a line with slope m and y-intercept c",
+        inputs: [{ id: "m", label: "Slope m" }, { id: "c", label: "y-intercept c" }, { id: "x", label: "x (find y at)" }],
+        compute: ({ m, c, x }) => {
+          [m, c, x] = [+m, +c, +x];
+          const y = m * x + c;
+          const xInt = -c / m;
+          return {
+            steps: [
+              `Line: y = ${m}x + ${c}`,
+              `Slope m = ${m}`,
+              `y-intercept (0, ${c})`,
+              m !== 0 ? `x-intercept: set y=0 → x = −c/m = −(${c})/${m} = ${xInt.toFixed(4)}  →  (${xInt.toFixed(4)}, 0)` : `No x-intercept (horizontal line y = ${c})`,
+              `At x = ${x}:`,
+              `y = ${m}(${x}) + ${c} = ${m*x} + ${c} = ${y}`
+            ],
+            answer: `y = ${m}x + ${c},   at x=${x}: y = ${y}`
+          };
+        }
+      },
+      {
+        id: "ptlinedist", name: "Distance: Point to Line",
+        formula: "d = \\frac{|ax_1 + by_1 + c|}{\\sqrt{a^2 + b^2}}",
+        desc: "Perpendicular distance from point (x₁,y₁) to line ax + by + c = 0",
+        inputs: [
+          { id: "a", label: "a (coeff of x in line)" }, { id: "b", label: "b (coeff of y)" },
+          { id: "c", label: "c (constant)" }, { id: "x1", label: "x₁ (point)" }, { id: "y1", label: "y₁ (point)" }
+        ],
+        compute: ({ a, b, c, x1, y1 }) => {
+          [a, b, c, x1, y1] = [+a, +b, +c, +x1, +y1];
+          const num = Math.abs(a * x1 + b * y1 + c);
+          const den = Math.sqrt(a * a + b * b);
+          if (den === 0) return { steps: ["a and b cannot both be 0"], answer: "Invalid" };
+          const d = num / den;
+          return {
+            steps: [
+              `Line: ${a}x + ${b}y + ${c} = 0`,
+              `Point: P(${x1}, ${y1})`,
+              `d = |ax₁ + by₁ + c| / √(a²+b²)`,
+              `Numerator = |${a}(${x1}) + ${b}(${y1}) + ${c}|`,
+              `= |${a*x1} + ${b*y1} + ${c}| = |${a*x1+b*y1+c}| = ${num}`,
+              `Denominator = √(${a}²+${b}²) = √${a*a+b*b} = ${den.toFixed(6)}`,
+              `d = ${num} / ${den.toFixed(4)} = ${d.toFixed(8)}`
+            ],
+            answer: `Distance = ${d.toFixed(4)} units`
+          };
+        }
+      },
+      {
+        id: "anglebwlines", name: "Angle Between Two Lines",
+        formula: "\\tan \\theta = \\left|\\frac{m_1 - m_2}{1 + m_1 m_2}\\right|",
+        desc: "Acute angle between two lines with slopes m₁ and m₂",
+        inputs: [{ id: "m1", label: "Slope m₁ of line 1" }, { id: "m2", label: "Slope m₂ of line 2" }],
+        compute: ({ m1, m2 }) => {
+          [m1, m2] = [+m1, +m2];
+          const denom = 1 + m1 * m2;
+          if (Math.abs(denom) < 1e-10) return { steps: ["1 + m₁m₂ = 0  →  Lines are PERPENDICULAR  θ = 90°"], answer: "θ = 90° (perpendicular)" };
+          if (m1 === m2) return { steps: ["m₁ = m₂  →  Lines are PARALLEL  θ = 0°"], answer: "θ = 0° (parallel)" };
+          const tanT = Math.abs((m1 - m2) / denom);
+          const theta = Math.atan(tanT) * 180 / Math.PI;
+          return {
+            steps: [
+              `m₁ = ${m1},  m₂ = ${m2}`,
+              `tan θ = |m₁−m₂| / |1+m₁m₂|`,
+              `Numerator: |${m1}−${m2}| = |${m1-m2}| = ${Math.abs(m1-m2).toFixed(4)}`,
+              `Denominator: |1+(${m1})(${m2})| = |1+${m1*m2}| = |${1+m1*m2}| = ${Math.abs(1+m1*m2).toFixed(4)}`,
+              `tan θ = ${tanT.toFixed(8)}`,
+              `θ = arctan(${tanT.toFixed(4)}) = ${theta.toFixed(6)}°`
+            ],
+            answer: `θ = ${theta.toFixed(2)}°`
+          };
+        }
+      },
+      {
+        id: "sectformula", name: "Section Formula",
+        formula: "P = \\left(\\frac{mx_2+nx_1}{m+n},\\; \\frac{my_2+ny_1}{m+n}\\right)",
+        desc: "Point dividing segment AB in ratio m:n internally",
+        inputs: [
+          { id: "x1", label: "x₁ (point A)" }, { id: "y1", label: "y₁" },
+          { id: "x2", label: "x₂ (point B)" }, { id: "y2", label: "y₂" },
+          { id: "m", label: "m (ratio part)" }, { id: "n", label: "n (ratio part)" }
+        ],
+        compute: ({ x1, y1, x2, y2, m, n }) => {
+          [x1, y1, x2, y2, m, n] = [x1, y1, x2, y2, m, n].map(Number);
+          if (m + n === 0) return { steps: ["m + n cannot be 0"], answer: "Invalid" };
+          const px = (m * x2 + n * x1) / (m + n);
+          const py = (m * y2 + n * y1) / (m + n);
+          return {
+            steps: [
+              `A = (${x1}, ${y1}),  B = (${x2}, ${y2}),  Ratio = ${m}:${n}`,
+              `Section formula (internal division):`,
+              `Px = (m·x₂ + n·x₁) / (m+n) = (${m}×${x2} + ${n}×${x1}) / (${m}+${n})`,
+              `= (${m*x2} + ${n*x1}) / ${m+n} = ${(m*x2+n*x1)/(m+n).toFixed(6)}`,
+              `Py = (m·y₂ + n·y₁) / (m+n) = (${m*y2} + ${n*y1}) / ${m+n} = ${py.toFixed(6)}`,
+            ],
+            answer: `P = (${px.toFixed(4)}, ${py.toFixed(4)})`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Probability ──────────────────────────────────────────
+  {
+    id: "probability", name: "Probability", classes: "Classes 11–12",
+    icon: "P(A)", emoji: "🎲", color: "#E11D48", dim: "#5a0018",
+    formulas: [
+      {
+        id: "basicprob", name: "Classical Probability",
+        formula: "P(A) = \\frac{n(A)}{n(S)}",
+        desc: "Probability of event A = favourable outcomes / total outcomes",
+        inputs: [{ id: "nA", label: "n(A) — favourable outcomes" }, { id: "nS", label: "n(S) — total outcomes" }],
+        compute: ({ nA, nS }) => {
+          [nA, nS] = [+nA, +nS];
+          if (nS <= 0) return { steps: ["Total outcomes must be > 0"], answer: "Invalid" };
+          if (nA < 0 || nA > nS) return { steps: ["0 ≤ n(A) ≤ n(S)"], answer: "Invalid" };
+          const p = nA / nS;
+          const q = 1 - p;
+          return {
+            steps: [
+              `Favourable outcomes n(A) = ${nA}`,
+              `Total outcomes n(S) = ${nS}`,
+              `P(A) = n(A) / n(S) = ${nA} / ${nS} = ${p.toFixed(8)}`,
+              `P(A') = 1 − P(A) = 1 − ${p.toFixed(6)} = ${q.toFixed(6)}`,
+              `P(A) + P(A') = ${p.toFixed(4)} + ${q.toFixed(4)} = 1 ✓`,
+              p === 1 ? "P(A) = 1 → Certain event" : p === 0 ? "P(A) = 0 → Impossible event" : `0 < P(A) < 1 → Non-trivial event`
+            ],
+            answer: `P(A) = ${p.toFixed(4)},  P(A') = ${q.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "addtheorem", name: "Addition Theorem P(A∪B)",
+        formula: "P(A \\cup B) = P(A) + P(B) - P(A \\cap B)",
+        desc: "Probability of A or B occurring — subtract the overlap to avoid double-counting",
+        inputs: [{ id: "pA", label: "P(A)" }, { id: "pB", label: "P(B)" }, { id: "pAB", label: "P(A∩B)" }],
+        compute: ({ pA, pB, pAB }) => {
+          [pA, pB, pAB] = [+pA, +pB, +pAB];
+          if ([pA,pB,pAB].some(v => v < 0 || v > 1)) return { steps: ["All probabilities must be in [0,1]"], answer: "Invalid" };
+          const pUnion = pA + pB - pAB;
+          if (pUnion > 1 + 1e-9) return { steps: ["⚠ Result > 1 — check your inputs (P(A∩B) might be too small)"], answer: "Check inputs" };
+          return {
+            steps: [
+              `P(A) = ${pA},  P(B) = ${pB},  P(A∩B) = ${pAB}`,
+              `P(A∪B) = P(A) + P(B) − P(A∩B)`,
+              `= ${pA} + ${pB} − ${pAB}`,
+              `= ${pUnion.toFixed(8)}`,
+              pAB === 0 ? `P(A∩B) = 0 → A and B are MUTUALLY EXCLUSIVE` : `A and B overlap with P(A∩B) = ${pAB}`,
+              `P(A'∩B') = 1 − P(A∪B) = ${(1 - pUnion).toFixed(6)}`
+            ],
+            answer: `P(A∪B) = ${pUnion.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "condprob", name: "Conditional Probability",
+        formula: "P(A|B) = \\frac{P(A \\cap B)}{P(B)}",
+        desc: "Probability of A given that B has already occurred",
+        inputs: [{ id: "pAB", label: "P(A∩B)" }, { id: "pB", label: "P(B)  (> 0)" }],
+        compute: ({ pAB, pB }) => {
+          [pAB, pB] = [+pAB, +pB];
+          if (pB <= 0) return { steps: ["P(B) must be > 0"], answer: "Invalid" };
+          if (pAB > pB) return { steps: ["P(A∩B) cannot exceed P(B)"], answer: "Invalid" };
+          const pAgivenB = pAB / pB;
+          return {
+            steps: [
+              `P(A∩B) = ${pAB},  P(B) = ${pB}`,
+              `P(A|B) = P(A∩B) / P(B)`,
+              `= ${pAB} / ${pB}`,
+              `= ${pAgivenB.toFixed(8)}`,
+              `Interpretation: Given B occurred, probability of A is ${(pAgivenB*100).toFixed(2)}%`,
+              `Also: P(B|A) = P(A∩B)/P(A) — you need P(A) for this`
+            ],
+            answer: `P(A|B) = ${pAgivenB.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "bayes", name: "Bayes' Theorem",
+        formula: "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}",
+        desc: "Update probability of A given new evidence B — fundamental to modern statistics",
+        inputs: [
+          { id: "pA", label: "P(A) — prior probability" },
+          { id: "pBgivenA", label: "P(B|A) — likelihood" },
+          { id: "pB", label: "P(B) — marginal probability" }
+        ],
+        compute: ({ pA, pBgivenA, pB }) => {
+          [pA, pBgivenA, pB] = [+pA, +pBgivenA, +pB];
+          if (pB <= 0) return { steps: ["P(B) must be > 0"], answer: "Invalid" };
+          const pAgivenB = (pBgivenA * pA) / pB;
+          const pAc = 1 - pA;
+          const pBgivenAc = (pB - pBgivenA * pA) / pAc;
+          return {
+            steps: [
+              `Prior P(A) = ${pA}  →  P(A') = ${pAc.toFixed(4)}`,
+              `Likelihood P(B|A) = ${pBgivenA}`,
+              `Marginal P(B) = ${pB}`,
+              `Bayes: P(A|B) = P(B|A) × P(A) / P(B)`,
+              `= ${pBgivenA} × ${pA} / ${pB}`,
+              `= ${pBgivenA * pA} / ${pB}`,
+              `= ${pAgivenB.toFixed(8)}`,
+              `Prior ${(pA*100).toFixed(1)}%  →  Posterior ${(pAgivenB*100).toFixed(2)}%  after evidence B`,
+              pAgivenB > pA ? "Evidence B INCREASED probability of A" : "Evidence B DECREASED probability of A"
+            ],
+            answer: `P(A|B) = ${pAgivenB.toFixed(4)}`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Inverse Trigonometry ─────────────────────────────────
+  {
+    id: "inversetrig", name: "Inverse Trigonometry", classes: "Classes 11–12",
+    icon: "sin⁻¹", emoji: "🔄", color: "#818CF8", dim: "#1a1460",
+    formulas: [
+      {
+        id: "sincosinv", name: "sin⁻¹ x + cos⁻¹ x = π/2",
+        formula: "\\sin^{-1}x + \\cos^{-1}x = \\frac{\\pi}{2} \\quad x \\in [-1,1]",
+        desc: "The complementary identity — always true for any x in [−1, 1]",
+        inputs: [{ id: "x", label: "x  (in [−1, 1])" }],
+        compute: ({ x }) => {
+          x = +x;
+          if (x < -1 || x > 1) return { steps: ["x must be in [−1, 1]"], answer: "Invalid" };
+          const sinInv = Math.asin(x), cosInv = Math.acos(x);
+          return {
+            steps: [
+              `x = ${x}`,
+              `sin⁻¹(${x}) = ${sinInv.toFixed(8)} rad = ${(sinInv*180/Math.PI).toFixed(4)}°`,
+              `cos⁻¹(${x}) = ${cosInv.toFixed(8)} rad = ${(cosInv*180/Math.PI).toFixed(4)}°`,
+              `Sum = ${(sinInv + cosInv).toFixed(10)} rad`,
+              `π/2 = ${(Math.PI/2).toFixed(10)} rad`,
+              `sin⁻¹(x) + cos⁻¹(x) = π/2 ✓`
+            ],
+            answer: `sin⁻¹(${x}) + cos⁻¹(${x}) = π/2 ✓`
+          };
+        }
+      },
+      {
+        id: "tanadd", name: "tan⁻¹ Addition Formula",
+        formula: "\\tan^{-1}x + \\tan^{-1}y = \\tan^{-1}\\!\\left(\\frac{x+y}{1-xy}\\right) \\quad (xy<1)",
+        desc: "Sum of two arctangents — essential identity for JEE",
+        inputs: [{ id: "x", label: "x" }, { id: "y", label: "y" }],
+        compute: ({ x, y }) => {
+          [x, y] = [+x, +y];
+          const xy = x * y;
+          const t1 = Math.atan(x), t2 = Math.atan(y);
+          const sum = t1 + t2;
+          let rhs, note;
+          if (Math.abs(1 - xy) < 1e-10) {
+            note = "xy = 1 → Sum = ±π/2  (special case)";
+            rhs = Math.PI / 2 * Math.sign(x);
+          } else {
+            rhs = Math.atan((x + y) / (1 - xy));
+            if (xy > 1 && x > 0) rhs += Math.PI;
+            if (xy > 1 && x < 0) rhs -= Math.PI;
+            note = xy < 1 ? "xy < 1 → formula applies directly" : "xy > 1, x > 0 → add π to result";
+          }
+          return {
+            steps: [
+              `x = ${x}, y = ${y}, xy = ${xy}`,
+              `tan⁻¹(${x}) = ${t1.toFixed(6)} rad`,
+              `tan⁻¹(${y}) = ${t2.toFixed(6)} rad`,
+              `LHS = ${t1.toFixed(6)} + ${t2.toFixed(6)} = ${sum.toFixed(8)} rad`,
+              `Formula: tan⁻¹((x+y)/(1−xy)) = tan⁻¹(${((x+y)/(1-xy)).toFixed(4)}) = ${rhs.toFixed(8)} rad`,
+              note,
+              `LHS ≈ RHS ✓`
+            ],
+            answer: `tan⁻¹(${x}) + tan⁻¹(${y}) = ${sum.toFixed(4)} rad = ${(sum*180/Math.PI).toFixed(2)}°`
+          };
+        }
+      },
+      {
+        id: "principalval", name: "Principal Values of sin⁻¹, cos⁻¹, tan⁻¹",
+        formula: "\\sin^{-1}: [-\\tfrac{\\pi}{2},\\tfrac{\\pi}{2}], \\; \\cos^{-1}: [0,\\pi], \\; \\tan^{-1}: (-\\tfrac{\\pi}{2},\\tfrac{\\pi}{2})",
+        desc: "Evaluate all three inverse trig functions and verify their principal value ranges",
+        inputs: [{ id: "x", label: "x  (for sin⁻¹ & tan⁻¹; use [−1,1] for sin⁻¹/cos⁻¹)" }],
+        compute: ({ x }) => {
+          x = +x;
+          const t = Math.atan(x) * 180 / Math.PI;
+          let sinI = "—", cosI = "—";
+          if (x >= -1 && x <= 1) {
+            sinI = `${(Math.asin(x)*180/Math.PI).toFixed(4)}° ∈ [−90°,90°]`;
+            cosI = `${(Math.acos(x)*180/Math.PI).toFixed(4)}° ∈ [0°,180°]`;
+          }
+          return {
+            steps: [
+              `x = ${x}`,
+              x >= -1 && x <= 1 ? `sin⁻¹(${x}) = ${sinI}` : `sin⁻¹ not defined for |x| > 1`,
+              x >= -1 && x <= 1 ? `cos⁻¹(${x}) = ${cosI}` : `cos⁻¹ not defined for |x| > 1`,
+              `tan⁻¹(${x}) = ${t.toFixed(4)}° ∈ (−90°, 90°)  [defined for all real x]`,
+              `Principal value ranges:`,
+              `  sin⁻¹: [−π/2, π/2]  →  [−90°, 90°]`,
+              `  cos⁻¹: [0, π]       →  [0°, 180°]`,
+              `  tan⁻¹: (−π/2, π/2) →  (−90°, 90°)  (open interval)`
+            ],
+            answer: `tan⁻¹(${x}) = ${t.toFixed(2)}°` + (x >= -1 && x <= 1 ? `;  sin⁻¹ = ${(Math.asin(x)*180/Math.PI).toFixed(2)}°` : '')
+          };
+        }
+      },
+      {
+        id: "sin2inv", name: "sin⁻¹(2x√(1−x²)) = 2 sin⁻¹ x",
+        formula: "\\sin^{-1}(2x\\sqrt{1-x^2}) = 2\\sin^{-1}x, \\quad x \\in \\left[-\\tfrac{1}{\\sqrt{2}}, \\tfrac{1}{\\sqrt{2}}\\right]",
+        desc: "Double-angle identity for inverse sine — key formula in JEE proofs",
+        inputs: [{ id: "x", label: "x  (in [−1/√2, 1/√2] ≈ [−0.707, 0.707])" }],
+        compute: ({ x }) => {
+          x = +x;
+          const bound = 1 / Math.sqrt(2);
+          if (Math.abs(x) > bound + 1e-9) return { steps: [`|x| must be ≤ 1/√2 ≈ ${bound.toFixed(4)}`], answer: "Out of range" };
+          const inner = 2 * x * Math.sqrt(1 - x * x);
+          const lhs = Math.asin(inner);
+          const rhs = 2 * Math.asin(x);
+          return {
+            steps: [
+              `x = ${x}`,
+              `Inner expression: 2x√(1−x²) = 2(${x})√(1−${x*x}) = ${inner.toFixed(8)}`,
+              `LHS: sin⁻¹(${inner.toFixed(6)}) = ${lhs.toFixed(8)} rad`,
+              `RHS: 2·sin⁻¹(${x}) = 2 × ${Math.asin(x).toFixed(6)} = ${rhs.toFixed(8)} rad`,
+              `LHS = RHS ✓  (difference = ${Math.abs(lhs-rhs).toExponential(2)})`
+            ],
+            answer: `sin⁻¹(2x√(1−x²)) = 2sin⁻¹(${x}) = ${rhs.toFixed(4)} rad`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Coordinate Geometry Extras ──────────────────────────
+  {
+    id: "coordgeom", name: "Coordinate Geometry", classes: "Classes 10–12",
+    icon: "(x,y)", emoji: "📌", color: "#22D3EE", dim: "#022a33",
+    formulas: [
+      {
+        id: "distformula", name: "Distance Between Two Points",
+        formula: "d = \\sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}",
+        desc: "Euclidean distance — derived from the Pythagorean theorem",
+        inputs: [{ id: "x1", label: "x₁" }, { id: "y1", label: "y₁" }, { id: "x2", label: "x₂" }, { id: "y2", label: "y₂" }],
+        compute: ({ x1, y1, x2, y2 }) => {
+          [x1, y1, x2, y2] = [+x1, +y1, +x2, +y2];
+          const dx = x2 - x1, dy = y2 - y1;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          return {
+            steps: [
+              `A = (${x1}, ${y1}),  B = (${x2}, ${y2})`,
+              `Δx = x₂ − x₁ = ${x2} − ${x1} = ${dx}`,
+              `Δy = y₂ − y₁ = ${y2} − ${y1} = ${dy}`,
+              `d = √(Δx² + Δy²) = √(${dx}² + ${dy}²)`,
+              `= √(${dx*dx} + ${dy*dy})`,
+              `= √${dx*dx + dy*dy}`,
+              `= ${d.toFixed(8)}`
+            ],
+            answer: `d = ${d.toFixed(4)} units`
+          };
+        }
+      },
+      {
+        id: "centroid", name: "Centroid of a Triangle",
+        formula: "G = \\left(\\frac{x_1+x_2+x_3}{3},\\; \\frac{y_1+y_2+y_3}{3}\\right)",
+        desc: "The centroid divides each median in ratio 2:1 from the vertex",
+        inputs: [
+          { id: "x1", label: "x₁" }, { id: "y1", label: "y₁" },
+          { id: "x2", label: "x₂" }, { id: "y2", label: "y₂" },
+          { id: "x3", label: "x₃" }, { id: "y3", label: "y₃" }
+        ],
+        compute: ({ x1, y1, x2, y2, x3, y3 }) => {
+          [x1, y1, x2, y2, x3, y3] = [x1, y1, x2, y2, x3, y3].map(Number);
+          const gx = (x1 + x2 + x3) / 3, gy = (y1 + y2 + y3) / 3;
+          return {
+            steps: [
+              `Vertices: A(${x1},${y1}), B(${x2},${y2}), C(${x3},${y3})`,
+              `Gx = (x₁+x₂+x₃)/3 = (${x1}+${x2}+${x3})/3 = ${x1+x2+x3}/3 = ${gx.toFixed(6)}`,
+              `Gy = (y₁+y₂+y₃)/3 = (${y1}+${y2}+${y3})/3 = ${y1+y2+y3}/3 = ${gy.toFixed(6)}`,
+              `The centroid is the point of intersection of the three medians`,
+              `Each median is divided in 2:1 ratio from vertex to opposite midpoint`
+            ],
+            answer: `G = (${gx.toFixed(4)}, ${gy.toFixed(4)})`
+          };
+        }
+      },
+      {
+        id: "circlexy", name: "Equation of a Circle",
+        formula: "(x - h)^2 + (y - k)^2 = r^2",
+        desc: "Standard form — centre (h, k) and radius r",
+        inputs: [
+          { id: "h", label: "h (centre x)" }, { id: "k", label: "k (centre y)" },
+          { id: "r", label: "r (radius, > 0)" },
+          { id: "px", label: "Test point x" }, { id: "py", label: "Test point y" }
+        ],
+        compute: ({ h, k, r, px, py }) => {
+          [h, k, r, px, py] = [+h, +k, +r, +px, +py];
+          if (r <= 0) return { steps: ["Radius must be > 0"], answer: "Invalid" };
+          const dist2 = (px - h) ** 2 + (py - k) ** 2;
+          const dist = Math.sqrt(dist2);
+          const pos = dist < r ? "INSIDE the circle" : dist > r ? "OUTSIDE the circle" : "ON the circle";
+          return {
+            steps: [
+              `Circle: (x − ${h})² + (y − ${k})² = ${r}² = ${r*r}`,
+              `Centre C = (${h}, ${k}),  Radius r = ${r}`,
+              `Circumference = 2πr = ${(2*Math.PI*r).toFixed(4)}`,
+              `Area = πr² = ${(Math.PI*r*r).toFixed(4)}`,
+              `General form: x²+y² ${-2*h < 0 ? '' : '+'} ${-2*h}x ${-2*k < 0 ? '' : '+'} ${-2*k}y + ${h*h+k*k-r*r} = 0`,
+              ``,
+              `Test point P = (${px}, ${py}):`,
+              `(${px}−${h})² + (${py}−${k})² = ${(px-h)**2} + ${(py-k)**2} = ${dist2.toFixed(4)}`,
+              `Distance from centre = ${dist.toFixed(4)},  r = ${r}`,
+              `Point is ${pos}`
+            ],
+            answer: `Centre=(${h},${k}), r=${r}; Point (${px},${py}) is ${pos}`
+          };
+        }
+      },
+      {
+        id: "locus", name: "Locus: Equal Distance from Two Points",
+        formula: "PA = PB \\implies \\text{perpendicular bisector of AB}",
+        desc: "The locus of a point equidistant from two fixed points is the perpendicular bisector",
+        inputs: [
+          { id: "x1", label: "x₁ (point A)" }, { id: "y1", label: "y₁" },
+          { id: "x2", label: "x₂ (point B)" }, { id: "y2", label: "y₂" }
+        ],
+        compute: ({ x1, y1, x2, y2 }) => {
+          [x1, y1, x2, y2] = [+x1, +y1, +x2, +y2];
+          const mx = (x1+x2)/2, my = (y1+y2)/2;
+          const dx = x2-x1, dy = y2-y1;
+          // Perp bisector: dx(x-mx) + dy(y-my) = 0
+          // i.e. dx·x + dy·y = dx·mx + dy·my
+          const rhs = dx*mx + dy*my;
+          return {
+            steps: [
+              `A = (${x1},${y1}),  B = (${x2},${y2})`,
+              `Midpoint M = ((${x1}+${x2})/2, (${y1}+${y2})/2) = (${mx}, ${my})`,
+              `Slope of AB = (${y2}−${y1})/(${x2}−${x1}) = ${dy}/${dx} = ${dy===0||dx===0 ? (dy===0?'0':'∞') : (dy/dx).toFixed(4)}`,
+              dx !== 0 ? `Slope of perp. bisector = −${dx}/${dy} = ${dy!==0?(-dx/dy).toFixed(4):'0'}` : `AB is vertical → perp bisector is horizontal: y = ${my}`,
+              `Equation of perp. bisector:`,
+              `${dx}(x − ${mx}) + ${dy}(y − ${my}) = 0`,
+              `${dx}x + ${dy}y = ${rhs}`,
+              `Any point on this line is equidistant from A and B ✓`
+            ],
+            answer: `Perp. bisector: ${dx}x + ${dy}y = ${rhs}  passes through (${mx}, ${my})`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Mensuration — Surfaces & Volumes ────────────────────
+  {
+    id: "mensuration", name: "Mensuration — 3D Shapes", classes: "Classes 9–12",
+    icon: "V,SA", emoji: "🧊", color: "#34D399", dim: "#033a20",
+    formulas: [
+      {
+        id: "sphere", name: "Sphere — Volume & Surface Area",
+        formula: "V = \\tfrac{4}{3}\\pi r^3, \\quad SA = 4\\pi r^2",
+        desc: "All-important sphere formulas — memorise the 4/3 coefficient",
+        inputs: [{ id: "r", label: "Radius r" }],
+        compute: ({ r }) => {
+          r = +r;
+          if (r <= 0) return { steps: ["r must be > 0"], answer: "Invalid" };
+          const V = (4/3) * Math.PI * r ** 3;
+          const SA = 4 * Math.PI * r * r;
+          return {
+            steps: [
+              `r = ${r}`,
+              `Volume V = (4/3)πr³`,
+              `= (4/3) × π × ${r}³`,
+              `= (4/3) × ${Math.PI.toFixed(6)} × ${r**3}`,
+              `= ${V.toFixed(8)}`,
+              `Surface Area SA = 4πr²`,
+              `= 4 × π × ${r*r}`,
+              `= ${SA.toFixed(8)}`,
+              `Diameter = 2r = ${2*r}`,
+              `V/SA ratio = r/3 = ${(r/3).toFixed(4)}`
+            ],
+            answer: `V = ${V.toFixed(4)},  SA = ${SA.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "cylinder", name: "Cylinder — Volume & Surface Area",
+        formula: "V = \\pi r^2 h, \\quad CSA = 2\\pi r h, \\quad TSA = 2\\pi r(r+h)",
+        desc: "CSA = curved surface area (without caps); TSA = total surface area",
+        inputs: [{ id: "r", label: "Radius r" }, { id: "h", label: "Height h" }],
+        compute: ({ r, h }) => {
+          [r, h] = [+r, +h];
+          if (r <= 0 || h <= 0) return { steps: ["r and h must be > 0"], answer: "Invalid" };
+          const V = Math.PI * r * r * h;
+          const CSA = 2 * Math.PI * r * h;
+          const TSA = 2 * Math.PI * r * (r + h);
+          return {
+            steps: [
+              `r = ${r}, h = ${h}`,
+              `Volume = πr²h = π × ${r*r} × ${h} = ${V.toFixed(6)}`,
+              `Curved SA = 2πrh = 2π × ${r} × ${h} = ${CSA.toFixed(6)}`,
+              `Total SA = 2πr(r+h) = 2π × ${r} × (${r}+${h}) = 2π × ${r} × ${r+h} = ${TSA.toFixed(6)}`
+            ],
+            answer: `V = ${V.toFixed(4)},  CSA = ${CSA.toFixed(4)},  TSA = ${TSA.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "cone", name: "Cone — Volume & Surface Area",
+        formula: "V = \\tfrac{1}{3}\\pi r^2 h, \\quad l = \\sqrt{r^2+h^2}, \\quad CSA = \\pi r l",
+        desc: "l is the slant height — key quantity for the curved surface area",
+        inputs: [{ id: "r", label: "Base radius r" }, { id: "h", label: "Height h" }],
+        compute: ({ r, h }) => {
+          [r, h] = [+r, +h];
+          if (r <= 0 || h <= 0) return { steps: ["r and h must be > 0"], answer: "Invalid" };
+          const l = Math.sqrt(r*r + h*h);
+          const V = (1/3) * Math.PI * r * r * h;
+          const CSA = Math.PI * r * l;
+          const TSA = CSA + Math.PI * r * r;
+          return {
+            steps: [
+              `r = ${r}, h = ${h}`,
+              `Slant height l = √(r²+h²) = √(${r*r}+${h*h}) = √${r*r+h*h} = ${l.toFixed(6)}`,
+              `Volume = (1/3)πr²h = (1/3) × π × ${r*r} × ${h} = ${V.toFixed(6)}`,
+              `Curved SA = πrl = π × ${r} × ${l.toFixed(4)} = ${CSA.toFixed(6)}`,
+              `Total SA = πrl + πr² = ${CSA.toFixed(4)} + ${(Math.PI*r*r).toFixed(4)} = ${TSA.toFixed(6)}`
+            ],
+            answer: `l = ${l.toFixed(4)},  V = ${V.toFixed(4)},  CSA = ${CSA.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "cuboid", name: "Cuboid — Volume & Surface Area",
+        formula: "V = l \\cdot b \\cdot h, \\quad SA = 2(lb + bh + lh), \\quad d = \\sqrt{l^2+b^2+h^2}",
+        desc: "The diagonal of a cuboid uses the 3D Pythagorean theorem",
+        inputs: [{ id: "l", label: "Length l" }, { id: "b", label: "Breadth b" }, { id: "h", label: "Height h" }],
+        compute: ({ l, b, h }) => {
+          [l, b, h] = [+l, +b, +h];
+          if (l <= 0 || b <= 0 || h <= 0) return { steps: ["l, b, h must all be > 0"], answer: "Invalid" };
+          const V = l * b * h;
+          const SA = 2 * (l*b + b*h + l*h);
+          const d = Math.sqrt(l*l + b*b + h*h);
+          return {
+            steps: [
+              `l = ${l}, b = ${b}, h = ${h}`,
+              `Volume = l×b×h = ${l}×${b}×${h} = ${V}`,
+              `SA = 2(lb+bh+lh) = 2(${l*b}+${b*h}+${l*h}) = 2×${l*b+b*h+l*h} = ${SA}`,
+              `Diagonal d = √(l²+b²+h²) = √(${l*l}+${b*b}+${h*h}) = √${l*l+b*b+h*h} = ${d.toFixed(6)}`
+            ],
+            answer: `V = ${V},  SA = ${SA},  Diagonal = ${d.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "frustum", name: "Frustum of a Cone",
+        formula: "V = \\tfrac{\\pi h}{3}(R^2+r^2+Rr), \\quad CSA = \\pi(R+r)l",
+        desc: "A cone with the top cut off — l = √(h²+(R−r)²) is slant height",
+        inputs: [
+          { id: "R", label: "Larger radius R (base)" }, { id: "r", label: "Smaller radius r (top)" },
+          { id: "h", label: "Height h" }
+        ],
+        compute: ({ R, r, h }) => {
+          [R, r, h] = [+R, +r, +h];
+          if (R <= 0 || r <= 0 || h <= 0 || r >= R) return { steps: ["Need R > r > 0 and h > 0"], answer: "Invalid" };
+          const l = Math.sqrt(h*h + (R-r)**2);
+          const V = (Math.PI * h / 3) * (R*R + r*r + R*r);
+          const CSA = Math.PI * (R + r) * l;
+          const TSA = CSA + Math.PI * (R*R + r*r);
+          return {
+            steps: [
+              `R = ${R}, r = ${r}, h = ${h}`,
+              `Slant height l = √(h²+(R−r)²) = √(${h*h}+${(R-r)**2}) = ${l.toFixed(6)}`,
+              `Volume = (πh/3)(R²+r²+Rr) = (π×${h}/3)(${R*R}+${r*r}+${R*r}) = ${V.toFixed(6)}`,
+              `CSA = π(R+r)l = π×${R+r}×${l.toFixed(4)} = ${CSA.toFixed(6)}`,
+              `TSA = CSA + π(R²+r²) = ${TSA.toFixed(6)}`
+            ],
+            answer: `l = ${l.toFixed(4)},  V = ${V.toFixed(4)},  CSA = ${CSA.toFixed(4)}`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Heights & Distances ──────────────────────────────────
+  {
+    id: "heights", name: "Heights & Distances", classes: "Classes 10–11",
+    icon: "tan θ", emoji: "🏔️", color: "#FBBF24", dim: "#5a3a00",
+    formulas: [
+      {
+        id: "elevation", name: "Angle of Elevation",
+        formula: "\\tan \\theta = \\frac{\\text{height}}{\\text{distance}}",
+        desc: "Find the height of an object given angle of elevation and horizontal distance",
+        inputs: [{ id: "theta", label: "Angle of elevation θ (degrees)" }, { id: "d", label: "Horizontal distance d" }],
+        compute: ({ theta, d }) => {
+          [theta, d] = [+theta, +d];
+          if (theta <= 0 || theta >= 90 || d <= 0) return { steps: ["θ must be in (0°,90°) and d > 0"], answer: "Invalid" };
+          const r = theta * Math.PI / 180;
+          const h = d * Math.tan(r);
+          const hyp = d / Math.cos(r);
+          return {
+            steps: [
+              `θ = ${theta}°, Horizontal distance = ${d}`,
+              `tan θ = height / distance`,
+              `height = d × tan θ = ${d} × tan(${theta}°)`,
+              `= ${d} × ${Math.tan(r).toFixed(6)}`,
+              `= ${h.toFixed(8)}`,
+              `Slant distance (line of sight) = d/cos θ = ${d}/cos(${theta}°) = ${hyp.toFixed(6)}`,
+              `Trigonometric values at ${theta}°:`,
+              `  sin(${theta}°) = ${Math.sin(r).toFixed(4)},  cos(${theta}°) = ${Math.cos(r).toFixed(4)},  tan(${theta}°) = ${Math.tan(r).toFixed(4)}`
+            ],
+            answer: `Height = ${h.toFixed(4)} units,  Line of sight = ${hyp.toFixed(4)} units`
+          };
+        }
+      },
+      {
+        id: "depression", name: "Angle of Depression",
+        formula: "\\text{depth} = d \\cdot \\tan \\theta \\quad (\\text{angle of depression} = \\text{angle of elevation from below})",
+        desc: "Looking downward — angle of depression equals angle of elevation from the base (alternate interior angles)",
+        inputs: [{ id: "theta", label: "Angle of depression θ (degrees)" }, { id: "d", label: "Horizontal distance d" }],
+        compute: ({ theta, d }) => {
+          [theta, d] = [+theta, +d];
+          if (theta <= 0 || theta >= 90 || d <= 0) return { steps: ["θ ∈ (0°,90°), d > 0"], answer: "Invalid" };
+          const r = theta * Math.PI / 180;
+          const depth = d * Math.tan(r);
+          return {
+            steps: [
+              `Angle of depression = ${theta}°`,
+              `Horizontal distance = ${d}`,
+              `Key property: Angle of depression from top = Angle of elevation from bottom (alternate interior angles, parallel lines)`,
+              `depth = d × tan θ = ${d} × tan(${theta}°) = ${d} × ${Math.tan(r).toFixed(6)} = ${depth.toFixed(8)}`,
+              `Direct line of sight = √(d²+depth²) = ${Math.sqrt(d*d+depth*depth).toFixed(4)}`
+            ],
+            answer: `Depth = ${depth.toFixed(4)} units`
+          };
+        }
+      },
+      {
+        id: "twoangles", name: "Height from Two Angles of Elevation",
+        formula: "h = \\frac{d \\tan \\alpha \\tan \\beta}{\\tan \\alpha - \\tan \\beta}",
+        desc: "Two observers at distance d apart see the top of a tower at angles α and β (α > β)",
+        inputs: [
+          { id: "alpha", label: "Nearer angle α (degrees, larger)" },
+          { id: "beta", label: "Farther angle β (degrees, smaller)" },
+          { id: "d", label: "Distance between the two observers d" }
+        ],
+        compute: ({ alpha, beta, d }) => {
+          [alpha, beta, d] = [+alpha, +beta, +d];
+          if (alpha <= beta || beta <= 0 || alpha >= 90 || d <= 0) return { steps: ["Need 90° > α > β > 0° and d > 0"], answer: "Invalid" };
+          const ta = Math.tan(alpha * Math.PI / 180), tb = Math.tan(beta * Math.PI / 180);
+          const h = d * ta * tb / (ta - tb);
+          const x = h / ta; // distance of nearer observer
+          return {
+            steps: [
+              `Angles: α = ${alpha}°,  β = ${beta}°,  d = ${d}`,
+              `tan α = ${ta.toFixed(6)},  tan β = ${tb.toFixed(6)}`,
+              `h = d·tan α·tan β / (tan α − tan β)`,
+              `= ${d} × ${ta.toFixed(4)} × ${tb.toFixed(4)} / (${ta.toFixed(4)} − ${tb.toFixed(4)})`,
+              `= ${(d*ta*tb).toFixed(4)} / ${(ta-tb).toFixed(4)}`,
+              `= ${h.toFixed(8)}`,
+              `Distance of nearer observer from base = h/tan α = ${x.toFixed(4)}`
+            ],
+            answer: `Height of tower = ${h.toFixed(4)} units`
+          };
+        }
+      },
+      {
+        id: "sinecoserule", name: "Sine Rule & Cosine Rule",
+        formula: "\\frac{a}{\\sin A}=\\frac{b}{\\sin B}=\\frac{c}{\\sin C}, \\quad c^2=a^2+b^2-2ab\\cos C",
+        desc: "Generalisations of Pythagoras — work for any triangle, not just right-angled",
+        inputs: [{ id: "a", label: "Side a" }, { id: "b", label: "Side b" }, { id: "C", label: "Included angle C (degrees)" }],
+        compute: ({ a, b, C }) => {
+          [a, b, C] = [+a, +b, +C];
+          if (a <= 0 || b <= 0 || C <= 0 || C >= 180) return { steps: ["a,b > 0; C ∈ (0°,180°)"], answer: "Invalid" };
+          const Cr = C * Math.PI / 180;
+          const c = Math.sqrt(a*a + b*b - 2*a*b*Math.cos(Cr));
+          const A = Math.asin(a * Math.sin(Cr) / c) * 180 / Math.PI;
+          const B = 180 - A - C;
+          const area = 0.5 * a * b * Math.sin(Cr);
+          return {
+            steps: [
+              `a = ${a}, b = ${b}, C = ${C}°`,
+              `Cosine Rule: c² = a²+b²−2ab·cos C`,
+              `= ${a*a}+${b*b}−2×${a}×${b}×cos(${C}°)`,
+              `= ${a*a+b*b}−${(2*a*b*Math.cos(Cr)).toFixed(4)}`,
+              `= ${(a*a+b*b-2*a*b*Math.cos(Cr)).toFixed(6)}`,
+              `c = ${c.toFixed(6)}`,
+              `Sine Rule → A = arcsin(a·sin C/c) = ${A.toFixed(4)}°`,
+              `B = 180°−A−C = ${B.toFixed(4)}°`,
+              `Area = ½ab sin C = ½×${a}×${b}×sin(${C}°) = ${area.toFixed(6)}`
+            ],
+            answer: `c = ${c.toFixed(4)},  A = ${A.toFixed(2)}°,  B = ${B.toFixed(2)}°,  Area = ${area.toFixed(4)}`
+          };
+        }
+      },
+    ]
+  },
+
+  // ── NEW: Statistics — Central Tendency ───────────────────────
+  {
+    id: "centraltend", name: "Statistics — Central Tendency", classes: "Classes 9–11",
+    icon: "x̄, M", emoji: "📊", color: "#A78BFA", dim: "#2a1060",
+    formulas: [
+      {
+        id: "mean", name: "Arithmetic Mean x̄",
+        formula: "\\bar{x} = \\frac{\\sum x_i}{n} = \\frac{x_1 + x_2 + \\cdots + x_n}{n}",
+        desc: "The average — sum divided by count; sensitive to outliers",
+        inputs: [{ id: "vals", label: "Values (comma-separated)", type: "text" }],
+        compute: ({ vals }) => {
+          const arr = String(vals).split(",").map(Number).filter(v => !isNaN(v));
+          if (arr.length < 1) return { steps: ["Enter at least 1 value"], answer: "Invalid" };
+          const n = arr.length;
+          const sum = arr.reduce((s, v) => s + v, 0);
+          const mean = sum / n;
+          return {
+            steps: [
+              `Data: [${arr.join(", ")}]`,
+              `n = ${n}`,
+              `Σxᵢ = ${arr.join(" + ")} = ${sum}`,
+              `x̄ = Σxᵢ / n = ${sum} / ${n} = ${mean.toFixed(8)}`,
+              `Check: deviations from mean sum to 0:`,
+              `Σ(xᵢ − x̄) = ${arr.reduce((s,v) => s + (v-mean), 0).toFixed(10)}  ≈ 0 ✓`
+            ],
+            answer: `Mean x̄ = ${mean.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "median", name: "Median",
+        formula: "M = \\begin{cases} x_{(n+1)/2} & n\\text{ odd} \\\\ \\frac{x_{n/2}+x_{n/2+1}}{2} & n\\text{ even} \\end{cases}",
+        desc: "The middle value of sorted data — resistant to outliers unlike the mean",
+        inputs: [{ id: "vals", label: "Values (comma-separated)", type: "text" }],
+        compute: ({ vals }) => {
+          const arr = String(vals).split(",").map(Number).filter(v => !isNaN(v));
+          if (arr.length < 1) return { steps: ["Enter at least 1 value"], answer: "Invalid" };
+          const sorted = [...arr].sort((a, b) => a - b);
+          const n = sorted.length;
+          let median, steps;
+          if (n % 2 === 1) {
+            const mid = (n - 1) / 2;
+            median = sorted[mid];
+            steps = [
+              `Original data: [${arr.join(", ")}]`,
+              `Sorted: [${sorted.join(", ")}]`,
+              `n = ${n}  (odd)`,
+              `Position = (n+1)/2 = (${n}+1)/2 = ${(n+1)/2}`,
+              `Median = x₍${(n+1)/2}₎ = ${median}`
+            ];
+          } else {
+            const m1 = sorted[n/2 - 1], m2 = sorted[n/2];
+            median = (m1 + m2) / 2;
+            steps = [
+              `Original data: [${arr.join(", ")}]`,
+              `Sorted: [${sorted.join(", ")}]`,
+              `n = ${n}  (even)`,
+              `Middle two values: x₍${n/2}₎ = ${m1}  and  x₍${n/2+1}₎ = ${m2}`,
+              `Median = (${m1} + ${m2}) / 2 = ${median}`
+            ];
+          }
+          return { steps, answer: `Median = ${median}` };
+        }
+      },
+      {
+        id: "mode", name: "Mode",
+        formula: "\\text{Mode} = \\text{most frequently occurring value}",
+        desc: "Value that appears most often — a dataset can have no mode, one mode (unimodal), or multiple modes",
+        inputs: [{ id: "vals", label: "Values (comma-separated)", type: "text" }],
+        compute: ({ vals }) => {
+          const arr = String(vals).split(",").map(Number).filter(v => !isNaN(v));
+          if (arr.length < 1) return { steps: ["Enter at least 1 value"], answer: "Invalid" };
+          const freq = {};
+          arr.forEach(v => freq[v] = (freq[v] || 0) + 1);
+          const maxFreq = Math.max(...Object.values(freq));
+          const modes = Object.keys(freq).filter(k => freq[k] === maxFreq).map(Number);
+          const isNoMode = maxFreq === 1;
+          return {
+            steps: [
+              `Data: [${arr.join(", ")}]`,
+              `Frequency table:`,
+              ...Object.entries(freq).sort((a,b)=>+a[0]-+b[0]).map(([v, f]) => `  ${v} → appears ${f} time${f>1?'s':''}`),
+              `Maximum frequency = ${maxFreq}`,
+              isNoMode ? `All values appear once → No mode` : `Mode(s): ${modes.join(", ")}  (appears ${maxFreq} times)`
+            ],
+            answer: isNoMode ? "No mode" : `Mode = ${modes.join(", ")}`
+          };
+        }
+      },
+      {
+        id: "weightedmean", name: "Weighted Mean",
+        formula: "\\bar{x}_w = \\frac{\\sum w_i x_i}{\\sum w_i}",
+        desc: "Average where each value contributes proportionally to its weight — used in CGPA, index numbers",
+        inputs: [
+          { id: "vals", label: "Values x (comma-separated)", type: "text" },
+          { id: "weights", label: "Weights w (comma-separated)", type: "text" }
+        ],
+        compute: ({ vals, weights }) => {
+          const xs = String(vals).split(",").map(Number).filter(v => !isNaN(v));
+          const ws = String(weights).split(",").map(Number).filter(v => !isNaN(v));
+          if (xs.length !== ws.length || xs.length < 1) return { steps: ["Values and weights must have the same count"], answer: "Invalid" };
+          if (ws.some(w => w < 0)) return { steps: ["Weights must be ≥ 0"], answer: "Invalid" };
+          const sumW = ws.reduce((s, w) => s + w, 0);
+          if (sumW === 0) return { steps: ["Sum of weights cannot be 0"], answer: "Invalid" };
+          const sumWX = xs.reduce((s, x, i) => s + x * ws[i], 0);
+          const wm = sumWX / sumW;
+          return {
+            steps: [
+              `Values:  [${xs.join(", ")}]`,
+              `Weights: [${ws.join(", ")}]`,
+              `Σwᵢxᵢ = ${xs.map((x,i) => `${ws[i]}×${x}`).join(" + ")} = ${sumWX.toFixed(4)}`,
+              `Σwᵢ = ${ws.join(" + ")} = ${sumW}`,
+              `Weighted Mean = Σwᵢxᵢ / Σwᵢ = ${sumWX.toFixed(4)} / ${sumW} = ${wm.toFixed(8)}`,
+              `Compare: Simple mean = ${(xs.reduce((s,v)=>s+v,0)/xs.length).toFixed(4)}`
+            ],
+            answer: `Weighted Mean = ${wm.toFixed(4)}`
+          };
+        }
+      },
+      {
+        id: "emprelation", name: "Empirical Relation: Mean, Median, Mode",
+        formula: "\\text{Mode} \\approx 3\\,\\text{Median} - 2\\,\\text{Mean}",
+        desc: "Karl Pearson's empirical formula — relates the three measures of central tendency",
+        inputs: [{ id: "vals", label: "Data values (comma-separated)", type: "text" }],
+        compute: ({ vals }) => {
+          const arr = String(vals).split(",").map(Number).filter(v => !isNaN(v));
+          if (arr.length < 3) return { steps: ["Enter at least 3 values"], answer: "Invalid" };
+          const n = arr.length;
+          const mean = arr.reduce((s,v) => s+v, 0) / n;
+          const sorted = [...arr].sort((a,b) => a-b);
+          const median = n % 2 === 1 ? sorted[(n-1)/2] : (sorted[n/2-1]+sorted[n/2])/2;
+          const estimatedMode = 3*median - 2*mean;
+          const freq = {};
+          arr.forEach(v => freq[v] = (freq[v]||0)+1);
+          const maxF = Math.max(...Object.values(freq));
+          const actualModes = Object.keys(freq).filter(k => freq[k]===maxF).map(Number);
+          return {
+            steps: [
+              `Data: [${arr.join(", ")}]`,
+              `Mean x̄ = ${mean.toFixed(4)}`,
+              `Median M = ${median.toFixed(4)}`,
+              `Empirical Mode = 3×Median − 2×Mean`,
+              `= 3×${median.toFixed(4)} − 2×${mean.toFixed(4)}`,
+              `= ${(3*median).toFixed(4)} − ${(2*mean).toFixed(4)}`,
+              `= ${estimatedMode.toFixed(4)}`,
+              maxF > 1 ? `Actual mode(s) from data = ${actualModes.join(", ")}` : `No repeated values — empirical formula gives estimate = ${estimatedMode.toFixed(4)}`
+            ],
+            answer: `Estimated Mode ≈ ${estimatedMode.toFixed(4)}`
+          };
+        }
+      },
+    ]
+  },
+
   // ── 26. Trigonometric Limits ──────────────────────────────────
   {
     id: "triglims", name: "Trigonometric Limits", classes: "Class 11",
