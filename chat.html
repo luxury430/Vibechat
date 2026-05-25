@@ -32257,39 +32257,29 @@ self.addEventListener('message', e => {
      input bar needs to ride with it — not get buried underneath.
   ────────────────────────────────────────────────────────────── */
   (function _keyboardAwareness () {
-    /* Modern: VirtualKeyboard API (Chrome 94+) */
-    if ('virtualKeyboard' in navigator) {
-      navigator.virtualKeyboard.overlaysContent = true;
-      navigator.virtualKeyboard.addEventListener('geometrychange', e => {
-        const h = e.target.boundingRect.height;
-        document.documentElement.style.setProperty('--kb-height', h + 'px');
-      });
-      return;
-    }
+    /* ── Why we do NOT use navigator.virtualKeyboard.overlaysContent = true ──
+       Setting overlaysContent = true tells the browser to overlay the keyboard
+       on top of the viewport rather than resize it. This silently breaks every
+       fixed-position modal and bottom-sheet in the app (tc-ov, discuss-ov,
+       community comment sheets, channel broadcast bar, etc.) because they use
+       `position:fixed; inset:0` — they keep filling the full screen height,
+       so their inputs are buried underneath the open keyboard.
+       Only .inp-area and .bottom-nav have CSS that compensates via --kb-height;
+       all other overlays do not, and cannot practically all be patched.
 
-    /* Fallback: detect viewport height shrink */
-    const initialH = window.innerHeight;
-    let kbOpen = false;
+       The correct approach: let the browser naturally shrink the visual viewport
+       when the keyboard opens (the default behaviour). Fixed modals then
+       automatically fit the visible area. We track the keyboard height via
+       visualViewport so --kb-height still works for .inp-area / .bottom-nav. */
 
-    window.addEventListener('resize', () => {
-      const diff = initialH - window.visualViewport.height;
-      const h = diff > 80 ? diff : 0;
+    if (!window.visualViewport) return;
+
+    window.visualViewport.addEventListener('resize', () => {
+      const diff = window.innerHeight - window.visualViewport.height;
+      const h    = diff > 80 ? diff : 0;
       document.documentElement.style.setProperty('--kb-height', h + 'px');
-      const wasOpen = kbOpen;
-      kbOpen = h > 80;
-      if (kbOpen && !wasOpen) document.documentElement.classList.add('kb-open');
-      if (!kbOpen && wasOpen) document.documentElement.classList.remove('kb-open');
+      document.documentElement.classList.toggle('kb-open', h > 80);
     }, { passive: true });
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', () => {
-        const diff = window.innerHeight - window.visualViewport.height;
-        const h = diff > 80 ? diff : 0;
-        document.documentElement.style.setProperty('--kb-height', h + 'px');
-        kbOpen = h > 80;
-        document.documentElement.classList.toggle('kb-open', kbOpen);
-      }, { passive: true });
-    }
   })();
 
   /* ──────────────────────────────────────────────────────────────
