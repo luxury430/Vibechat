@@ -3532,12 +3532,12 @@ body::before {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
-  transition: transform .3s var(--spring), opacity .25s var(--ease);
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
 }
 .home-page.hidden {
-  transform: scale(0.97) translateY(8px);
+  transform: translateY(6px);
   opacity: 0;
   pointer-events: none;
 }
@@ -5267,15 +5267,15 @@ body::before {
   z-index: 800;
   display: flex;
   flex-direction: column;
-  transform: scale(0.97) translateY(15px);
+  transform: translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
   overflow: hidden;
   will-change: transform, opacity;
 }
 .community-page.open {
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
@@ -5290,6 +5290,111 @@ body::before {
 .community-page > * { position: relative; z-index: 1; }
 
 /* ════════════════════════════════════════════════════════
+   CREATION PAGE — slides in from right over community
+════════════════════════════════════════════════════════ */
+.creation-page {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-chat);
+  z-index: 820;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .22s cubic-bezier(.25,.46,.45,.94), opacity .15s ease;
+  overflow: hidden;
+  will-change: transform, opacity;
+}
+.creation-page.open {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: all;
+}
+.creation-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px 13px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+.creation-back-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg-input);
+  color: var(--ts);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .18s var(--ease), border-color .18s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.creation-back-btn:hover { background: var(--bg-hover); border-color: var(--accent); color: var(--accent2); }
+.creation-head-title {
+  font-family: var(--font-d);
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--tp);
+  letter-spacing: -.01em;
+}
+.creation-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px 100px;
+  gap: 14px;
+}
+.creation-placeholder-ico {
+  width: 64px; height: 64px;
+  border-radius: var(--r-l);
+  background: rgba(59,130,246,.08);
+  border: 1.5px solid rgba(59,130,246,.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+.creation-placeholder-title {
+  font-family: var(--font-d);
+  font-size: 1.28rem; font-weight: 800;
+  color: var(--tp); letter-spacing: -.4px;
+  text-align: center;
+}
+.creation-placeholder-sub {
+  font-size: .82rem; color: var(--ts);
+  line-height: 1.6; text-align: center; max-width: 260px;
+}
+.comm-creation-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border-radius: var(--r-f);
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--border2);
+  color: var(--ts);
+  font-family: var(--font-b);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: all .18s var(--ease);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.comm-creation-btn:hover { background: rgba(255,255,255,.12); color: var(--tp); border-color: var(--accent); }
+.comm-creation-btn i { font-size: .9rem; }
+
+/* ════════════════════════════════════════════════════════
    EXPLORE PAGE — Wave Lab (same animation as community-page)
 ════════════════════════════════════════════════════════ */
 .explore-page {
@@ -5299,16 +5404,16 @@ body::before {
   z-index: 800;
   display: flex;
   flex-direction: column;
-  transform: scale(0.97) translateY(15px);
+  transform: translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
   overflow: hidden;
   will-change: transform, opacity;
   padding-bottom: 90px; /* clear the floating bottom nav on mobile */
 }
 .explore-page.open {
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
@@ -5400,16 +5505,16 @@ body::before {
   z-index: 870; /* above bottom-nav (860) — nav is hidden when this is open */
   display: flex;
   flex-direction: column;
-  transform: scale(0.97) translateY(15px);
+  transform: translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
   overflow: hidden;
   will-change: transform, opacity;
   padding-bottom: 0; /* nav is hidden when sub-modal is open */
 }
 .sub-modal-page.open {
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
@@ -6594,15 +6699,15 @@ body::before {
   z-index: 800;
   display: flex;
   flex-direction: column;
-  transform: scale(0.97) translateY(15px);
+  transform: translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
   overflow: hidden;
   will-change: transform, opacity;
 }
 .channels-page.open {
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
@@ -6626,16 +6731,16 @@ body::before {
   z-index: 800;
   display: flex;
   flex-direction: column;
-  transform: scale(0.97) translateY(15px);
+  transform: translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
   overflow: hidden;
   will-change: transform, opacity;
   min-height: 0;
 }
 .discover-page.open {
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
@@ -9453,7 +9558,7 @@ body::before {
 }
 @keyframes unlockReveal {
   from { opacity: 0; transform: scale(.93) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Shimmer sweep across popup on reveal */
@@ -9926,7 +10031,7 @@ button:active:not(:disabled) { transform: scale(0.97); }
 /* ── Message pop — soft, not bouncy ── */
 @keyframes msgPop {
   from { opacity: 0; transform: scale(.84) translateY(7px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Modal open — clean fade+lift ── */
@@ -10250,7 +10355,7 @@ button:active:not(:disabled) { transform: scale(0.97); }
   transform: scale(.92) translateY(12px);
   transition: transform .3s cubic-bezier(0.22,1,0.36,1);
 }
-.smooth-modal-ov.open .smooth-modal { transform: scale(1) translateY(0); }
+.smooth-modal-ov.open .smooth-modal { transform: translateY(0); }
 .smooth-modal-top {
   padding: 28px 24px 20px;
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -10719,7 +10824,7 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
   transform: scale(.92) translateY(10px);
   transition: transform .28s cubic-bezier(0.22,1,0.36,1);
 }
-.mod-action-ov.open .mod-action-modal { transform: scale(1) translateY(0); }
+.mod-action-ov.open .mod-action-modal { transform: translateY(0); }
 .mod-action-modal-ico {
   width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 16px;
   background: linear-gradient(135deg, #7c0a32, #be123c);
@@ -12008,15 +12113,15 @@ html[data-performance="smooth"] .nf-ai-btn-ring {
   position: fixed; inset: 0; z-index: 900;
   background: var(--bg-chat);
   display: flex; flex-direction: column;
-  transform: scale(0.97) translateY(15px);
+  transform: translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: transform .4s cubic-bezier(.22,.1,.36,1), opacity .3s ease;
+  transition: transform .18s var(--ease), opacity .18s var(--ease);
   overflow: hidden;
   will-change: transform, opacity;
 }
 .lb-ov.show {
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
@@ -14683,9 +14788,13 @@ h1, h2, h3 {
   </div>
 
   <!-- ── MAIN TAB BAR (DISCUSS / TEST) ── -->
-  <div class="comm-main-tab-bar" id="commMainTabBar">
+  <div class="comm-main-tab-bar" id="commMainTabBar" style="position:relative;">
     <button class="comm-main-tab active" data-comm-tab="discuss" id="commTabDiscuss">DISCUSS</button>
     <button class="comm-main-tab" data-comm-tab="test" id="commTabTest">TEST</button>
+    <button class="comm-creation-btn" id="commCreationBtn" title="Creation">
+      <i class="ri-pencil-ruler-2-line"></i>
+      Creation
+    </button>
   </div>
 
   <!-- ── TAB PANEL: DISCUSS (existing community feed) ── -->
@@ -14758,6 +14867,21 @@ h1, h2, h3 {
     <button class="test-fab" id="testFab" title="Create Test">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
+  </div>
+</div>
+
+<!-- ══════════════ CREATION PAGE ══════════════ -->
+<div class="creation-page" id="creationPage">
+  <div class="creation-head">
+    <button class="creation-back-btn" id="creationBackBtn" title="Back to Community">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="creation-head-title">Creation</div>
+  </div>
+  <div class="creation-body">
+    <div class="creation-placeholder-ico">✦</div>
+    <div class="creation-placeholder-title">Creation Hub</div>
+    <div class="creation-placeholder-sub">Tools for creating tests, challenges, study sets, and more — coming soon.</div>
   </div>
 </div>
 
@@ -17136,11 +17260,20 @@ const NeuroBridge = (() => {
           where('users', 'array-contains', _uid)
         );
         return onSnapshot(q, async (snapshot) => {
-          const fetchPs = snapshot.docs.map(async (docSnap) => {
-            const chat = docSnap.data();
-            const otherId = chat.users.find(u => u !== _uid);
+          // ── INCREMENTAL: only process genuinely changed docs, not all docs ──
+          // This is the primary fix for the "contacts rebuild storm":
+          // a single incoming message used to re-fetch ALL contact user profiles.
+          const changePs = snapshot.docChanges().map(async (change) => {
+            if (change.type === 'removed') {
+              // Return a sentinel so we can delete from the local map
+              const chat = change.doc.data();
+              const otherId = chat.users?.find(u => u !== _uid);
+              return otherId ? { _removed: true, id: otherId } : null;
+            }
+            const chat = change.doc.data();
+            const otherId = chat.users?.find(u => u !== _uid);
             if (!otherId) return null;
-            // ── Cache-first: zero extra Firestore reads if user is warm ──
+            // ── Cache-first: zero extra Firestore reads if user profile is warm ──
             let user = MemoryCache.get('users', otherId);
             if (!user) {
               try {
@@ -17152,17 +17285,32 @@ const NeuroBridge = (() => {
               } catch { return null; }
             }
             return {
-              id:          otherId,
+              id:            otherId,
               ...user,
-              lastMsg:     chat.lastMsg     || '',
-              updatedAt:   chat.updatedAt   || 0,
-              unreadCount: chat[`unread_${_uid}`] || 0,
+              lastMsg:       chat.lastMsg       || '',
+              updatedAt:     chat.updatedAt     || 0,
+              unreadCount:   chat[`unread_${_uid}`] || 0,
+              lastMsgSender: chat.lastMsgSender  || '',
+              lastMsgSeen:   chat.lastMsgSeen    || false,
             };
           });
 
-          const results  = await Promise.all(fetchPs);
-          const contacts = results
-            .filter(Boolean)
+          const changes = await Promise.all(changePs);
+
+          // ── Merge into existing contacts map (preserves untouched entries) ──
+          const existing = MemoryCache.get('contacts', _uid) || [];
+          const contactMap = new Map(existing.map(c => [c.id, c]));
+
+          for (const ch of changes) {
+            if (!ch) continue;
+            if (ch._removed) {
+              contactMap.delete(ch.id);
+            } else {
+              contactMap.set(ch.id, ch);
+            }
+          }
+
+          const contacts = Array.from(contactMap.values())
             .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
           // ── Persist to MemoryCache ──
@@ -17210,7 +17358,10 @@ const NeuroBridge = (() => {
                 const cached = MemoryCache.get('groups', g.id);
                 if (cached) {
                   cached.unreadCount = rSnap.data().unread || 0;
-                  SubscriptionBus.notify(topic, MemoryCache.getAll('groups'));
+                  // Route through RenderScheduler to avoid bypassing throttle
+                  RenderScheduler.schedule('nf:groups', (data) => {
+                    SubscriptionBus.notify(topic, data);
+                  }, MemoryCache.getAll('groups'));
                 }
               }).catch(() => {});
           });
@@ -19025,20 +19176,31 @@ function nnAvatarHTML() {
 /** localStorage key for weekly NN post guard (per-user) */
 const NN_LAST_POST_KEY = 'nf_nn_last_weekly';
 
+// ── Bus unsub guards — prevent SubscriptionBus accumulation on re-init ──
+// Each call to listenToChats()/listenToGroups() unsubscribes the PREVIOUS
+// render callback before registering a new one. Without this, every background
+// resume adds another subscriber and contacts rebuild N× per Firestore event.
+let _chatsBusUnsub  = null;
+let _groupsBusUnsub = null;
+
 /* ─────────────────────────────────────────────────────────────
    FIRESTORE: LOAD CONTACTS
 ───────────────────────────────────────────────────────────── */
 // Debounce helper: batch contact-list re-renders (avoids thrashing on burst updates)
+// 200ms window is wide enough to catch a contacts + groups snapshot pair (typically
+// arrives within 100–150ms of each other) but short enough to feel responsive.
 let _contactsRenderTimer = null;
 function _scheduleContactsRender() {
   if (_isUserTyping) { _pendingContactsRender = true; return; } // freeze during typing
   clearTimeout(_contactsRenderTimer);
-  _contactsRenderTimer = setTimeout(() => renderContacts(), 80);
+  _contactsRenderTimer = setTimeout(() => renderContacts(), 200);
 }
 
 function listenToChats() {
   // ── INTENT: subscribe to contacts.  NeuroBridge owns all Firebase I/O. ──
-  NeuroBridge.subscribeChats((contacts) => {
+  // Unsubscribe previous bus subscriber to prevent accumulation across re-inits.
+  if (_chatsBusUnsub) { try { _chatsBusUnsub(); } catch(_) {} _chatsBusUnsub = null; }
+  _chatsBusUnsub = NeuroBridge.subscribeChats((contacts) => {
     if (isSearching) return;
     // Guard: strip any manually-deleted contacts that may re-appear from cache
     const filtered = contacts.filter(u => !_pendingDeleteIds.has(u.id));
@@ -19063,7 +19225,9 @@ function listenToChats() {
 let _groupsUpdateTimer = null;
 function listenToGroups() {
   // ── INTENT: subscribe to group list. NeuroBridge owns all Firebase I/O. ──
-  NeuroBridge.subscribeGroups((groups) => {
+  // Unsub previous subscriber to prevent accumulation across re-inits.
+  if (_groupsBusUnsub) { try { _groupsBusUnsub(); } catch(_) {} _groupsBusUnsub = null; }
+  _groupsBusUnsub = NeuroBridge.subscribeGroups((groups) => {
     if (isSearching) return;
 
     // Throttle rapid bursts into a single render per 100ms
@@ -19163,6 +19327,11 @@ const NF_SmartListeners = (() => {
     // ── NeuroBridge owns all Firebase listeners — detach through it ──
     NeuroBridge.detachChats();
     NeuroBridge.detachGroups();
+
+    // ── Clear SubscriptionBus refs so resume() creates fresh, single subscriptions ──
+    if (typeof _chatsBusUnsub === 'function')  { try { _chatsBusUnsub();  } catch(_) {} _chatsBusUnsub  = null; }
+    if (typeof _groupsBusUnsub === 'function') { try { _groupsBusUnsub(); } catch(_) {} _groupsBusUnsub = null; }
+
     // Kill active-chat message listener (user can't read while backgrounded)
     if (typeof unsubMessages === 'function') { try { unsubMessages(); } catch(_) {} }
 
@@ -23563,6 +23732,10 @@ function openCommunity() {
   // Desktop left rail
   ['railHome','railQuiz','railChat','railLeaderboard'].forEach(id => $(id)?.classList.remove('active'));
   $('railCommunity')?.classList.add('active');
+
+  // ── Guard: if community is already open (e.g. repeated + taps), skip re-fetch ──
+  const alreadyOpen = $('communityPage')?.classList.contains('open');
+
   // Hide homepage
   $('homePage')?.classList.add('hidden');
   // Hide sidebar (chat-only)
@@ -23645,7 +23818,8 @@ function openCommunity() {
     });
   }
 
-  startListeningPosts();
+  // Only start listening (fetching) if community wasn't already open
+  if (!alreadyOpen) startListeningPosts();
 }
 
 function closeCommunity() {
@@ -23663,6 +23837,7 @@ function closeCommunity() {
   document.body.classList.add('sidebar-hidden');
 
   $('communityPage')?.classList.remove('open');
+  $('creationPage')?.classList.remove('open');
   if (_commUnsub) { _commUnsub(); _commUnsub = null; }
 
   // Stop poll timer when community is closed (saves battery + reads)
@@ -28234,6 +28409,16 @@ function init() {
 
   // ── COMMUNITY PAGE BACK BUTTON (desktop/landscape) ──
   safeClick('commBackBtn', closeCommunity);
+
+  // ── CREATION PAGE ──
+  safeClick('commCreationBtn', () => {
+    const cp = $('creationPage');
+    if (cp) cp.classList.add('open');
+  });
+  safeClick('creationBackBtn', () => {
+    const cp = $('creationPage');
+    if (cp) cp.classList.remove('open');
+  });
 
   // ── HOME PAGE top bar buttons ──
   safeClick('homeBellBtn',    () => { $('bellBtn')?.click(); });
@@ -35170,7 +35355,7 @@ setTimeout(initFCM, 0);
       '.chan-back-btn, .settings-close, .members-back, ' +
       '.prof-close, .rp-close, .cg-close, .m-close, ' +
       '.chan-info-close, .create-chan-close, .create-chan-cancel, ' +
-      '.disc-back-btn, .lb-back-btn'
+      '.disc-back-btn, .lb-back-btn, .creation-back-btn'
     );
 
     if (closeBtn) {
